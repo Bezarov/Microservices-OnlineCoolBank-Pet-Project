@@ -1,0 +1,31 @@
+components:
+  #Users microservice
+  - componentName: "Users"
+    componentURL: "http://localhost:8081/users/"
+    componentId: "a4ad33d9-382d-4cd4-9ce9-c7b941c14912"
+    componentSecret: "UsersServicePassword"
+  #Account microservice
+  - componentName: "Account"
+    componentURL: "http://localhost:8082/accounts/"
+    componentId: "c5acff7c-77f2-4026-b56e-2612ae7483d2"
+    componentSecret: "AccountServicePassword"
+  #Card microservice
+  - componentName: "Card"
+    componentURL: "http://localhost:8083/cards/"
+    componentId: "1d8c6259-a859-4e13-88e6-49668a1e39c6"
+    componentSecret: "CardServicePassword"
+  #Payment microservice
+  - componentName: "Payment"
+    componentURL: "http://localhost:8084/payments/"
+    componentId: "1d8c6259-a859-4e13-88e6-49668a1e39c6"
+    componentSecret: "PaymentServicePassword"
+  #Auth microservice
+  - componentName: "Auth"
+    componentURL: "http://localhost:8085/auth/"
+    componentId: "1414fdb6-dbbd-4e44-8db8-618850391e18"
+    componentSecret: "AuthServicePassword"
+  #AppComponent microservice
+  - componentName: "AppComponent"
+    componentURL: "http://localhost:8086/services/"
+    componentId: "0d9ac6d0-c62d-487f-9575-9b2b48837123"
+    componentSecret: "ServiceAppServicePassword"
