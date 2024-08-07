@@ -6,9 +6,10 @@
         </encoder>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>src/main/java/com/example/userscomponent/log/current-app.log</file>
+        <file>src/main/java/com/example/accountcomponent/log/current-app.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>src/main/java/com/example/userscomponent/log/history-app-%d{yyyy-MM-dd}-%i.log
+            <fileNamePattern>
+                src/main/java/com/example/accountcomponent/log/history-app-%d{yyyy-MM-dd}-%i.log
             </fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>10MB</maxFileSize>
@@ -24,5 +25,5 @@
         <appender-ref ref="FILE"/>
     </root>
     <logger name="org.springframework" level="warn"/>
-    <logger name="com.example.userscomponent" level="debug"/>
+    <logger name="com.example.accountcomponent" level="debug"/>
 </configuration>
