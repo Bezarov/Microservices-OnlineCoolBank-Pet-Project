@@ -11,8 +11,12 @@ public class AppComponent {
     @Id
     @JsonProperty("componentId")
     private UUID componentId;
-    @JsonProperty("componentURL")
-    private String componentURL;
+
+    @JsonProperty("componentAddress")
+    private String componentAddress;
+
+    @JsonProperty("componentPort")
+    private String componentPort;
     @JsonProperty("componentName")
     private String componentName;
     @JsonProperty("componentSecret")
@@ -24,14 +28,6 @@ public class AppComponent {
 
     public void setComponentId(UUID componentId) {
         this.componentId = componentId;
-    }
-
-    public String getComponentURL() {
-        return componentURL;
-    }
-
-    public void setComponentURL(String componentURL) {
-        this.componentURL = componentURL;
     }
 
     public String getComponentName() {
@@ -50,11 +46,28 @@ public class AppComponent {
         this.componentSecret = componentSecret;
     }
 
+    public String getComponentAddress() {
+        return componentAddress;
+    }
+
+    public void setComponentAddress(String componentAddress) {
+        this.componentAddress = componentAddress;
+    }
+
+    public String getComponentPort() {
+        return componentPort;
+    }
+
+    public void setComponentPort(String componentPort) {
+        this.componentPort = componentPort;
+    }
+
     @Override
     public String toString() {
         return "AppComponent{" +
                 "componentId=" + componentId +
-                ", componentURL='" + componentURL + '\'' +
+                ", componentAddress='" + componentAddress + '\'' +
+                ", componentPort='" + componentPort + '\'' +
                 ", componentName='" + componentName + '\'' +
                 ", componentSecret='" + componentSecret + '\'' +
                 '}';
