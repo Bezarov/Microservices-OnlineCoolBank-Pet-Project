@@ -20,11 +20,11 @@ public class CloudConfigServerRepoWriter {
         List<AppComponent> components = configReader.getComponents().stream()
                 .filter(component ->
                         "Eureka-Server-01".equals(component.getComponentName()) ||
-                        "Users-01".equals(component.getComponentName()) ||
-                        "Account-01".equals(component.getComponentName()) ||
-                        "Card-01".equals(component.getComponentName()) ||
-                        "Payment-01".equals(component.getComponentName()) ||
-                        "Auth-01".equals(component.getComponentName()))
+                                "Users-01".equals(component.getComponentName()) ||
+                                "Account-01".equals(component.getComponentName()) ||
+                                "Card-01".equals(component.getComponentName()) ||
+                                "Payment-01".equals(component.getComponentName()) ||
+                                "Auth-01".equals(component.getComponentName()))
                 .toList();
         components.forEach(this::updateComponentFile);
     }
@@ -43,9 +43,9 @@ public class CloudConfigServerRepoWriter {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("server.port")) {
-                    line = "server.port=" + extractPortFromUrl(component.getComponentURL());
+                    line = "server.port=" + component.getComponentPort();
                 } else if (line.startsWith("server.address")) {
-                    line = "server.address=" + component.getComponentURL();
+                    line = "server.address=" + component.getComponentAddress();
                 }
                 content.append(line).append(System.lineSeparator());
             }
@@ -65,18 +65,14 @@ public class CloudConfigServerRepoWriter {
 
     private String getFilePathForComponent(String componentName) {
         return switch (componentName) {
-            case "Eureka-Server-01" -> "src/main/resources/OnlineCoolBank-config-repo/Eureka-Server-Component-01";
-            case "Users-01" -> "src/main/resources/OnlineCoolBank-config-repo/Users-Component-01";
-            case "Account-01" -> "src/main/resources/OnlineCoolBank-config-repo/Account-Component-01";
-            case "Card-01" -> "src/main/resources/OnlineCoolBank-config-repo/Card-Component-01";
-            case "Payment-01" -> "src/main/resources/OnlineCoolBank-config-repo/Payment-Component-01";
-            case "Auth-01" -> "src/main/resources/OnlineCoolBank-config-repo/Auth-Component-01";
+            case "Eureka-Server-01" ->
+                    "src/main/resources/OnlineCoolBank-config-repo/Eureka-Server-Component-01.properties";
+            case "Users-01" -> "src/main/resources/OnlineCoolBank-config-repo/Users-Component-01.properties";
+            case "Account-01" -> "src/main/resources/OnlineCoolBank-config-repo/Account-Component-01.properties";
+            case "Card-01" -> "src/main/resources/OnlineCoolBank-config-repo/Card-Component-01.properties";
+            case "Payment-01" -> "src/main/resources/OnlineCoolBank-config-repo/Payment-Component-01.properties";
+            case "Auth-01" -> "src/main/resources/OnlineCoolBank-config-repo/Auth-Component-01.properties";
             default -> null;
         };
-    }
-
-    private static int extractPortFromUrl(String url) {
-        String[] parts = url.split(":");
-        return Integer.parseInt(parts[parts.length - 1].replaceAll("\\D", ""));
     }
 }
