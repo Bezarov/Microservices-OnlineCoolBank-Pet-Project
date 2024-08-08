@@ -1,0 +1,15 @@
+spring.cloud.config.enabled=false
+server.port=8083
+server.address=http://localhost:8083
+spring.cloud.openfeign.client.config.default.connectTimeout=5000
+spring.cloud.openfeign.client.config.default.readTimeout=5000
+spring.datasource.url=jdbc:h2:mem:card
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=admin
+spring.datasource.password=card
+spring.h2.console.enabled=true
+spring.jpa.hibernate.ddl-auto=create-drop
+#DB Logging
+logging.charset.file=utf-8
+logging.file.name=src/main/java/com/example/cardcomponent/log/h2-db-error.log
+logging.level.root=error
