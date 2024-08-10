@@ -1,4 +1,4 @@
-package com.example.accountcomponent;
+package com.example.paymentcomponent;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,8 +6,10 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-public class AccountComponentApplication {
+public class PaymentComponentApplication {
+
     public static void main(String[] args) {
-        SpringApplication.run(AccountComponentApplication.class, args);
+        SpringApplication.run(PaymentComponentApplication.class, args);
     }
+
 }

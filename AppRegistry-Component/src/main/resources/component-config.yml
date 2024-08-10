@@ -42,13 +42,13 @@ components:
     componentPort: "8401"
     componentId: "1d8c6259-a859-4e13-88e6-49668a1e39c6"
     componentSecret: "PaymentServicePassword"
-  #Auth microservice
-  - componentName: "Auth-Component-01"
-    instanceEurekaName: "Auth-Component"
+  #Security microservice
+  - componentName: "Security-Component-01"
+    instanceEurekaName: "Security-Component"
     componentAddress: "localhost"
     componentPort: "8501"
     componentId: "1414fdb6-dbbd-4e44-8db8-618850391e18"
-    componentSecret: "AuthServicePassword"
+    componentSecret: "SecurityServicePassword"
   #Eureka-Server microservice
   - componentName: "EurekaServer-Component-01"
     componentAddress: "localhost"
