@@ -17,6 +17,9 @@ public class AppComponent {
 
     @JsonProperty("componentPort")
     private String componentPort;
+
+    @JsonProperty("instanceEurekaName")
+    private String instanceEurekaName;
     @JsonProperty("componentName")
     private String componentName;
     @JsonProperty("componentSecret")
@@ -62,13 +65,22 @@ public class AppComponent {
         this.componentPort = componentPort;
     }
 
+    public String getInstanceEurekaName() {
+        return instanceEurekaName;
+    }
+
+    public void setInstanceEurekaName(String instanceEurekaName) {
+        this.instanceEurekaName = instanceEurekaName;
+    }
+
     @Override
     public String toString() {
         return "AppComponent{" +
-                "componentId=" + componentId +
+                "componentName='" + componentName +
+                ", componentId=" + componentId + '\'' +
                 ", componentAddress='" + componentAddress + '\'' +
                 ", componentPort='" + componentPort + '\'' +
-                ", componentName='" + componentName + '\'' +
+                ", instanceEurekaName='" + instanceEurekaName + '\'' +
                 ", componentSecret='" + componentSecret + '\'' +
                 '}';
     }

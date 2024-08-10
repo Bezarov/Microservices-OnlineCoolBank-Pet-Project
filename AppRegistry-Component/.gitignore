@@ -40,4 +40,4 @@ out/
 !**/src/test/**/out/
 
 src/main/java/com/example/appregistrycomponent/log/*
-src/main/resources/db/*
+src/main/java/resources/OnlineCoolBank-config-repo/*

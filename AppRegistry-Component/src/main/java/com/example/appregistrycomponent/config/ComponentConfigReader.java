@@ -38,7 +38,7 @@ public class ComponentConfigReader {
             logger.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();
         }
-        logger.debug("Deserialization successfully: {}", config);
+        config.getComponents().forEach(component -> logger.debug("Deserialization successfully: {}.", component));
         return config;
     }
 }
