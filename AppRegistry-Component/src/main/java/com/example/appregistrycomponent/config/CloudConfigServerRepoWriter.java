@@ -4,6 +4,7 @@ import com.example.appregistrycomponent.model.AppComponent;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -14,65 +15,58 @@ public class CloudConfigServerRepoWriter {
     private final ComponentConfigReader configReader = ComponentConfigReader.readConfig();
     private static final Logger logger = LoggerFactory.getLogger(CloudConfigServerRepoWriter.class);
 
+    private static final String DEFAULT_PROPERTIES_CONFIG_PATH = "default-component-config/";
 
     @PostConstruct
     void init() {
-        List<AppComponent> components = configReader.getComponents().stream()
-                .filter(component ->
-                        "Eureka-Server-01".equals(component.getComponentName()) ||
-                                "Users-01".equals(component.getComponentName()) ||
-                                "Account-01".equals(component.getComponentName()) ||
-                                "Card-01".equals(component.getComponentName()) ||
-                                "Payment-01".equals(component.getComponentName()) ||
-                                "Auth-01".equals(component.getComponentName()))
-                .toList();
-        components.forEach(this::updateComponentFile);
+        List<AppComponent> components = configReader.getComponents();
+        components.forEach(this::createOrUpdateComponentFile);
     }
 
-    private void updateComponentFile(AppComponent component) {
-        String filePath = getFilePathForComponent(component.getComponentName());
-        if (filePath == null) {
-            logger.error("No file path found for component: " + component.getComponentName());
+    private void createOrUpdateComponentFile(AppComponent component) {
+        String filePath = "src/main/resources/OnlineCoolBank-config-repo/" +
+                component.getComponentName() + ".properties";
+        File file = new File(filePath);
+
+        String defaultProperties = getDefaultProperties(component);
+        if (defaultProperties == null) {
+            logger.error("Error reading default properties for component: " + component.getComponentName());
             return;
         }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            writer.write(defaultProperties);
+        } catch (IOException e) {
+            logger.error("Error writing to file: " + filePath);
+        }
+        logger.info("Repository config file: {} created/updated successfully.", component.getComponentName());
+    }
 
-        File file = new File(filePath);
+    private String getDefaultProperties(AppComponent component) {
+        String defaultFileName = DEFAULT_PROPERTIES_CONFIG_PATH + component.getComponentName()
+                .split("-")[0] + "-Component-default.properties";
+        ClassPathResource resource = new ClassPathResource(defaultFileName);
+
         StringBuilder content = new StringBuilder();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("server.port")) {
+                if (line.startsWith("spring.application.name")) {
+                    line = "spring.application.name=" + component.getComponentName();
+                } else if (line.startsWith("server.port")) {
                     line = "server.port=" + component.getComponentPort();
                 } else if (line.startsWith("server.address")) {
                     line = "server.address=" + component.getComponentAddress();
+                } else if (line.startsWith("eureka.instance.appname")) {
+                    line = "eureka.instance.appname=" + component.getInstanceEurekaName();
                 }
                 content.append(line).append(System.lineSeparator());
             }
         } catch (IOException e) {
-            logger.error("Error reading file: " + filePath, e);
-            return;
+            logger.error("Error reading default properties file or it doesn't exists: " + defaultFileName);
+            return null;
         }
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write(content.toString());
-        } catch (IOException e) {
-            logger.error("Error writing to file: " + filePath, e);
-        }
-
-        logger.info("File {} updated successfully.", filePath);
-    }
-
-    private String getFilePathForComponent(String componentName) {
-        return switch (componentName) {
-            case "Eureka-Server-01" ->
-                    "src/main/resources/OnlineCoolBank-config-repo/Eureka-Server-Component-01.properties";
-            case "Users-01" -> "src/main/resources/OnlineCoolBank-config-repo/Users-Component-01.properties";
-            case "Account-01" -> "src/main/resources/OnlineCoolBank-config-repo/Account-Component-01.properties";
-            case "Card-01" -> "src/main/resources/OnlineCoolBank-config-repo/Card-Component-01.properties";
-            case "Payment-01" -> "src/main/resources/OnlineCoolBank-config-repo/Payment-Component-01.properties";
-            case "Auth-01" -> "src/main/resources/OnlineCoolBank-config-repo/Auth-Component-01.properties";
-            default -> null;
-        };
+        return content.toString();
     }
 }
