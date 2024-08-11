@@ -49,8 +49,16 @@ components:
     componentPort: "8501"
     componentId: "1414fdb6-dbbd-4e44-8db8-618850391e18"
     componentSecret: "SecurityServicePassword"
+  #Example of Another AppRegistry microservice
+  - componentName: "AppRegistry-Component-01"
+    instanceEurekaName: "AppRegistry-Component"
+    componentAddress: "localhost"
+    componentPort: "8601"
+    componentId: "7de9eedd-8b4d-44b8-ab5a-155cffee465b"
+    componentSecret: "AppRegistryPassword"
   #Eureka-Server microservice
   - componentName: "EurekaServer-Component-01"
+    instanceEurekaName: "EurekaServer-Component"
     componentAddress: "localhost"
     componentPort: "8701"
     componentId: "0d9ac6d0-c62d-487f-9575-9b2b48837123"
