@@ -1,4 +1,4 @@
-package com.example.userscomponent.dto;
+package com.example.apigatewaycomponent.dto;
 
 import java.util.UUID;
 

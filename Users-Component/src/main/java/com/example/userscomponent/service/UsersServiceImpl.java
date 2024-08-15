@@ -1,17 +1,19 @@
 package com.example.userscomponent.service;
 
-import com.example.userscomponent.client.AccountComponent;
 import com.example.userscomponent.dto.UsersDTO;
 import com.example.userscomponent.model.Users;
 import com.example.userscomponent.repository.UsersRepository;
-import feign.RetryableException;
 import jakarta.transaction.Transactional;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,21 +21,20 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class UsersServiceImpl implements UsersService {
     private static final Logger logger = LoggerFactory.getLogger(UsersServiceImpl.class);
     private final PasswordEncoder passwordEncoder;
     private final UsersRepository usersRepository;
-    private final AccountComponent accountComponent;
+    private final KafkaTemplate<String, UsersDTO> responseKafkaTemplate;
 
     @Autowired
     public UsersServiceImpl(PasswordEncoder passwordEncoder, UsersRepository usersRepository,
-                            @Qualifier("Account-Component") AccountComponent accountComponent) {
+                            KafkaTemplate<String, UsersDTO> responseKafkaTemplate) {
         this.passwordEncoder = passwordEncoder;
         this.usersRepository = usersRepository;
-        this.accountComponent = accountComponent;
+        this.responseKafkaTemplate = responseKafkaTemplate;
     }
 
     private UsersDTO convertUsersModelToDTO(Users user) {
@@ -58,7 +59,8 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public UsersDTO createUser(UsersDTO usersDTO) {
+    @KafkaListener(topics = "user-creation", groupId = "users-component")
+    public void createUser(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Trying to find User with email: {}", usersDTO.getEmail());
         usersRepository.findByEmail(usersDTO.getEmail())
                 .ifPresent(UserEntity -> {
@@ -69,13 +71,17 @@ public class UsersServiceImpl implements UsersService {
         logger.info("User email is unique, trying to create User in DB");
         Users user = usersRepository.save(convertUsersDTOToModel(usersDTO));
         logger.info("User created successfully: {}", user);
-        return convertUsersModelToDTO(user);
+
+        ProducerRecord<String, UsersDTO> responseRecord = new ProducerRecord<>("user-creation-response",
+                null, convertUsersModelToDTO(user));
+        responseRecord.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
+        responseKafkaTemplate.send(responseRecord);
     }
 
     @Override
     public UsersDTO getUserById(UUID userId) {
         logger.info("Trying to find User with ID: {}", userId);
-        UsersDTO usersDTO = usersRepository.findById(userId)
+        return usersRepository.findById(userId)
                 .map(UserEntity -> {
                     logger.info("User was found and received to the Controller: {}", UserEntity);
                     return convertUsersModelToDTO(UserEntity);
@@ -85,21 +91,12 @@ public class UsersServiceImpl implements UsersService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found");
                 });
-
-        try {
-            usersDTO.setAccount(accountComponent.getAccountsByUserId(usersDTO.getId()).stream()
-                    .peek(account -> logger.info("Account was found and added to response: {}", account))
-                    .collect(Collectors.toList()));
-        } catch (RetryableException connectionRefused) {
-            logger.error("Account-App-Component unreachable, returned null Account List");
-        }
-        return usersDTO;
     }
 
     @Override
     public UsersDTO getUserByEmail(String userEmail) {
         logger.info("Trying to find User with email: {}", userEmail);
-        UsersDTO usersDTO = usersRepository.findByEmail(userEmail)
+        return usersRepository.findByEmail(userEmail)
                 .map(UserEntity -> {
                     logger.info("User was found and received to the Controller: {}", UserEntity);
                     return convertUsersModelToDTO(UserEntity);
@@ -109,21 +106,12 @@ public class UsersServiceImpl implements UsersService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such email: " + userEmail + " was not found");
                 });
-
-        try {
-            usersDTO.setAccount(accountComponent.getAccountsByUserId(usersDTO.getId()).stream()
-                    .peek(account -> logger.info("Account was found and added to response: {}", account))
-                    .collect(Collectors.toList()));
-        } catch (Exception exception) {
-            logger.error("Account-App-Component unreachable, returned null Account List");
-        }
-        return usersDTO;
     }
 
     @Override
     public UsersDTO getUserByFullName(String userFullName) {
         logger.info("Trying to find User with name: {}", userFullName);
-        UsersDTO usersDTO = usersRepository.findByFullName(userFullName)
+        return usersRepository.findByFullName(userFullName)
                 .map(UserEntity -> {
                     logger.info("User was found and received to the Controller: {}", UserEntity);
                     return convertUsersModelToDTO(UserEntity);
@@ -133,21 +121,12 @@ public class UsersServiceImpl implements UsersService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such full name: " + userFullName + " was not found");
                 });
-
-        try {
-            usersDTO.setAccount(accountComponent.getAccountsByUserId(usersDTO.getId()).stream()
-                    .peek(account -> logger.info("Account was found and added to response: {}", account))
-                    .collect(Collectors.toList()));
-        } catch (RetryableException connectionRefused) {
-            logger.error("Account-App-Component unreachable, returned null Account List");
-        }
-        return usersDTO;
     }
 
     @Override
     public UsersDTO getUserByPhoneNumber(String userPhoneNumber) {
         logger.info("Trying to find User with phone number: {}", userPhoneNumber);
-        UsersDTO usersDTO = usersRepository.findByPhoneNumber(userPhoneNumber)
+        return usersRepository.findByPhoneNumber(userPhoneNumber)
                 .map(UserEntity -> {
                     logger.info("User was found and received to the Controller: {}", UserEntity);
                     return convertUsersModelToDTO(UserEntity);
@@ -157,15 +136,6 @@ public class UsersServiceImpl implements UsersService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such phone number: " + userPhoneNumber + " was not found");
                 });
-
-        try {
-            usersDTO.setAccount(accountComponent.getAccountsByUserId(usersDTO.getId()).stream()
-                    .peek(account -> logger.info("Account was found and added to response: {}", account))
-                    .collect(Collectors.toList()));
-        } catch (RetryableException connectionRefused) {
-            logger.error("Account-App-Component unreachable, returned null Account List");
-        }
-        return usersDTO;
     }
 
     @Override
@@ -219,13 +189,6 @@ public class UsersServiceImpl implements UsersService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found");
                 });
-
-        try {
-            accountComponent.deleteAllUsersAccounts(user.getId());
-            logger.info("Users accounts was found and deleted successfully: {}", user);
-        } catch (RetryableException connectionRefused) {
-            logger.error("Account-App-Component unreachable, can't remove Users accounts");
-        }
         usersRepository.deleteById(userId);
         logger.info("User was found and deleted successfully: {}", user);
         return new ResponseEntity<>("User deleted successfully", HttpStatus.ACCEPTED);
@@ -241,12 +204,6 @@ public class UsersServiceImpl implements UsersService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such email: " + userEmail + " was not found");
                 });
-        try {
-            accountComponent.deleteAllUsersAccounts(user.getId());
-            logger.info("Users accounts was found and deleted successfully: {}", user);
-        } catch (RetryableException connectionRefused) {
-            logger.error("Account-App-Component unreachable, can't remove Users accounts");
-        }
         usersRepository.deleteByEmail(userEmail);
         logger.info("User was found and deleted successfully: {}", user);
         return new ResponseEntity<>("User deleted successfully", HttpStatus.ACCEPTED);
@@ -262,12 +219,6 @@ public class UsersServiceImpl implements UsersService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such full name: " + userFullName + " was not found");
                 });
-        try {
-            accountComponent.deleteAllUsersAccounts(user.getId());
-            logger.info("Users accounts was found and deleted successfully: {}", user);
-        } catch (RetryableException connectionRefused) {
-            logger.error("Account-App-Component unreachable, can't remove Users accounts");
-        }
         usersRepository.deleteByFullName(userFullName);
         logger.info("User was found and deleted successfully: {}", user);
         return new ResponseEntity<>("User deleted successfully", HttpStatus.ACCEPTED);

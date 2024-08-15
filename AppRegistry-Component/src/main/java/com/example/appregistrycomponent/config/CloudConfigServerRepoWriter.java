@@ -51,12 +51,10 @@ public class CloudConfigServerRepoWriter {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("spring.application.name")) {
-                    line = "spring.application.name=" + component.getComponentName();
+                if (line.startsWith("server.address")) {
+                    line = "server.address=" + component.getComponentAddress();
                 } else if (line.startsWith("server.port")) {
                     line = "server.port=" + component.getComponentPort();
-                } else if (line.startsWith("server.address")) {
-                    line = "server.address=" + component.getComponentAddress();
                 } else if (line.startsWith("eureka.instance.appname")) {
                     line = "eureka.instance.appname=" + component.getInstanceEurekaName();
                 }
