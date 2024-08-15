@@ -2,11 +2,14 @@ package com.example.userscomponent.service;
 
 import com.example.userscomponent.dto.UsersDTO;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 
 import java.util.UUID;
 
 public interface UsersService {
-    UsersDTO createUser(UsersDTO usersDTO);
+
+    void createUser(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     UsersDTO getUserById(UUID userId);
 

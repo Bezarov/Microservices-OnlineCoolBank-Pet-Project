@@ -20,14 +20,6 @@ public class UsersController {
         this.usersService = usersService;
     }
 
-    @PostMapping
-    public ResponseEntity<UsersDTO> createUser(@RequestBody UsersDTO usersDTO) {
-        logger.info("Received POST request to create User: {}", usersDTO);
-        UsersDTO responseUsersDTO = usersService.createUser(usersDTO);
-        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
-        return ResponseEntity.ok(responseUsersDTO);
-    }
-
     @GetMapping("/by-id/{userId}")
     public ResponseEntity<UsersDTO> getUserById(@PathVariable UUID userId) {
         logger.info("Received GET request to get User by ID: {}", userId);

@@ -1,4 +1,4 @@
-package com.example.userscomponent.dto;
+package com.example.apigatewaycomponent.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,14 +14,13 @@ public class AccountDTO {
     private String accountType;
     private LocalDateTime createdDate;
     private String currency;
-    private List<CardDTO> cards;
 
     public AccountDTO() {
     }
 
     public AccountDTO(UUID id, String accountName, BigDecimal balance, String accountHolderFullName,
                       String status, String accountType, LocalDateTime createdDate,
-                      String currency, List<CardDTO> cards) {
+                      String currency) {
         this.id = id;
         this.accountName = accountName;
         this.balance = balance;
@@ -30,7 +29,6 @@ public class AccountDTO {
         this.accountType = accountType;
         this.createdDate = createdDate;
         this.currency = currency;
-        this.cards = cards;
     }
 
     public UUID getId() {
@@ -95,14 +93,6 @@ public class AccountDTO {
 
     public void setCurrency(String currency) {
         this.currency = currency;
-    }
-
-    public List<CardDTO> getCards() {
-        return cards;
-    }
-
-    public void setCards(List<CardDTO> cards) {
-        this.cards = cards;
     }
 
     @Override
