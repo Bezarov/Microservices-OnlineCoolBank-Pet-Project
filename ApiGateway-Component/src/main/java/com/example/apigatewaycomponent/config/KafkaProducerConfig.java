@@ -12,12 +12,13 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Configuration
 public class KafkaProducerConfig {
 
     @Bean
-    public ProducerFactory<String, UsersDTO> producerUsersFactory() {
+    public ProducerFactory<String, Object> producerUsersFactory() {
         Map<String, Object> producerProp = new HashMap<>();
         producerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         producerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -26,7 +27,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, UsersDTO> kafkaUsersTemplate() {
+    public KafkaTemplate<String, Object> kafkaUsersTemplate() {
         return new KafkaTemplate<>(producerUsersFactory());
     }
 }

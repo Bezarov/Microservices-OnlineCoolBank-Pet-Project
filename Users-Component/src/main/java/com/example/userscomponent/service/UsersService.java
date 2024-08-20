@@ -5,27 +5,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 
+import java.util.Map;
 import java.util.UUID;
 
 public interface UsersService {
 
     void createUser(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    UsersDTO getUserById(UUID userId);
+    void getUserById(String userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    UsersDTO getUserByEmail(String userEmail);
+    void getUserByEmail(String userEmail, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    UsersDTO getUserByFullName(String userFullName);
+    void getUserByFullName(String userFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    UsersDTO getUserByPhoneNumber(String userPhoneNumber);
+    void getUserByPhoneNumber(String userPhoneNumber, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    UsersDTO updateUser(UUID userId, UsersDTO usersDTO);
+    void updateUser(Map<String, Object> UUIDAndUserDTOMap, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    UsersDTO updatePasswordById(UUID userId, String newPassword);
+    void updatePasswordById(Map<String, String> UUIDAndNewPasswordMap, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    ResponseEntity<String> deleteUserById(UUID userId);
+    void deleteUserById(String userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    ResponseEntity<String> deleteUserByEmail(String userEmail);
+    void deleteUserByEmail(String userEmail, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    ResponseEntity<String> deleteUserByFullName(String userFullName);
+    void deleteUserByFullName(String userFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 }

@@ -1,97 +1,105 @@
 package com.example.apigatewaycomponent.controller;
 
 import com.example.apigatewaycomponent.dto.UsersDTO;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import com.example.apigatewaycomponent.service.UsersGatewayService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/users")
 public class UsersGatewayController {
     private static final Logger logger = LoggerFactory.getLogger(UsersGatewayController.class);
-    private static final long REQUEST_TIMEOUT = 10;
-    private final RestTemplate restTemplate;
-    private final KafkaTemplate<String, UsersDTO> usersDTOKafkaTemplate;
-    private final Map<String, CompletableFuture<UsersDTO>> responseFutures = new ConcurrentHashMap<>();
+    private final UsersGatewayService usersGatewayService;
 
-    public UsersGatewayController(RestTemplate restTemplate, KafkaTemplate<String, UsersDTO> usersDTOKafkaTemplate) {
-        this.restTemplate = restTemplate;
-        this.usersDTOKafkaTemplate = usersDTOKafkaTemplate;
+    public UsersGatewayController(UsersGatewayService usersGatewayService) {
+        this.usersGatewayService = usersGatewayService;
     }
 
     @PostMapping
-    public CompletableFuture<ResponseEntity<UsersDTO>> createUser(@RequestBody UsersDTO usersDTO) {
-        String correlationId = UUID.randomUUID().toString();
-        CompletableFuture<UsersDTO> future = new CompletableFuture<>();
-        responseFutures.put(correlationId, future);
-
-        ProducerRecord<String, UsersDTO> topic = new ProducerRecord<>("user-creation", usersDTO);
-        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersDTOKafkaTemplate.send(topic);
-
-        return future.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
-                .thenApply(ResponseEntity::ok)
-                .exceptionally(error -> {
-                    logger.error("Error occurred while processing request", error);
-                    if (error.getCause() instanceof ResponseStatusException)
-                        throw (ResponseStatusException) error.getCause();
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
-                });
+    public CompletableFuture<ResponseEntity<Object>> createUser(@RequestBody UsersDTO usersDTO) {
+        logger.info("Received POST request to create User: {}", usersDTO);
+        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.createUser(usersDTO);
+        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
+        return responseUsersDTO;
     }
 
-    @KafkaListener(topics = "user-creation-response", groupId = "api-gateway")
-    public void handleUserCreationResponse(UsersDTO usersDTO,
-                               @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        CompletableFuture<UsersDTO> future = responseFutures.remove(correlationId);
-        if (future != null)
-            future.complete(usersDTO);
-        else {
-            logger.warn("Response topic with correlationId was not found: " + correlationId);
-            throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
-
-        }
-    }
-    @KafkaListener(topics = "user-creation-error", groupId = "api-gateway")
-    public void handleError(ConsumerRecord<String, String> record,
-                            @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        CompletableFuture<UsersDTO> future = responseFutures.remove(correlationId);
-        if (future != null) {
-            future.completeExceptionally(new ResponseStatusException(HttpStatus.BAD_REQUEST, record.value()));
-        } else {
-            logger.warn("No future found for correlationId: " + correlationId);
-        }
+    @GetMapping("/by-id/{userId}")
+    public CompletableFuture<ResponseEntity<Object>> getUserById(@PathVariable String userId) {
+        logger.info("Received GET request to get User by ID: {}", userId);
+        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.getUserById(userId);
+        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
+        return responseUsersDTO;
     }
 
-    @GetMapping("/getUserById/{userId}")
-    public String getUserDetails(@PathVariable String userId) {
-        // Получаем данные пользователя из Users-Components
-        String userUrl = "http://users-components/user/by-id/" + userId;
-        String userResponse = restTemplate.getForObject(userUrl, String.class);
-
-        // Получаем данные аккаунта пользователя из Account-Components
-        String accountUrl = "http://account-components/account/by-user-id/" + userId;
-        String accountResponse = restTemplate.getForObject(accountUrl, String.class);
-
-        // Получаем данные о картах пользователя из Card-Components
-        String cardUrl = "http://card-components/card/by-user-id/" + userId;
-        String cardResponse = restTemplate.getForObject(cardUrl, String.class);
-
-        return "User: " + userResponse + "\nAccount: " + accountResponse + "\nCards: " + cardResponse;
+    @GetMapping("/by-email/{userEmail}")
+    public CompletableFuture<ResponseEntity<Object>> getUserByEmail(@PathVariable String userEmail) {
+        logger.info("Received GET request to get User by Email: {}", userEmail);
+        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.getUserByEmail(userEmail);
+        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
+        return responseUsersDTO;
     }
+
+    @GetMapping("/by-name/{userFullName}")
+    public CompletableFuture<ResponseEntity<Object>> getUserByFullName(@PathVariable String userFullName) {
+        logger.info("Received GET request to get User by Full Name: {}", userFullName);
+        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.getUserByFullName(userFullName);
+        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
+        return responseUsersDTO;
+    }
+
+    @GetMapping("/by-phone/{userPhoneNumber}")
+    public CompletableFuture<ResponseEntity<Object>> getUserByPhoneNumber(@PathVariable String userPhoneNumber) {
+        logger.info("Received GET request to get User by Phone Number: {}", userPhoneNumber);
+        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.getUserByPhoneNumber(userPhoneNumber);
+        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
+        return responseUsersDTO;
+    }
+
+    @PutMapping("/by-id/{userId}")
+    public CompletableFuture<ResponseEntity<Object>> updateUser(@PathVariable String userId,
+                                               @RequestBody UsersDTO usersDTO) {
+        logger.info("Received PUT request to update User with ID: {}," +
+                " UPDATE TO: {}", userId, usersDTO);
+        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.updateUser(userId, usersDTO);
+        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
+        return responseUsersDTO;
+    }
+
+    @PatchMapping("/by-id/{userId}/password/{newPassword}")
+    public CompletableFuture<ResponseEntity<Object>> updatePasswordById(@PathVariable String userId,
+                                                       @PathVariable String newPassword) {
+        logger.info("Received PATCH request to update User password with ID: {}," +
+                " New Password: {}", userId, newPassword);
+        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.updatePasswordById(userId, newPassword);
+        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
+        return responseUsersDTO;
+    }
+//
+//    @DeleteMapping("/by-id/{userId}")
+//    public ResponseEntity<String> deleteUserById(@PathVariable UUID userId) {
+//        logger.info("Received DELETE request to remove User with ID: {}", userId);
+//        ResponseEntity<String> responseMessage = usersService.deleteUserById(userId);
+//        logger.debug("Request was successfully processed and response message was sent: {}", responseMessage);
+//        return responseMessage;
+//    }
+//
+//    @DeleteMapping("/by-email/{userEmail}")
+//    public ResponseEntity<String> deleteUserByEmail(@PathVariable String userEmail) {
+//        logger.info("Received DELETE request to remove User with Email: {}", userEmail);
+//        ResponseEntity<String> responseMessage = usersService.deleteUserByEmail(userEmail);
+//        logger.debug("Request was successfully processed and response message was sent: {}", responseMessage);
+//        return responseMessage;
+//    }
+//
+//    @DeleteMapping("/by-name/{userFullName}")
+//    public ResponseEntity<String> deleteUserByFullName(@PathVariable String userFullName) {
+//        logger.info("Received DELETE request to remove User with Full Name: {}", userFullName);
+//        ResponseEntity<String> responseMessage = usersService.deleteUserByFullName(userFullName);
+//        logger.debug("Request was successfully processed and response message was sent: {}", responseMessage);
+//        return responseMessage;
+//    }
 }
