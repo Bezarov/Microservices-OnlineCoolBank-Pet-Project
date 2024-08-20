@@ -5,7 +5,6 @@ import com.example.userscomponent.model.Users;
 import com.example.userscomponent.repository.UsersRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import org.apache.catalina.User;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,16 +26,16 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
-public class UsersServiceImpl implements UsersService {
-    private static final Logger logger = LoggerFactory.getLogger(UsersServiceImpl.class);
+public class KafkaUsersServiceImpl implements KafkaUsersService {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaUsersServiceImpl.class);
     private final PasswordEncoder passwordEncoder;
     private final UsersRepository usersRepository;
     private final KafkaTemplate<String, UsersDTO> responseDTOKafkaTemplate;
 //    private final KafkaTemplate<String, ResponseEntity<String>> responseMessageKafkaTemplate;
 
     @Autowired
-    public UsersServiceImpl(PasswordEncoder passwordEncoder, UsersRepository usersRepository,
-                            KafkaTemplate<String, UsersDTO> responseDTOKafkaTemplate) {
+    public KafkaUsersServiceImpl(PasswordEncoder passwordEncoder, UsersRepository usersRepository,
+                                 KafkaTemplate<String, UsersDTO> responseDTOKafkaTemplate) {
         this.passwordEncoder = passwordEncoder;
         this.usersRepository = usersRepository;
         this.responseDTOKafkaTemplate = responseDTOKafkaTemplate;

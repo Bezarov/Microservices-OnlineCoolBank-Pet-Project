@@ -2,7 +2,6 @@ package com.example.userscomponent.config;
 
 import com.example.userscomponent.dto.UsersDTO;
 import com.example.userscomponent.exception.GlobalKafkaExceptionHandler;
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
