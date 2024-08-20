@@ -47,17 +47,17 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, ResponseEntity<String>> usersDeleteMessageProduceFactory() {
-        Map<String, Object> usersDeleteMessageProducerProp = new HashMap<>();
-        usersDeleteMessageProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        usersDeleteMessageProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        usersDeleteMessageProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(usersDeleteMessageProducerProp);
+    public ProducerFactory<String, String> StringMessageProduceFactory() {
+        Map<String, Object> StringMessageProducerProp = new HashMap<>();
+        StringMessageProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        StringMessageProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        StringMessageProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        return new DefaultKafkaProducerFactory<>(StringMessageProducerProp);
     }
 
     @Bean
-    public KafkaTemplate<String, ResponseEntity<String>> usersDeleteMessageKafkaTemplate() {
-        return new KafkaTemplate<>(usersDeleteMessageProduceFactory());
+    public KafkaTemplate<String, String> StringMessageKafkaTemplate() {
+        return new KafkaTemplate<>(StringMessageProduceFactory());
     }
 
 }

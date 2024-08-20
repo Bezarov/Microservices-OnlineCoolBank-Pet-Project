@@ -37,8 +37,10 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
             containerFactory = "usersErrorDTOKafkaListenerFactory")
     public void handleUsersErrors(UsersErrorDTO usersErrorDTO,
                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+        logger.error("Received error topic with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.remove(correlationId);
         if (futureErrorResponse != null) {
+            logger.info("Complete CompletableFuture exceptionally with message: {} ", usersErrorDTO.toString());
             futureErrorResponse.completeExceptionally(new ResponseStatusException(HttpStatus.valueOf(
                     usersErrorDTO.getStatus()), usersErrorDTO.getMessage()));
         } else {
@@ -66,7 +68,6 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
                     }
                 })
                 .exceptionally(error -> {
-                    logger.error("Error occurred while processing request: ", error);
                     if (error.getCause() instanceof ResponseStatusException)
                         throw (ResponseStatusException) error.getCause();
                     else {
@@ -109,7 +110,6 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
                     }
                 })
                 .exceptionally(error -> {
-                    logger.error("Error occurred while processing request: ", error);
                     if (error.getCause() instanceof ResponseStatusException)
                         throw (ResponseStatusException) error.getCause();
                     else {
@@ -152,7 +152,6 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
                     }
                 })
                 .exceptionally(error -> {
-                    logger.error("Error occurred while processing request: ", error);
                     if (error.getCause() instanceof ResponseStatusException)
                         throw (ResponseStatusException) error.getCause();
                     else {
@@ -195,7 +194,6 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
                     }
                 })
                 .exceptionally(error -> {
-                    logger.error("Error occurred while processing request: ", error);
                     if (error.getCause() instanceof ResponseStatusException)
                         throw (ResponseStatusException) error.getCause();
                     else {
@@ -238,7 +236,6 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
                     }
                 })
                 .exceptionally(error -> {
-                    logger.error("Error occurred while processing request: ", error);
                     if (error.getCause() instanceof ResponseStatusException)
                         throw (ResponseStatusException) error.getCause();
                     else {
@@ -251,7 +248,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     @KafkaListener(topics = "get-user-by-phone-number-response", groupId = "api-gateway",
             containerFactory = "usersDTOKafkaListenerFactory")
     public void handleGetUserByPhoneNumberResponse(UsersDTO usersDTO,
-                                                @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+                                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
         if (futureResponse != null)
             futureResponse.complete(ResponseEntity.ok(usersDTO));
@@ -283,7 +280,6 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
                     }
                 })
                 .exceptionally(error -> {
-                    logger.error("Error occurred while processing request: ", error);
                     if (error.getCause() instanceof ResponseStatusException)
                         throw (ResponseStatusException) error.getCause();
                     else {
@@ -296,7 +292,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     @KafkaListener(topics = "update-user-by-id-response", groupId = "api-gateway",
             containerFactory = "usersDTOKafkaListenerFactory")
     public void handleUpdateUserByIdResponse(UsersDTO usersDTO,
-                                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+                                             @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
         if (futureResponse != null)
             futureResponse.complete(ResponseEntity.ok(usersDTO));
@@ -329,7 +325,6 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
                     }
                 })
                 .exceptionally(error -> {
-                    logger.error("Error occurred while processing request: ", error);
                     if (error.getCause() instanceof ResponseStatusException)
                         throw (ResponseStatusException) error.getCause();
                     else {
@@ -342,7 +337,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     @KafkaListener(topics = "update-user-password-by-id-response", groupId = "api-gateway",
             containerFactory = "usersDTOKafkaListenerFactory")
     public void handleUpdateUserPassordByIdResponse(UsersDTO usersDTO,
-                                             @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+                                                    @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
         if (futureResponse != null)
             futureResponse.complete(ResponseEntity.ok(usersDTO));
@@ -354,17 +349,129 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     }
 
     @Override
-    public ResponseEntity<String> deleteUserById(UUID userId) {
-        return null;
+    public CompletableFuture<ResponseEntity<Object>> deleteUserById(String userId) {
+        String correlationId = UUID.randomUUID().toString();
+        CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
+        responseFutures.put(correlationId, futureResponse);
+
+        ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-user-by-id", userId);
+        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
+        usersKafkaTemplate.send(topic);
+
+        return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
+                .thenApply(response -> {
+                    if (response != null)
+                        return ResponseEntity.ok(response.getBody());
+                    else {
+                        throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
+                    }
+                })
+                .exceptionally(error -> {
+                    if (error.getCause() instanceof ResponseStatusException)
+                        throw (ResponseStatusException) error.getCause();
+                    else {
+                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+                    }
+                });
     }
 
     @Override
-    public ResponseEntity<String> deleteUserByEmail(String userEmail) {
-        return null;
+    @KafkaListener(topics = "delete-user-by-id-response", groupId = "api-gateway",
+            containerFactory = "StringKafkaListenerFactory")
+    public void handleDeleteUserByIdResponse(String responseMessage,
+                                             @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
+        if (futureResponse != null)
+            futureResponse.complete(ResponseEntity.ok(responseMessage));
+        else {
+            logger.warn("Response topic with correlationId was not found: " + correlationId);
+            throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
+
+        }
+    }
+
+
+    @Override
+    public CompletableFuture<ResponseEntity<Object>> deleteUserByEmail(String userEmail) {
+        String correlationId = UUID.randomUUID().toString();
+        CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
+        responseFutures.put(correlationId, futureResponse);
+
+        ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-user-by-email", userEmail);
+        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
+        usersKafkaTemplate.send(topic);
+
+        return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
+                .thenApply(response -> {
+                    if (response != null)
+                        return ResponseEntity.ok(response.getBody());
+                    else {
+                        throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
+                    }
+                })
+                .exceptionally(error -> {
+                    if (error.getCause() instanceof ResponseStatusException)
+                        throw (ResponseStatusException) error.getCause();
+                    else {
+                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+                    }
+                });
     }
 
     @Override
-    public ResponseEntity<String> deleteUserByFullName(String userFullName) {
-        return null;
+    @KafkaListener(topics = "delete-user-by-email-response", groupId = "api-gateway",
+            containerFactory = "StringKafkaListenerFactory")
+    public void handleDeleteUserByEmailResponse(String responseMessage,
+                                                @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
+        if (futureResponse != null)
+            futureResponse.complete(ResponseEntity.ok(responseMessage));
+        else {
+            logger.warn("Response topic with correlationId was not found: " + correlationId);
+            throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
+
+        }
+    }
+
+    @Override
+    public CompletableFuture<ResponseEntity<Object>> deleteUserByFullName(String userFullName) {
+        String correlationId = UUID.randomUUID().toString();
+        CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
+        responseFutures.put(correlationId, futureResponse);
+
+        ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-user-by-full-name", userFullName);
+        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
+        usersKafkaTemplate.send(topic);
+
+        return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
+                .thenApply(response -> {
+                    if (response != null)
+                        return ResponseEntity.ok(response.getBody());
+                    else {
+                        throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
+                    }
+                })
+                .exceptionally(error -> {
+                    if (error.getCause() instanceof ResponseStatusException)
+                        throw (ResponseStatusException) error.getCause();
+                    else {
+                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+                    }
+                });
+    }
+
+    @Override
+    @KafkaListener(topics = "delete-user-by-full-name-response", groupId = "api-gateway",
+            containerFactory = "StringKafkaListenerFactory")
+    public void handleDeleteUserByFullNameResponse(String responseMessage,
+                                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
+        if (futureResponse != null)
+            futureResponse.complete(ResponseEntity.ok(responseMessage));
+        else {
+            logger.warn("Response topic with correlationId was not found: " + correlationId);
+            throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
+
+        }
     }
 }
