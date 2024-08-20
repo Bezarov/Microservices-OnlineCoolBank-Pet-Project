@@ -28,4 +28,12 @@ public class UsersErrorDTO {
     public void setCorrelationId(String correlationId) {
         this.correlationId = correlationId;
     }
+
+    @Override
+    public String toString() {
+        return "UsersErrorDTO{" +
+                "message='" + message + '\'' +
+                ", status=" + status +
+                '}';
+    }
 }

@@ -7,7 +7,6 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public interface UsersGatewayService {
@@ -18,15 +17,19 @@ public interface UsersGatewayService {
     void handleUserCreationResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     CompletableFuture<ResponseEntity<Object>> getUserById(String userId);
+
     void handleGetUserByIdResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     CompletableFuture<ResponseEntity<Object>> getUserByEmail(String userEmail);
+
     void handleGetUserByEmailResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     CompletableFuture<ResponseEntity<Object>> getUserByFullName(String userFullName);
+
     void handleGetUserByFullNameResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     CompletableFuture<ResponseEntity<Object>> getUserByPhoneNumber(String userPhoneNumber);
+
     void handleGetUserByPhoneNumberResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     CompletableFuture<ResponseEntity<Object>> updateUser(String userId, UsersDTO usersDTO);
@@ -34,11 +37,18 @@ public interface UsersGatewayService {
     void handleUpdateUserByIdResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     CompletableFuture<ResponseEntity<Object>> updatePasswordById(String userId, String newPassword);
+
     void handleUpdateUserPassordByIdResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    ResponseEntity<String> deleteUserById(UUID userId);
+    CompletableFuture<ResponseEntity<Object>> deleteUserById(String userId);
 
-    ResponseEntity<String> deleteUserByEmail(String userEmail);
+    void handleDeleteUserByIdResponse(String responseMessage, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    ResponseEntity<String> deleteUserByFullName(String userFullName);
+    CompletableFuture<ResponseEntity<Object>> deleteUserByEmail(String userEmail);
+
+    void handleDeleteUserByEmailResponse(String responseMessage, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+
+    CompletableFuture<ResponseEntity<Object>> deleteUserByFullName(String userFullName);
+
+    void handleDeleteUserByFullNameResponse(String responseMessage, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 }

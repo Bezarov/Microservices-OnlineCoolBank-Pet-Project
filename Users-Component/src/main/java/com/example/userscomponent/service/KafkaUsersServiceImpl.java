@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -31,14 +30,16 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     private final PasswordEncoder passwordEncoder;
     private final UsersRepository usersRepository;
     private final KafkaTemplate<String, UsersDTO> responseDTOKafkaTemplate;
-//    private final KafkaTemplate<String, ResponseEntity<String>> responseMessageKafkaTemplate;
+    private final KafkaTemplate<String, String> responseMessageKafkaTemplate;
 
     @Autowired
     public KafkaUsersServiceImpl(PasswordEncoder passwordEncoder, UsersRepository usersRepository,
-                                 KafkaTemplate<String, UsersDTO> responseDTOKafkaTemplate) {
+                                 KafkaTemplate<String, UsersDTO> responseDTOKafkaTemplate,
+                                 KafkaTemplate<String, String> responseMessageKafkaTemplate) {
         this.passwordEncoder = passwordEncoder;
         this.usersRepository = usersRepository;
         this.responseDTOKafkaTemplate = responseDTOKafkaTemplate;
+        this.responseMessageKafkaTemplate = responseMessageKafkaTemplate;
     }
 
     private UsersDTO convertUsersModelToDTO(Users user) {
@@ -249,12 +250,11 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 });
         usersRepository.deleteById(UUID.fromString(userId.replaceAll("\"", "")));
         logger.info("User was found and deleted successfully: {}", user);
-        ResponseEntity<String> responseEntity =
-                new ResponseEntity<>("User deleted successfully", HttpStatus.ACCEPTED);
-//        ProducerRecord<String, ResponseEntity<String> > responseRecord = new ProducerRecord<>(
-//                "delete-user-by-id-response", null, responseEntity);
-//        responseRecord.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-//        responseMessageKafkaTemplate.send(responseRecord);
+
+        ProducerRecord<String, String> responseRecord = new ProducerRecord<>(
+                "delete-user-by-id-response", null, "User deleted successfully");
+        responseRecord.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
+        responseMessageKafkaTemplate.send(responseRecord);
     }
 
     @Transactional
@@ -272,12 +272,11 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 });
         usersRepository.deleteByEmail(userEmail);
         logger.info("User was found and deleted successfully: {}", user);
-        ResponseEntity<String> responseEntity =
-                new ResponseEntity<>("User deleted successfully", HttpStatus.ACCEPTED);
-//        ProducerRecord<String, ResponseEntity<String> > responseRecord = new ProducerRecord<>(
-//                "delete-user-by-email-response", null, responseEntity);
-//        responseRecord.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-//        responseMessageKafkaTemplate.send(responseRecord);
+
+        ProducerRecord<String, String> responseRecord = new ProducerRecord<>(
+                "delete-user-by-id-response", null, "User deleted successfully");
+        responseRecord.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
+        responseMessageKafkaTemplate.send(responseRecord);
     }
 
     @Transactional
@@ -295,11 +294,10 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 });
         usersRepository.deleteByFullName(userFullName);
         logger.info("User was found and deleted successfully: {}", user);
-        ResponseEntity<String> responseEntity =
-                new ResponseEntity<>("User deleted successfully", HttpStatus.ACCEPTED);
-//        ProducerRecord<String, ResponseEntity<String> > responseRecord = new ProducerRecord<>(
-//                "delete-user-by-full-name-response", null, responseEntity);
-//        responseRecord.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-//        responseMessageKafkaTemplate.send(responseRecord);
+
+        ProducerRecord<String, String> responseRecord = new ProducerRecord<>(
+                "delete-user-by-id-response", null, "User deleted successfully");
+        responseRecord.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
+        responseMessageKafkaTemplate.send(responseRecord);
     }
 }

@@ -22,84 +22,102 @@ public class UsersGatewayController {
     @PostMapping
     public CompletableFuture<ResponseEntity<Object>> createUser(@RequestBody UsersDTO usersDTO) {
         logger.info("Received POST request to create User: {}", usersDTO);
-        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.createUser(usersDTO);
-        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
-        return responseUsersDTO;
+        return usersGatewayService.createUser(usersDTO)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
     }
 
     @GetMapping("/by-id/{userId}")
     public CompletableFuture<ResponseEntity<Object>> getUserById(@PathVariable String userId) {
         logger.info("Received GET request to get User by ID: {}", userId);
-        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.getUserById(userId);
-        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
-        return responseUsersDTO;
+        return usersGatewayService.getUserById(userId)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
     }
 
     @GetMapping("/by-email/{userEmail}")
     public CompletableFuture<ResponseEntity<Object>> getUserByEmail(@PathVariable String userEmail) {
         logger.info("Received GET request to get User by Email: {}", userEmail);
-        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.getUserByEmail(userEmail);
-        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
-        return responseUsersDTO;
+        return usersGatewayService.getUserByEmail(userEmail)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
     }
 
     @GetMapping("/by-name/{userFullName}")
     public CompletableFuture<ResponseEntity<Object>> getUserByFullName(@PathVariable String userFullName) {
         logger.info("Received GET request to get User by Full Name: {}", userFullName);
-        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.getUserByFullName(userFullName);
-        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
-        return responseUsersDTO;
+        return usersGatewayService.getUserByFullName(userFullName)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
     }
 
     @GetMapping("/by-phone/{userPhoneNumber}")
     public CompletableFuture<ResponseEntity<Object>> getUserByPhoneNumber(@PathVariable String userPhoneNumber) {
         logger.info("Received GET request to get User by Phone Number: {}", userPhoneNumber);
-        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.getUserByPhoneNumber(userPhoneNumber);
-        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
-        return responseUsersDTO;
+        return usersGatewayService.getUserByPhoneNumber(userPhoneNumber)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
     }
 
     @PutMapping("/by-id/{userId}")
     public CompletableFuture<ResponseEntity<Object>> updateUser(@PathVariable String userId,
-                                               @RequestBody UsersDTO usersDTO) {
-        logger.info("Received PUT request to update User with ID: {}," +
-                " UPDATE TO: {}", userId, usersDTO);
-        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.updateUser(userId, usersDTO);
-        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
-        return responseUsersDTO;
+                                                                @RequestBody UsersDTO usersDTO) {
+        logger.info("Received PUT request to update User with ID: {}, UPDATE TO: {}", userId, usersDTO);
+        return usersGatewayService.updateUser(userId, usersDTO)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
     }
 
     @PatchMapping("/by-id/{userId}/password/{newPassword}")
     public CompletableFuture<ResponseEntity<Object>> updatePasswordById(@PathVariable String userId,
-                                                       @PathVariable String newPassword) {
-        logger.info("Received PATCH request to update User password with ID: {}," +
-                " New Password: {}", userId, newPassword);
-        CompletableFuture<ResponseEntity<Object>> responseUsersDTO = usersGatewayService.updatePasswordById(userId, newPassword);
-        logger.debug("Request was successfully processed and response was sent: {}", responseUsersDTO);
-        return responseUsersDTO;
+                                                                        @PathVariable String newPassword) {
+        logger.info("Received PATCH request to update User password with ID: {}, New Password: {}", userId, newPassword);
+        return usersGatewayService.updatePasswordById(userId, newPassword)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
     }
-//
-//    @DeleteMapping("/by-id/{userId}")
-//    public ResponseEntity<String> deleteUserById(@PathVariable UUID userId) {
-//        logger.info("Received DELETE request to remove User with ID: {}", userId);
-//        ResponseEntity<String> responseMessage = usersService.deleteUserById(userId);
-//        logger.debug("Request was successfully processed and response message was sent: {}", responseMessage);
-//        return responseMessage;
-//    }
-//
-//    @DeleteMapping("/by-email/{userEmail}")
-//    public ResponseEntity<String> deleteUserByEmail(@PathVariable String userEmail) {
-//        logger.info("Received DELETE request to remove User with Email: {}", userEmail);
-//        ResponseEntity<String> responseMessage = usersService.deleteUserByEmail(userEmail);
-//        logger.debug("Request was successfully processed and response message was sent: {}", responseMessage);
-//        return responseMessage;
-//    }
-//
-//    @DeleteMapping("/by-name/{userFullName}")
-//    public ResponseEntity<String> deleteUserByFullName(@PathVariable String userFullName) {
-//        logger.info("Received DELETE request to remove User with Full Name: {}", userFullName);
-//        ResponseEntity<String> responseMessage = usersService.deleteUserByFullName(userFullName);
-//        logger.debug("Request was successfully processed and response message was sent: {}", responseMessage);
-//        return responseMessage;
-//    }
+
+    @DeleteMapping("/by-id/{userId}")
+    public CompletableFuture<ResponseEntity<Object>> deleteUserById(@PathVariable String userId) {
+        logger.info("Received DELETE request to remove User with ID: {}", userId);
+        return usersGatewayService.deleteUserById(userId)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
+    }
+
+    @DeleteMapping("/by-email/{userEmail}")
+    public CompletableFuture<ResponseEntity<Object>> deleteUserByEmail(@PathVariable String userEmail) {
+        logger.info("Received DELETE request to remove User with Email: {}", userEmail);
+        return usersGatewayService.deleteUserByEmail(userEmail)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
+    }
+
+    @DeleteMapping("/by-name/{userFullName}")
+    public CompletableFuture<ResponseEntity<Object>> deleteUserByFullName(@PathVariable String userFullName) {
+        logger.info("Received DELETE request to remove User with Full Name: {}", userFullName);
+        return usersGatewayService.deleteUserByFullName(userFullName)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
+    }
 }
