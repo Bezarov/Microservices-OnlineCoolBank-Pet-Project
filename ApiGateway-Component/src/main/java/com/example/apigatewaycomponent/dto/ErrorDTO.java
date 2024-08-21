@@ -1,6 +1,6 @@
-package com.example.userscomponent.dto;
+package com.example.apigatewaycomponent.dto;
 
-public class UsersErrorDTO {
+public class ErrorDTO {
     private String message;
     private int status;
     private String correlationId;
@@ -27,5 +27,13 @@ public class UsersErrorDTO {
 
     public void setCorrelationId(String correlationId) {
         this.correlationId = correlationId;
+    }
+
+    @Override
+    public String toString() {
+        return "ErrorDTO{" +
+                "message='" + message + '\'' +
+                ", status=" + status +
+                '}';
     }
 }

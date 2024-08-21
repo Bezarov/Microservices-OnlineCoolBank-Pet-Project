@@ -1,8 +1,8 @@
 package com.example.apigatewaycomponent.service;
 
 import com.example.apigatewaycomponent.controller.UsersGatewayController;
+import com.example.apigatewaycomponent.dto.ErrorDTO;
 import com.example.apigatewaycomponent.dto.UsersDTO;
-import com.example.apigatewaycomponent.errordto.UsersErrorDTO;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +34,8 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
 
     @Override
     @KafkaListener(topics = "users-error", groupId = "api-gateway",
-            containerFactory = "usersErrorDTOKafkaListenerFactory")
-    public void handleUsersErrors(UsersErrorDTO usersErrorDTO,
+            containerFactory = "errorDTOKafkaListenerFactory")
+    public void handleUsersErrors(ErrorDTO usersErrorDTO,
                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.error("Received error topic with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.remove(correlationId);
@@ -56,24 +56,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         ProducerRecord<String, Object> topic = new ProducerRecord<>("create-user", usersDTO);
-        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-
-        return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
-                .thenApply(response -> {
-                    if (response != null)
-                        return ResponseEntity.ok(response.getBody());
-                    else {
-                        throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
-                    }
-                })
-                .exceptionally(error -> {
-                    if (error.getCause() instanceof ResponseStatusException)
-                        throw (ResponseStatusException) error.getCause();
-                    else {
-                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
-                    }
-                });
+        return getResponseEntityCompletableFuture(correlationId, futureResponse, topic);
     }
 
     @Override
@@ -87,7 +70,6 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         else {
             logger.warn("Response topic with correlationId was not found: " + correlationId);
             throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
-
         }
     }
 
@@ -98,24 +80,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         ProducerRecord<String, Object> topic = new ProducerRecord<>("get-user-by-id", userId);
-        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-
-        return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
-                .thenApply(response -> {
-                    if (response != null)
-                        return ResponseEntity.ok(response.getBody());
-                    else {
-                        throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
-                    }
-                })
-                .exceptionally(error -> {
-                    if (error.getCause() instanceof ResponseStatusException)
-                        throw (ResponseStatusException) error.getCause();
-                    else {
-                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
-                    }
-                });
+        return getResponseEntityCompletableFuture(correlationId, futureResponse, topic);
     }
 
     @Override
@@ -140,24 +105,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         ProducerRecord<String, Object> topic = new ProducerRecord<>("get-user-by-email", userEmail);
-        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-
-        return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
-                .thenApply(response -> {
-                    if (response != null)
-                        return ResponseEntity.ok(response.getBody());
-                    else {
-                        throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
-                    }
-                })
-                .exceptionally(error -> {
-                    if (error.getCause() instanceof ResponseStatusException)
-                        throw (ResponseStatusException) error.getCause();
-                    else {
-                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
-                    }
-                });
+        return getResponseEntityCompletableFuture(correlationId, futureResponse, topic);
     }
 
     @Override
@@ -182,24 +130,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         ProducerRecord<String, Object> topic = new ProducerRecord<>("get-user-by-full-name", userFullName);
-        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-
-        return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
-                .thenApply(response -> {
-                    if (response != null)
-                        return ResponseEntity.ok(response.getBody());
-                    else {
-                        throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
-                    }
-                })
-                .exceptionally(error -> {
-                    if (error.getCause() instanceof ResponseStatusException)
-                        throw (ResponseStatusException) error.getCause();
-                    else {
-                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
-                    }
-                });
+        return getResponseEntityCompletableFuture(correlationId, futureResponse, topic);
     }
 
     @Override
@@ -224,24 +155,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         ProducerRecord<String, Object> topic = new ProducerRecord<>("get-user-by-phone-number", userPhoneNumber);
-        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-
-        return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
-                .thenApply(response -> {
-                    if (response != null)
-                        return ResponseEntity.ok(response.getBody());
-                    else {
-                        throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
-                    }
-                })
-                .exceptionally(error -> {
-                    if (error.getCause() instanceof ResponseStatusException)
-                        throw (ResponseStatusException) error.getCause();
-                    else {
-                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
-                    }
-                });
+        return getResponseEntityCompletableFuture(correlationId, futureResponse, topic);
     }
 
     @Override
@@ -268,24 +182,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         Map<String, UsersDTO> updateRequestMap = new HashMap<>();
         updateRequestMap.put(userId, usersDTO);
         ProducerRecord<String, Object> topic = new ProducerRecord<>("update-user-by-id", updateRequestMap);
-        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-
-        return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
-                .thenApply(response -> {
-                    if (response != null)
-                        return ResponseEntity.ok(response.getBody());
-                    else {
-                        throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
-                    }
-                })
-                .exceptionally(error -> {
-                    if (error.getCause() instanceof ResponseStatusException)
-                        throw (ResponseStatusException) error.getCause();
-                    else {
-                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
-                    }
-                });
+        return getResponseEntityCompletableFuture(correlationId, futureResponse, topic);
     }
 
     @Override
@@ -313,31 +210,14 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         updateUserPasswordRequestMap.put(userId, newPassword);
         ProducerRecord<String, Object> topic = new ProducerRecord<>("update-user-password-by-id",
                 updateUserPasswordRequestMap);
-        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-
-        return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
-                .thenApply(response -> {
-                    if (response != null)
-                        return ResponseEntity.ok(response.getBody());
-                    else {
-                        throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
-                    }
-                })
-                .exceptionally(error -> {
-                    if (error.getCause() instanceof ResponseStatusException)
-                        throw (ResponseStatusException) error.getCause();
-                    else {
-                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
-                    }
-                });
+        return getResponseEntityCompletableFuture(correlationId, futureResponse, topic);
     }
 
     @Override
     @KafkaListener(topics = "update-user-password-by-id-response", groupId = "api-gateway",
             containerFactory = "usersDTOKafkaListenerFactory")
-    public void handleUpdateUserPassordByIdResponse(UsersDTO usersDTO,
-                                                    @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+    public void handleUpdateUserPasswordByIdResponse(UsersDTO usersDTO,
+                                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
         if (futureResponse != null)
             futureResponse.complete(ResponseEntity.ok(usersDTO));
@@ -355,24 +235,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-user-by-id", userId);
-        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-
-        return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
-                .thenApply(response -> {
-                    if (response != null)
-                        return ResponseEntity.ok(response.getBody());
-                    else {
-                        throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
-                    }
-                })
-                .exceptionally(error -> {
-                    if (error.getCause() instanceof ResponseStatusException)
-                        throw (ResponseStatusException) error.getCause();
-                    else {
-                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
-                    }
-                });
+        return getResponseEntityCompletableFuture(correlationId, futureResponse, topic);
     }
 
     @Override
@@ -398,24 +261,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-user-by-email", userEmail);
-        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-
-        return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
-                .thenApply(response -> {
-                    if (response != null)
-                        return ResponseEntity.ok(response.getBody());
-                    else {
-                        throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
-                    }
-                })
-                .exceptionally(error -> {
-                    if (error.getCause() instanceof ResponseStatusException)
-                        throw (ResponseStatusException) error.getCause();
-                    else {
-                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
-                    }
-                });
+        return getResponseEntityCompletableFuture(correlationId, futureResponse, topic);
     }
 
     @Override
@@ -440,6 +286,27 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-user-by-full-name", userFullName);
+        return getResponseEntityCompletableFuture(correlationId, futureResponse, topic);
+    }
+
+    @Override
+    @KafkaListener(topics = "delete-user-by-full-name-response", groupId = "api-gateway",
+            containerFactory = "StringKafkaListenerFactory")
+    public void handleDeleteUserByFullNameResponse(String responseMessage,
+                                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
+        if (futureResponse != null)
+            futureResponse.complete(ResponseEntity.ok(responseMessage));
+        else {
+            logger.warn("Response topic with correlationId was not found: " + correlationId);
+            throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
+
+        }
+    }
+
+    private CompletableFuture<ResponseEntity<Object>> getResponseEntityCompletableFuture(
+            String correlationId, CompletableFuture<ResponseEntity<Object>> futureResponse,
+            ProducerRecord<String, Object> topic) {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         usersKafkaTemplate.send(topic);
 
@@ -458,20 +325,5 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
                         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
                     }
                 });
-    }
-
-    @Override
-    @KafkaListener(topics = "delete-user-by-full-name-response", groupId = "api-gateway",
-            containerFactory = "StringKafkaListenerFactory")
-    public void handleDeleteUserByFullNameResponse(String responseMessage,
-                                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        if (futureResponse != null)
-            futureResponse.complete(ResponseEntity.ok(responseMessage));
-        else {
-            logger.warn("Response topic with correlationId was not found: " + correlationId);
-            throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
-
-        }
     }
 }
