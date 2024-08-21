@@ -1,19 +1,13 @@
 package com.example.accountcomponent.service;
 
-import com.example.accountcomponent.client.CardComponent;
-import com.example.accountcomponent.client.UsersComponent;
 import com.example.accountcomponent.dto.AccountDTO;
 import com.example.accountcomponent.dto.CardDTO;
 import com.example.accountcomponent.dto.UsersDTO;
 import com.example.accountcomponent.model.Account;
 import com.example.accountcomponent.repository.AccountRepository;
-import feign.FeignException;
-import feign.RetryableException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,16 +24,9 @@ import java.util.stream.Collectors;
 public class AccountServiceImpl implements AccountService {
     private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
     private final AccountRepository accountRepository;
-    private final UsersComponent usersComponent;
-    private final CardComponent cardComponent;
 
-    @Autowired
-    public AccountServiceImpl(AccountRepository accountRepository,
-                              @Qualifier("Users-Component") UsersComponent usersComponent,
-                              @Qualifier("Card-Component") CardComponent cardComponent) {
+    public AccountServiceImpl(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
-        this.usersComponent = usersComponent;
-        this.cardComponent = cardComponent;
     }
 
     private AccountDTO convertAccountModelToDTO(Account account) {
@@ -79,12 +66,6 @@ public class AccountServiceImpl implements AccountService {
                         "User with such ID: " + userId + " was not found");
             });
             logger.info("User was found successfully: {}", userDTO);
-        } catch (FeignException exception) {
-            logger.error("Users-App-Component unreachable, account creation aborted");
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-                    "Unfortunately service is temporarily unavailable, please try later.");
-        }
-
         logger.info("Trying to create Account: {}", accountDTO);
         Account account = accountRepository.save(convertAccountDTOToModel(userDTO, accountDTO));
         logger.debug("Account created successfully: {}", accountDTO);

@@ -1,12 +1,11 @@
 package com.example.userscomponent.config;
 
 import com.example.userscomponent.dto.UsersDTO;
-import com.example.userscomponent.dto.UsersErrorDTO;
+import com.example.userscomponent.dto.ErrorDTO;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
@@ -33,7 +32,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, UsersErrorDTO> usersErrorDTOProducerFactory() {
+    public ProducerFactory<String, ErrorDTO> usersErrorDTOProducerFactory() {
         Map<String, Object> usersErrorDTOProducerProp = new HashMap<>();
         usersErrorDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         usersErrorDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -42,7 +41,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, UsersErrorDTO> usersErrorDTOKafkaTemplate() {
+    public KafkaTemplate<String, ErrorDTO> usersErrorDTOKafkaTemplate() {
         return new KafkaTemplate<>(usersErrorDTOProducerFactory());
     }
 

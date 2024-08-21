@@ -1,7 +1,7 @@
 package com.example.apigatewaycomponent.service;
 
 import com.example.apigatewaycomponent.dto.UsersDTO;
-import com.example.apigatewaycomponent.errordto.UsersErrorDTO;
+import com.example.apigatewaycomponent.dto.ErrorDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.concurrent.CompletableFuture;
 
 public interface UsersGatewayService {
-    void handleUsersErrors(UsersErrorDTO usersErrorDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+    void handleUsersErrors(ErrorDTO usersErrorDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     CompletableFuture<ResponseEntity<Object>> createUser(@RequestBody UsersDTO usersDTO);
 
@@ -38,7 +38,7 @@ public interface UsersGatewayService {
 
     CompletableFuture<ResponseEntity<Object>> updatePasswordById(String userId, String newPassword);
 
-    void handleUpdateUserPassordByIdResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+    void handleUpdateUserPasswordByIdResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     CompletableFuture<ResponseEntity<Object>> deleteUserById(String userId);
 
