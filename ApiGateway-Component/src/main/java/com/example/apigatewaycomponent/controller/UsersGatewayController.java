@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -30,7 +31,7 @@ public class UsersGatewayController {
     }
 
     @GetMapping("/by-id/{userId}")
-    public CompletableFuture<ResponseEntity<Object>> getUserById(@PathVariable String userId) {
+    public CompletableFuture<ResponseEntity<Object>> getUserById(@PathVariable UUID userId) {
         logger.info("Received GET request to get User by ID: {}", userId);
         return usersGatewayService.getUserById(userId)
                 .thenApply(response -> {

@@ -18,20 +18,6 @@ import java.util.Map;
 public class KafkaProducerConfig {
 
     @Bean
-    public ProducerFactory<String, UsersDTO> usersDTOProducerFactory() {
-        Map<String, Object> usersDTOProducerProp = new HashMap<>();
-        usersDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        usersDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        usersDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(usersDTOProducerProp);
-    }
-
-    @Bean
-    public KafkaTemplate<String, UsersDTO> usersDTOKafkaTemplate() {
-        return new KafkaTemplate<>(usersDTOProducerFactory());
-    }
-
-    @Bean
     public ProducerFactory<String, ErrorDTO> usersErrorDTOProducerFactory() {
         Map<String, Object> usersErrorDTOProducerProp = new HashMap<>();
         usersErrorDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
@@ -46,17 +32,31 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public ProducerFactory<String, String> StringMessageProduceFactory() {
-        Map<String, Object> StringMessageProducerProp = new HashMap<>();
-        StringMessageProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        StringMessageProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        StringMessageProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        return new DefaultKafkaProducerFactory<>(StringMessageProducerProp);
+    public ProducerFactory<String, UsersDTO> usersDTOProducerFactory() {
+        Map<String, Object> usersDTOProducerProp = new HashMap<>();
+        usersDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        usersDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        usersDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        return new DefaultKafkaProducerFactory<>(usersDTOProducerProp);
     }
 
     @Bean
-    public KafkaTemplate<String, String> StringMessageKafkaTemplate() {
-        return new KafkaTemplate<>(StringMessageProduceFactory());
+    public KafkaTemplate<String, UsersDTO> usersDTOKafkaTemplate() {
+        return new KafkaTemplate<>(usersDTOProducerFactory());
+    }
+
+    @Bean
+    public ProducerFactory<String, String> stringMessageProduceFactory() {
+        Map<String, Object> stringMessageProducerProp = new HashMap<>();
+        stringMessageProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        stringMessageProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        stringMessageProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        return new DefaultKafkaProducerFactory<>(stringMessageProducerProp);
+    }
+
+    @Bean
+    public KafkaTemplate<String, String> stringMessageKafkaTemplate() {
+        return new KafkaTemplate<>(stringMessageProduceFactory());
     }
 
 }

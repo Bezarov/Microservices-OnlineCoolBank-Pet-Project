@@ -7,6 +7,7 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public interface UsersGatewayService {
@@ -16,7 +17,7 @@ public interface UsersGatewayService {
 
     void handleUserCreationResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> getUserById(String userId);
+    CompletableFuture<ResponseEntity<Object>> getUserById(UUID userId);
 
     void handleGetUserByIdResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 

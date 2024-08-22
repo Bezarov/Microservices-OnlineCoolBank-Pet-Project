@@ -5,12 +5,13 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 
 import java.util.Map;
+import java.util.UUID;
 
 public interface KafkaUsersService {
 
     void createUser(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    void getUserById(String userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+    void getUserById(UUID userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     void getUserByEmail(String userEmail, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
