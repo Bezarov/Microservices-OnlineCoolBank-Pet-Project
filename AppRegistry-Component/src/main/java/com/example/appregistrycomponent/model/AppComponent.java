@@ -25,6 +25,9 @@ public class AppComponent {
     @JsonProperty("componentSecret")
     private String componentSecret;
 
+    @JsonProperty("kafkaBootstrapAddresses")
+    private String kafkaBootstrapAddresses;
+
     public UUID getComponentId() {
         return componentId;
     }
@@ -73,6 +76,14 @@ public class AppComponent {
         this.instanceEurekaName = instanceEurekaName;
     }
 
+    public String getKafkaBootstrapAddresses() {
+        return kafkaBootstrapAddresses;
+    }
+
+    public void setKafkaBootstrapAddresses(String kafkaBootstrapAddresses) {
+        this.kafkaBootstrapAddresses = kafkaBootstrapAddresses;
+    }
+
     @Override
     public String toString() {
         return "AppComponent{" +
@@ -81,6 +92,7 @@ public class AppComponent {
                 ", componentAddress='" + componentAddress + '\'' +
                 ", componentPort='" + componentPort + '\'' +
                 ", instanceEurekaName='" + instanceEurekaName + '\'' +
+                ", kafkaBootstrapAddresses='" + kafkaBootstrapAddresses + '\'' +
                 ", componentSecret='" + componentSecret + '\'' +
                 '}';
     }

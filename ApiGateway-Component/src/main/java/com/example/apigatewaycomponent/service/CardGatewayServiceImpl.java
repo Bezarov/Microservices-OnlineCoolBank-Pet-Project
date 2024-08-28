@@ -26,11 +26,17 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     private static final Logger logger = LoggerFactory.getLogger(CardGatewayServiceImpl.class);
     private static final long REQUEST_TIMEOUT = 5;
     private final KafkaTemplate<String, Object> cardKafkaTemplate;
+    private final KafkaTemplate<String, UUID> uuidKafkaTemplate;
+    private final KafkaTemplate<String, Map<UUID, String>> mapUUIDToStringKafkaTemplate;
+    private final KafkaTemplate<String, Map<String, String>> mapStringToStringKafkaTemplate;
     private final Map<String, CompletableFuture<ResponseEntity<Object>>> responseFutures = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<ResponseEntity<List<CardDTO>>>> responseListFutures = new ConcurrentHashMap<>();
 
-    public CardGatewayServiceImpl(KafkaTemplate<String, Object> cardKafkaTemplate) {
+    public CardGatewayServiceImpl(KafkaTemplate<String, Object> cardKafkaTemplate, KafkaTemplate<String, UUID> uuidKafkaTemplate, KafkaTemplate<String, Map<UUID, String>> mapUUIDToStringKafkaTemplate, KafkaTemplate<String, Map<String, String>> mapStringToStringKafkaTemplate) {
         this.cardKafkaTemplate = cardKafkaTemplate;
+        this.uuidKafkaTemplate = uuidKafkaTemplate;
+        this.mapUUIDToStringKafkaTemplate = mapUUIDToStringKafkaTemplate;
+        this.mapStringToStringKafkaTemplate = mapStringToStringKafkaTemplate;
     }
 
 
@@ -46,17 +52,17 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> createCard(String accountId) {
+    public CompletableFuture<ResponseEntity<Object>> createCard(UUID accountId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: create-card-by-account-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("create-card-by-account-id", accountId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("create-card-by-account-id", accountId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -74,17 +80,17 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> getCardById(String cardId) {
+    public CompletableFuture<ResponseEntity<Object>> getCardById(UUID cardId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-card-by-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("get-card-by-id", cardId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-card-by-id", cardId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -112,7 +118,7 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         ProducerRecord<String, Object> topic = new ProducerRecord<>("get-card-by-card-number", cardNumber);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -141,7 +147,7 @@ public class CardGatewayServiceImpl implements CardGatewayService {
                 "get-all-cards-by-holder-name", cardHolderFullName);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -159,17 +165,17 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountCardsByAccountId(String accountId) {
+    public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountCardsByAccountId(UUID accountId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-all-cards-by-account-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("get-all-cards-by-account-id", accountId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-all-cards-by-account-id", accountId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -187,17 +193,17 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByCardHolderId(String holderId) {
+    public CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByCardHolderId(UUID holderId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-all-cards-by-holder-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("get-all-cards-by-holder-id", holderId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-all-cards-by-holder-id", holderId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -215,19 +221,19 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByStatus(String holderId, String status) {
+    public CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByStatus(UUID holderId, String status) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: update-card-status-by-id with correlation id: {} ", correlationId);
-        Map<String, Object> getCardsRequestMap = Map.of(holderId, status);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("update-card-status-by-id",
+        Map<UUID, String> getCardsRequestMap = Map.of(holderId, status);
+        ProducerRecord<String, Map<UUID, String>> topic = new ProducerRecord<>("update-card-status-by-id",
                 getCardsRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        mapUUIDToStringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -245,17 +251,17 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<List<Object>>> getAllExpiredCards(String holderId) {
+    public CompletableFuture<ResponseEntity<List<Object>>> getAllExpiredCards(UUID holderId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-all-expired-cards-by-holder-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("get-all-expired-cards-by-holder-id", holderId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-all-expired-cards-by-holder-id", holderId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -273,17 +279,17 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<List<Object>>> getAllActiveCards(String holderId) {
+    public CompletableFuture<ResponseEntity<List<Object>>> getAllActiveCards(UUID holderId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-all-active-cards-by-holder-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("get-all-active-cards-by-holder-id", holderId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-all-active-cards-by-holder-id", holderId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -301,19 +307,19 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> updateCardStatusById(String cardId, String status) {
+    public CompletableFuture<ResponseEntity<Object>> updateCardStatusById(UUID cardId, String status) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: update-card-status-by-id with correlation id: {} ", correlationId);
-        Map<String, Object> updateCardRequestMap = Map.of(cardId, status);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("update-card-status-by-id",
+        Map<UUID, String> updateCardRequestMap = Map.of(cardId, status);
+        ProducerRecord<String, Map<UUID, String >> topic = new ProducerRecord<>("update-card-status-by-id",
                 updateCardRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        mapUUIDToStringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -338,12 +344,12 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: update-card-status-by-card-number with correlation id: {} ", correlationId);
-        Map<String, Object> updateCardRequestMap = Map.of(cardNumber, status);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("update-card-status-by-card-number",
+        Map<String, String> updateCardRequestMap = Map.of(cardNumber, status);
+        ProducerRecord<String, Map<String, String>> topic = new ProducerRecord<>("update-card-status-by-card-number",
                 updateCardRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        mapStringToStringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -361,17 +367,17 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> deleteCardById(String cardId) {
+    public CompletableFuture<ResponseEntity<Object>> deleteCardById(UUID cardId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: delete-card-by-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-card-by-id", cardId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("delete-card-by-id", cardId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -389,17 +395,17 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> deleteAllAccountCardsByAccountId(String accountId) {
+    public CompletableFuture<ResponseEntity<Object>> deleteAllAccountCardsByAccountId(UUID accountId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: delete-card-by-account-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-card-by-account-id", accountId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("delete-card-by-account-id", accountId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -417,17 +423,17 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> deleteAllUsersCardsByCardHolderUUID(String cardHolderUUID) {
+    public CompletableFuture<ResponseEntity<Object>> deleteAllUsersCardsByCardHolderUUID(UUID cardHolderUUID) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: delete-card-by-holder-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-card-by-holder-id", cardHolderUUID);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("delete-card-by-holder-id", cardHolderUUID);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        cardKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 

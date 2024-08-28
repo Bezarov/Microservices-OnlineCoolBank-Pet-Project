@@ -20,7 +20,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -66,8 +65,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     @Override
     @KafkaListener(topics = "create-user", groupId = "users-component",
             containerFactory = "usersDTOKafkaListenerFactory")
-    public void createUser(UsersDTO usersDTO,
-                           @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+    public void createUser(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: create-user with correlation id: {} ", correlationId);
         logger.info("Trying to find User with email: {}", usersDTO.getEmail());
         usersRepository.findByEmail(usersDTO.getEmail())
@@ -85,14 +83,13 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 "create-user-response", null, convertUsersModelToDTO(userEntity));
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
     }
 
     @Override
     @KafkaListener(topics = "get-user-by-id", groupId = "users-component",
             containerFactory = "uuidKafkaListenerFactory")
-    public void getUserById(UUID userId,
-                            @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+    public void getUserById(UUID userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-user-by-id with correlation id: {} ", correlationId);
         logger.info("Trying to find User with ID: {}", userId);
         UsersDTO responseUserDTO = usersRepository.findById(userId)
@@ -111,17 +108,16 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 "get-user-by-id-response", null, responseUserDTO);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
     }
 
     @Override
     @KafkaListener(topics = "get-user-by-email", groupId = "users-component",
-            containerFactory = "usersDTOKafkaListenerFactory")
-    public void getUserByEmail(String userEmail,
-                               @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+            containerFactory = "stringKafkaListenerFactory")
+    public void getUserByEmail(String userEmail, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-user-by-email with correlation id: {} ", correlationId);
         logger.info("Trying to find User with email: {}", userEmail);
-        UsersDTO responseUserDTO = usersRepository.findByEmail(userEmail.replaceAll("\"", ""))
+        UsersDTO responseUserDTO = usersRepository.findByEmail(userEmail)
                 .map(UserEntity -> {
                     logger.info("User was found and received to the Controller: {}", UserEntity);
                     return convertUsersModelToDTO(UserEntity);
@@ -137,17 +133,16 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 "get-user-by-email-response", null, responseUserDTO);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
     }
 
     @Override
     @KafkaListener(topics = "get-user-by-full-name", groupId = "users-component",
-            containerFactory = "usersDTOKafkaListenerFactory")
-    public void getUserByFullName(String userFullName,
-                                  @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+            containerFactory = "stringKafkaListenerFactory")
+    public void getUserByFullName(String userFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-user-by-full-name with correlation id: {} ", correlationId);
         logger.info("Trying to find User with name: {}", userFullName);
-        UsersDTO responseUserDTO = usersRepository.findByFullName(userFullName.replaceAll("\"", ""))
+        UsersDTO responseUserDTO = usersRepository.findByFullName(userFullName)
                 .map(UserEntity -> {
                     logger.info("User was found and received to the Controller: {}", UserEntity);
                     return convertUsersModelToDTO(UserEntity);
@@ -163,17 +158,16 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 "get-user-by-full-name-response", null, responseUserDTO);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
     }
 
     @Override
     @KafkaListener(topics = "get-user-by-phone-number", groupId = "users-component",
-            containerFactory = "usersDTOKafkaListenerFactory")
-    public void getUserByPhoneNumber(String userPhoneNumber,
-                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+            containerFactory = "stringKafkaListenerFactory")
+    public void getUserByPhoneNumber(String userPhoneNumber, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-user-by-phone-number with correlation id: {} ", correlationId);
         logger.info("Trying to find User with phone number: {}", userPhoneNumber);
-        UsersDTO responseUserDTO = usersRepository.findByPhoneNumber(userPhoneNumber.replaceAll("\"", ""))
+        UsersDTO responseUserDTO = usersRepository.findByPhoneNumber(userPhoneNumber)
                 .map(UserEntity -> {
                     logger.info("User was found and received to the Controller: {}", UserEntity);
                     return convertUsersModelToDTO(UserEntity);
@@ -189,22 +183,20 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 "get-user-by-phone-number-response", null, responseUserDTO);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
     }
 
     @Override
     @KafkaListener(topics = "update-user-by-id", groupId = "users-component",
-            containerFactory = "mapKafkaListenerFactory")
-    public void updateUser(Map<String, Object> UUIDAndUserDTOMap,
-                           @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+            containerFactory = "mapUUIDToDTOKafkaListenerFactory")
+    public void updateUser(Map<String, UsersDTO> mapUUIDToDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: update-user-by-id with correlation id: {} ", correlationId);
         ObjectMapper objectMapper = new ObjectMapper();
-        String userId = UUIDAndUserDTOMap.keySet().iterator().next();
-        LinkedHashMap<String, Object> userDTOMap = (LinkedHashMap<String, Object>) UUIDAndUserDTOMap.get(userId);
-        UsersDTO usersDTO = objectMapper.convertValue(userDTOMap, UsersDTO.class);
+        String userId = mapUUIDToDTO.keySet().iterator().next().replaceAll("\"", "");
+        UsersDTO usersDTO = objectMapper.convertValue(mapUUIDToDTO.get(userId), UsersDTO.class);
 
         logger.info("Trying to find User with ID: {}", userId);
-        UsersDTO responseUserDTO = usersRepository.findById(UUID.fromString(userId.replaceAll("\"", "")))
+        UsersDTO responseUserDTO = usersRepository.findById(UUID.fromString(userId))
                 .map(UserEntity -> {
                     logger.info("User was found updating");
                     UserEntity.setFullName(usersDTO.getFullName());
@@ -227,20 +219,19 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 "update-user-by-id-response", null, responseUserDTO);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
     }
 
     @Override
     @KafkaListener(topics = "update-user-password-by-id", groupId = "users-component",
-            containerFactory = "mapKafkaListenerFactory")
-    public void updatePasswordById(Map<String, String> UUIDAndNewPasswordMap,
-                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+            containerFactory = "mapUUIDToStringKafkaListenerFactory")
+    public void updatePasswordById(Map<String, String> mapUUIDToString, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: update-user-password-by-id with correlation id: {} ", correlationId);
-        String userId = UUIDAndNewPasswordMap.keySet().iterator().next();
-        String newPassword = UUIDAndNewPasswordMap.get(userId);
+        String userId = mapUUIDToString.keySet().iterator().next().replaceAll("\"", "");
+        String newPassword = mapUUIDToString.get(userId);
 
         logger.info("Trying to find User with ID: {}", userId);
-        UsersDTO responseUserDTO = usersRepository.findById(UUID.fromString(userId.replaceAll("\"", "")))
+        UsersDTO responseUserDTO = usersRepository.findById(UUID.fromString(userId))
                 .map(UserEntity -> {
                     logger.info("User was found, updating password");
                     UserEntity.setPassword(passwordEncoder.encode(newPassword));
@@ -260,24 +251,23 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 "update-user-password-by-id-response", null, responseUserDTO);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
     }
 
     @Transactional
     @Override
     @KafkaListener(topics = "delete-user-by-id", groupId = "users-component",
-            containerFactory = "usersDTOKafkaListenerFactory")
-    public void deleteUserById(String userId,
-                               @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+            containerFactory = "uuidKafkaListenerFactory")
+    public void deleteUserById(UUID userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: delete-user-by-id with correlation id: {} ", correlationId);
         logger.info("Trying to find User with ID: {}", userId);
-        Users user = usersRepository.findById(UUID.fromString(userId.replaceAll("\"", "")))
+        Users user = usersRepository.findById(userId)
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", userId);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found correlationId:" + correlationId);
                 });
-        usersRepository.deleteById(UUID.fromString(userId.replaceAll("\"", "")));
+        usersRepository.deleteById(userId);
         logger.info("User was found and deleted successfully: {}", user);
 
         logger.info("Trying to create topic: delete-user-by-id-response with correlation id: {} ", correlationId);
@@ -285,15 +275,14 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 "delete-user-by-id-response", null, "User deleted successfully");
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseMessageKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
     }
 
     @Transactional
     @Override
     @KafkaListener(topics = "delete-user-by-email", groupId = "users-component",
-            containerFactory = "usersDTOKafkaListenerFactory")
-    public void deleteUserByEmail(String userEmail,
-                                  @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+            containerFactory = "stringKafkaListenerFactory")
+    public void deleteUserByEmail(String userEmail, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: delete-user-by-email with correlation id: {} ", correlationId);
         logger.info("Trying to find User with email: {}", userEmail.replaceAll("\"", ""));
         Users user = usersRepository.findByEmail(userEmail)
@@ -310,15 +299,14 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 "delete-user-by-id-response", null, "User deleted successfully");
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseMessageKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
     }
 
     @Transactional
     @Override
     @KafkaListener(topics = "delete-user-by-full-name", groupId = "users-component",
-            containerFactory = "usersDTOKafkaListenerFactory")
-    public void deleteUserByFullName(String userFullName,
-                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+            containerFactory = "stringKafkaListenerFactory")
+    public void deleteUserByFullName(String userFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: delete-user-by-full-name with correlation id: {} ", correlationId);
         logger.info("Trying to find User with name: {}", userFullName);
         Users user = usersRepository.findByFullName(userFullName.replaceAll("\"", ""))
@@ -335,6 +323,6 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 "delete-user-by-full-name-response", null, "User deleted successfully");
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseMessageKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
     }
 }

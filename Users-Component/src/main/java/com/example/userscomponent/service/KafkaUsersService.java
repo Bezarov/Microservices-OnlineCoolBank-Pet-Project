@@ -1,9 +1,11 @@
 package com.example.userscomponent.service;
 
 import com.example.userscomponent.dto.UsersDTO;
+import com.example.userscomponent.model.Users;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,11 +21,11 @@ public interface KafkaUsersService {
 
     void getUserByPhoneNumber(String userPhoneNumber, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    void updateUser(Map<String, Object> UUIDAndUserDTOMap, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+    void updateUser(Map<String, UsersDTO> mapUUIDToDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    void updatePasswordById(Map<String, String> UUIDAndNewPasswordMap, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+    void updatePasswordById(Map<String, String> mapUUIDToString, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    void deleteUserById(String userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+    void deleteUserById(UUID userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     void deleteUserByEmail(String userEmail, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 

@@ -1,13 +1,13 @@
-package com.example.accountcomponent.client;
+package com.example.cardcomponent.feign;
 
-import com.example.accountcomponent.dto.UsersDTO;
+import com.example.cardcomponent.dto.UsersDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.UUID;
 
 @Component
-public class UsersComponentFallback implements UsersComponent {
+public class UsersComponentClientFallback implements UsersComponentClient {
     @Override
     public Optional<UsersDTO> findById(UUID userId) {
         return Optional.empty();

@@ -50,7 +50,7 @@ public class GlobalKafkaExceptionHandler implements CommonErrorHandler {
         String correlationId = exception.getMessage().replaceAll("^.*correlationId:|[\"\\s]", "").trim();
         String exceptionReason = exception.getReason().replaceAll("correlationId:(.*)$", "").trim();
 
-        //Create and Fill in ErrorDTO
+        //Create and fill in ErrorDTO
         ErrorDTO errorDTO = new ErrorDTO();
         errorDTO.setStatus(exception.getStatusCode().value());
         errorDTO.setMessage(exceptionReason);

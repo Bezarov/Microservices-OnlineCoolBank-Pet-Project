@@ -26,12 +26,23 @@ import java.util.concurrent.TimeUnit;
 public class AccountGatewayServiceImpl implements AccountGatewayService {
     private static final Logger logger = LoggerFactory.getLogger(AccountGatewayServiceImpl.class);
     private static final long REQUEST_TIMEOUT = 5;
-    private final KafkaTemplate<String, Object> accountKafkaTemplate;
+    private final KafkaTemplate<String, UUID> uuidKafkaTemplate;
+    private final KafkaTemplate<String, String> stringKafkaTemplate;
+    private final KafkaTemplate<String, Map<UUID, AccountDTO>> mapUUIDToDTOKafkaTemplate;
+    private final KafkaTemplate<String, Map<UUID, String>> mapUUIDToStringKafkaTemplate;
+    private final KafkaTemplate<String, Map<UUID, BigDecimal>> mapUUIDToBigDecimalKafkaTemplate;
+    private final KafkaTemplate<String, Map<String, BigDecimal>> mapStringToBigDecimalKafkaTemplate;
     private final Map<String, CompletableFuture<ResponseEntity<Object>>> responseFutures = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<ResponseEntity<List<AccountDTO>>>> responseListFutures = new ConcurrentHashMap<>();
 
-    public AccountGatewayServiceImpl(KafkaTemplate<String, Object> accountKafkaTemplate) {
-        this.accountKafkaTemplate = accountKafkaTemplate;
+    public AccountGatewayServiceImpl(KafkaTemplate<String, UUID> uuidKafkaTemplate,
+                                     KafkaTemplate<String, String> stringKafkaTemplate, KafkaTemplate<String, Map<UUID, AccountDTO>> mapUUIDToDTOKafkaTemplate, KafkaTemplate<String, Map<UUID, String>> mapUUIDToStringKafkaTemplate, KafkaTemplate<String, Map<UUID, BigDecimal>> mapUUIDToBigDecimalKafkaTemplate, KafkaTemplate<String, Map<String, BigDecimal>> mapStringToBigDecimalKafkaTemplate) {
+        this.stringKafkaTemplate = stringKafkaTemplate;
+        this.uuidKafkaTemplate = uuidKafkaTemplate;
+        this.mapUUIDToDTOKafkaTemplate = mapUUIDToDTOKafkaTemplate;
+        this.mapUUIDToStringKafkaTemplate = mapUUIDToStringKafkaTemplate;
+        this.mapUUIDToBigDecimalKafkaTemplate = mapUUIDToBigDecimalKafkaTemplate;
+        this.mapStringToBigDecimalKafkaTemplate = mapStringToBigDecimalKafkaTemplate;
     }
 
 
@@ -48,19 +59,19 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> createAccount(String userId, AccountDTO accountDTO) {
+    public CompletableFuture<ResponseEntity<Object>> createAccount(UUID userId, AccountDTO accountDTO) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: create-account-by-user-id with correlation id: {} ", correlationId);
-        Map<String, Object> createAccountRequestMap = Map.of(userId, accountDTO);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("create-account-by-user-id",
+        Map<UUID, AccountDTO> createAccountRequestMap = Map.of(userId, accountDTO);
+        ProducerRecord<String, Map<UUID, AccountDTO>> topic = new ProducerRecord<>("create-account-by-user-id",
                 createAccountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        mapUUIDToDTOKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -85,10 +96,10 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-account-by-account-name with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("get-account-by-account-name", accountName);
+        ProducerRecord<String, String> topic = new ProducerRecord<>("get-account-by-account-name", accountName);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        stringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -106,16 +117,17 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> getAccountById(String accountId) {
+    public CompletableFuture<ResponseEntity<Object>> getAccountById(UUID accountId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-account-by-account-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("get-account-by-account-id", accountId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-account-by-account-id", accountId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -133,17 +145,17 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<List<Object>>> getAllUserAccountsByUserId(String userId) {
+    public CompletableFuture<ResponseEntity<List<Object>>> getAllUserAccountsByUserId(UUID userId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<List<AccountDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-all-accounts-by-user-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("get-all-accounts-by-user-id", userId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-all-accounts-by-user-id", userId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -168,11 +180,11 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         responseListFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-all-accounts-by-holder-full-name with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>(
+        ProducerRecord<String, String> topic = new ProducerRecord<>(
                 "get-all-accounts-by-holder-full-name", accountHolderFullName);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        stringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -190,17 +202,17 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> getBalanceByAccountId(String accountId) {
+    public CompletableFuture<ResponseEntity<Object>> getBalanceByAccountId(UUID accountId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-balance-by-account-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("get-balance-by-account-id", accountId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-balance-by-account-id", accountId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -218,24 +230,23 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountsByStatus(String userId, String accountStatus) {
+    public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountsByStatus(UUID userId, String accountStatus) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<List<AccountDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-all-accounts-by-holder-full-name with correlation id: {} ", correlationId);
-        Map<String, Object> accountRequestMap = Map.of(userId, accountStatus);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>(
-                "get-all-accounts-by-holder-full-name", accountRequestMap);
+        Map<UUID, String> accountRequestMap = Map.of(userId, accountStatus);
+        ProducerRecord<String, Map<UUID, String>> topic = new ProducerRecord<>("get-all-accounts-by-status", accountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        mapUUIDToStringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
     @Override
-    @KafkaListener(topics = "get-all-accounts-by-holder-full-name-response", groupId = "api-gateway",
+    @KafkaListener(topics = "get-all-accounts-by-status-response", groupId = "api-gateway",
             containerFactory = "listKafkaListenerFactory")
     public void handleGetAllAccountsByStatusResponse(List<AccountDTO> accountDTOS,
                                                      @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
@@ -248,18 +259,19 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> refillAccount(String accountId, BigDecimal amount) {
+    public CompletableFuture<ResponseEntity<Object>> refillAccount(UUID accountId, BigDecimal amount) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: refill-account-by-account-id with correlation id: {} ", correlationId);
-        Map<String, Object> accountRequestMap = Map.of(accountId, amount);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("refill-account-by-account-id", accountRequestMap);
+        Map<UUID, BigDecimal> accountRequestMap = Map.of(accountId, amount);
+        ProducerRecord<String, Map<UUID, BigDecimal>> topic = new ProducerRecord<>(
+                "refill-account-by-account-id", accountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        mapUUIDToBigDecimalKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -277,19 +289,19 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> updateAccountById(String accountId, AccountDTO accountDTO) {
+    public CompletableFuture<ResponseEntity<Object>> updateAccountById(UUID accountId, AccountDTO accountDTO) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: update-account-by-account-id with correlation id: {} ", correlationId);
-        Map<String, Object> createAccountRequestMap = Map.of(accountId, accountDTO);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("update-account-by-account-id",
+        Map<UUID, AccountDTO> createAccountRequestMap = Map.of(accountId, accountDTO);
+        ProducerRecord<String, Map<UUID, AccountDTO>> topic = new ProducerRecord<>("update-account-by-account-id",
                 createAccountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        mapUUIDToDTOKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -307,19 +319,19 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> updateAccountStatusById(String accountId, String status) {
+    public CompletableFuture<ResponseEntity<Object>> updateAccountStatusById(UUID accountId, String status) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: update-account-status-by-account-id with correlation id: {} ", correlationId);
-        Map<String, Object> createAccountRequestMap = Map.of(accountId, status);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("update-account-status-by-account-id",
+        Map<UUID, String> createAccountRequestMap = Map.of(accountId, status);
+        ProducerRecord<String, Map<UUID, String>> topic = new ProducerRecord<>("update-account-status-by-account-id",
                 createAccountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        mapUUIDToStringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -337,19 +349,19 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> updateAccountBalanceById(String accountId, BigDecimal newBalance) {
+    public CompletableFuture<ResponseEntity<Object>> updateAccountBalanceById(UUID accountId, BigDecimal newBalance) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: update-account-balance-by-account-id with correlation id: {} ", correlationId);
-        Map<String, Object> createAccountRequestMap = Map.of(accountId, newBalance);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("update-account-balance-by-account-id",
+        Map<UUID, BigDecimal> createAccountRequestMap = Map.of(accountId, newBalance);
+        ProducerRecord<String, Map<UUID, BigDecimal>> topic = new ProducerRecord<>("update-account-balance-by-account-id",
                 createAccountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        mapUUIDToBigDecimalKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -375,12 +387,12 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: update-account-balance-by-account-name with correlation id: {} ", correlationId);
-        Map<String, Object> createAccountRequestMap = Map.of(accountName, newBalance);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("update-account-balance-by-account-name",
+        Map<String, BigDecimal> createAccountRequestMap = Map.of(accountName, newBalance);
+        ProducerRecord<String, Map<String, BigDecimal>> topic = new ProducerRecord<>("update-account-balance-by-account-name",
                 createAccountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        mapStringToBigDecimalKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -398,17 +410,17 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> deleteAccountByAccountId(String accountId) {
+    public CompletableFuture<ResponseEntity<Object>> deleteAccountByAccountId(UUID accountId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: delete-account-by-account-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-account-by-account-id", accountId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("delete-account-by-account-id", accountId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -433,10 +445,10 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: delete-account-by-account-name with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-account-by-account-name", accountName);
+        ProducerRecord<String, String> topic = new ProducerRecord<>("delete-account-by-account-name", accountName);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        stringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -454,17 +466,17 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> deleteAllUserAccountsByUserId(String userId) {
+    public CompletableFuture<ResponseEntity<Object>> deleteAllUserAccountsByUserId(UUID userId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: delete-account-by-account-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-account-by-account-id", userId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("delete-account-by-account-id", userId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 

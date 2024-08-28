@@ -24,17 +24,24 @@ import java.util.concurrent.TimeUnit;
 public class UsersGatewayServiceImpl implements UsersGatewayService {
     private static final Logger logger = LoggerFactory.getLogger(UsersGatewayServiceImpl.class);
     private static final long REQUEST_TIMEOUT = 5;
-    private final KafkaTemplate<String, Object> usersKafkaTemplate;
     private final KafkaTemplate<String, UsersDTO> usersDTOKafkaTemplate;
-
+    private final KafkaTemplate<String, String> stringKafkaTemplate;
     private final KafkaTemplate<String, UUID> uuidKafkaTemplate;
+    private final KafkaTemplate<String, Map<UUID, UsersDTO>> mapUUIDToDTOKafkaTemplate;
+    private final KafkaTemplate<String, Map<UUID, String>> mapUUIDToStringKafkaTemplate;
     private final Map<String, CompletableFuture<ResponseEntity<Object>>> responseFutures = new ConcurrentHashMap<>();
 
-    public UsersGatewayServiceImpl(KafkaTemplate<String, Object> usersKafkaTemplate, KafkaTemplate<String, UsersDTO> usersDTOKafkaTemplate, KafkaTemplate<String, UUID> uuidKafkaTemplate) {
-        this.usersKafkaTemplate = usersKafkaTemplate;
+    public UsersGatewayServiceImpl(KafkaTemplate<String, UsersDTO> usersDTOKafkaTemplate, KafkaTemplate<String,
+            String> stringKafkaTemplate, KafkaTemplate<String, UUID> uuidKafkaTemplate, KafkaTemplate<String,
+            Map<UUID, UsersDTO>> mapUUIDToDTOKafkaTemplate, KafkaTemplate<String,
+            Map<UUID, String>> mapUUIDToStringKafkaTemplate) {
         this.usersDTOKafkaTemplate = usersDTOKafkaTemplate;
+        this.stringKafkaTemplate = stringKafkaTemplate;
         this.uuidKafkaTemplate = uuidKafkaTemplate;
+        this.mapUUIDToDTOKafkaTemplate = mapUUIDToDTOKafkaTemplate;
+        this.mapUUIDToStringKafkaTemplate = mapUUIDToStringKafkaTemplate;
     }
+
 
     @Override
     @KafkaListener(topics = "users-error", groupId = "api-gateway",
@@ -59,7 +66,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         ProducerRecord<String, UsersDTO> topic = new ProducerRecord<>("create-user", usersDTO);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         usersDTOKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -87,7 +94,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-user-by-id", userId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -112,10 +119,10 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-user-by-email with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("get-user-by-email", userEmail);
+        ProducerRecord<String, String> topic = new ProducerRecord<>("get-user-by-email", userEmail);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        stringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -140,10 +147,10 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-user-by-full-name with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("get-user-by-full-name", userFullName);
+        ProducerRecord<String, String> topic = new ProducerRecord<>("get-user-by-full-name", userFullName);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        stringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -168,10 +175,10 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: get-user-by-phone-number with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("get-user-by-phone-number", userPhoneNumber);
+        ProducerRecord<String, String> topic = new ProducerRecord<>("get-user-by-phone-number", userPhoneNumber);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        stringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -189,18 +196,18 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> updateUser(String userId, UsersDTO usersDTO) {
+    public CompletableFuture<ResponseEntity<Object>> updateUser(UUID userId, UsersDTO usersDTO) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: update-user-by-id with correlation id: {} ", correlationId);
-        Map<String, UsersDTO> updateRequestMap = Map.of(userId, usersDTO);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("update-user-by-id", updateRequestMap);
+        Map<UUID, UsersDTO> updateRequestMap = Map.of(userId, usersDTO);
+        ProducerRecord<String, Map<UUID, UsersDTO>> topic = new ProducerRecord<>("update-user-by-id", updateRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        mapUUIDToDTOKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -218,19 +225,19 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> updatePasswordById(String userId, String newPassword) {
+    public CompletableFuture<ResponseEntity<Object>> updatePasswordById(UUID userId, String newPassword) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: update-user-password-by-id with correlation id: {} ", correlationId);
-        Map<String, String> updateUserPasswordRequestMap = Map.of(userId, newPassword);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>(
+        Map<UUID, String> updateUserPasswordRequestMap = Map.of(userId, newPassword);
+        ProducerRecord<String, Map<UUID, String>> topic = new ProducerRecord<>(
                 "update-user-password-by-id", updateUserPasswordRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        mapUUIDToStringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -248,17 +255,17 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> deleteUserById(String userId) {
+    public CompletableFuture<ResponseEntity<Object>> deleteUserById(UUID userId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: delete-user-by-id with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-user-by-id", userId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("delete-user-by-id", userId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        uuidKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -284,10 +291,10 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: delete-user-by-email with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-user-by-email", userEmail);
+        ProducerRecord<String, String> topic = new ProducerRecord<>("delete-user-by-email", userEmail);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        stringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -312,10 +319,10 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: delete-user-by-full-name with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("delete-user-by-full-name", userFullName);
+        ProducerRecord<String, String> topic = new ProducerRecord<>("delete-user-by-full-name", userFullName);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        usersKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        stringKafkaTemplate.send(topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
