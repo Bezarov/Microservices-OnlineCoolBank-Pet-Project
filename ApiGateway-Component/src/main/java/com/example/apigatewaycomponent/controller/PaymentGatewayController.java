@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -47,7 +48,7 @@ public class PaymentGatewayController {
     }
 
     @GetMapping("/by-payment-id/{paymentId}")
-    public CompletableFuture<ResponseEntity<Object>> getPaymentById(@PathVariable String paymentId) {
+    public CompletableFuture<ResponseEntity<Object>> getPaymentById(@PathVariable UUID paymentId) {
         logger.info("Received GET request to get Payment by ID: {}", paymentId);
         return paymentGatewayService.getPaymentById(paymentId)
                 .thenApply(response -> {
@@ -58,7 +59,7 @@ public class PaymentGatewayController {
 
     @GetMapping("/from-account-id/{fromAccountId}")
     public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountPaymentsByFromAccount(
-            @PathVariable String fromAccountId) {
+            @PathVariable UUID fromAccountId) {
         logger.info("Received GET request to get All Payments from Account ID: {}", fromAccountId);
         return paymentGatewayService.getAllAccountPaymentsByFromAccount(fromAccountId)
                 .thenApply(response -> {
@@ -69,7 +70,7 @@ public class PaymentGatewayController {
 
     @GetMapping("/to-account-id/{toAccountId}")
     public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountPaymentsByToAccount(
-            @PathVariable String toAccountId) {
+            @PathVariable UUID toAccountId) {
         logger.info("Received GET request to get All Payments to Account ID: {}", toAccountId);
         return paymentGatewayService.getAllAccountPaymentsByToAccount(toAccountId)
                 .thenApply(response -> {
@@ -80,7 +81,7 @@ public class PaymentGatewayController {
 
     @GetMapping("/from-account-id/{fromAccountId}/status")
     public CompletableFuture<ResponseEntity<List<Object>>> getPaymentsByStatus(
-            @PathVariable String fromAccountId,
+            @PathVariable UUID fromAccountId,
             @RequestParam String status) {
         logger.info("Received GET request to get All Payments from Account ID: {}," +
                 " with Status: {}", fromAccountId, status);
@@ -93,7 +94,7 @@ public class PaymentGatewayController {
 
     @GetMapping("/from-account-id/{fromAccountId}/type")
     public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountPaymentsByPaymentType(
-            @PathVariable String fromAccountId,
+            @PathVariable UUID fromAccountId,
             @RequestParam(name = "payment-type") String paymentType) {
         logger.info("Received GET request to get All Payments from Account ID: {}," +
                 " with Type: {}", fromAccountId, paymentType);
@@ -106,7 +107,7 @@ public class PaymentGatewayController {
 
     @GetMapping("/from-account-id/{fromAccountId}/date-range")
     public CompletableFuture<ResponseEntity<List<Object>>> getAllFromAccountPaymentsByPaymentDateRange(
-            @PathVariable String fromAccountId,
+            @PathVariable UUID fromAccountId,
             @RequestParam(name = "from-date") LocalDateTime fromPaymentDate,
             @RequestParam(name = "to-date") LocalDateTime toPaymentDate) {
         logger.info("Received GET request to get All Account Payments in date range FROM" +
@@ -120,7 +121,7 @@ public class PaymentGatewayController {
 
     @GetMapping("/to-account-id/{toAccountId}/date-range")
     public CompletableFuture<ResponseEntity<List<Object>>> getAllFromToPaymentsByPaymentDateRange(
-            @PathVariable String toAccountId,
+            @PathVariable UUID toAccountId,
             @RequestParam(name = "from-date") LocalDateTime fromPaymentDate,
             @RequestParam(name = "to-date") LocalDateTime toPaymentDate) {
         logger.info("Received GET request to get All Account Payments in date range TO" +

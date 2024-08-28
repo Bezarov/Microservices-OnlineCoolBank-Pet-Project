@@ -1,6 +1,5 @@
 package com.example.apigatewaycomponent.service;
 
-import com.example.apigatewaycomponent.dto.AccountDTO;
 import com.example.apigatewaycomponent.dto.CardDTO;
 import com.example.apigatewaycomponent.dto.ErrorDTO;
 import org.springframework.http.ResponseEntity;
@@ -8,16 +7,17 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public interface CardGatewayService {
     void handleCardErrors(ErrorDTO cardErrorDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> createCard(String accountId);
+    CompletableFuture<ResponseEntity<Object>> createCard(UUID accountId);
 
     void handleCardCreationResponse(CardDTO cardDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> getCardById(String cardId);
+    CompletableFuture<ResponseEntity<Object>> getCardById(UUID cardId);
 
     void handleGetCardByIdResponse(CardDTO cardDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
@@ -30,32 +30,32 @@ public interface CardGatewayService {
     void handleGetAllCardByHolderFullNameResponse(List<CardDTO> cardDTOS,
                                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<List<Object>>> getAllAccountCardsByAccountId(String accountId);
+    CompletableFuture<ResponseEntity<List<Object>>> getAllAccountCardsByAccountId(UUID accountId);
 
     void handleGetAllCardByAccountIdResponse(List<CardDTO> cardDTOS,
                                              @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByCardHolderId(String holderId);
+    CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByCardHolderId(UUID holderId);
 
     void handleGetAllCardByHolderIdResponse(List<CardDTO> cardDTOS,
                                             @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByStatus(String holderId, String status);
+    CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByStatus(UUID holderId, String status);
 
     void handleGetAllCardByStatusNameResponse(List<CardDTO> cardDTOS,
                                               @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<List<Object>>> getAllExpiredCards(String holderId);
+    CompletableFuture<ResponseEntity<List<Object>>> getAllExpiredCards(UUID holderId);
 
     void handleGetAllExpiredCardsResponse(List<CardDTO> cardDTOS,
                                           @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<List<Object>>> getAllActiveCards(String holderId);
+    CompletableFuture<ResponseEntity<List<Object>>> getAllActiveCards(UUID holderId);
 
     void handleGetAllActiveCardsResponse(List<CardDTO> cardDTOS,
                                          @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> updateCardStatusById(String cardId, String status);
+    CompletableFuture<ResponseEntity<Object>> updateCardStatusById(UUID cardId, String status);
 
     void handleUpdateCardStatusByIdResponse(CardDTO cardDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
@@ -63,15 +63,15 @@ public interface CardGatewayService {
 
     void handleUpdateCardStatusByNumberResponse(CardDTO cardDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> deleteCardById(String cardId);
+    CompletableFuture<ResponseEntity<Object>> deleteCardById(UUID cardId);
 
     void handleDeleteCardByCardIdResponse(CardDTO cardDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> deleteAllAccountCardsByAccountId(String accountId);
+    CompletableFuture<ResponseEntity<Object>> deleteAllAccountCardsByAccountId(UUID accountId);
 
     void handleDeleteCardByAccountIdResponse(CardDTO cardDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> deleteAllUsersCardsByCardHolderUUID(String cardHolderUUID);
+    CompletableFuture<ResponseEntity<Object>> deleteAllUsersCardsByCardHolderUUID(UUID cardHolderUUID);
 
     void handleDeleteAllCardsByHolderIdResponse(CardDTO cardDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 }

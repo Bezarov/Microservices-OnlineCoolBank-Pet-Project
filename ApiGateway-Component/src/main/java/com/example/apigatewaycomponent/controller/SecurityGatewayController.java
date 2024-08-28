@@ -1,7 +1,6 @@
 package com.example.apigatewaycomponent.controller;
 
 import com.example.apigatewaycomponent.dto.AuthRequestDTO;
-import com.example.apigatewaycomponent.dto.AuthResponseDTO;
 import com.example.apigatewaycomponent.service.SecurityGatewayService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

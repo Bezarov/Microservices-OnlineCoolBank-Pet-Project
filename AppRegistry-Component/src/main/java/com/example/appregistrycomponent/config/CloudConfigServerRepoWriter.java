@@ -57,14 +57,16 @@ public class CloudConfigServerRepoWriter {
                     line = "server.port=" + component.getComponentPort();
                 } else if (line.startsWith("eureka.instance.appname")) {
                     line = "eureka.instance.appname=" + component.getInstanceEurekaName();
+                } else if (line.startsWith("spring.kafka.bootstrap-servers")) {
+                    line = "spring.kafka.bootstrap-servers=" + component.getKafkaBootstrapAddresses();
                 }
+
                 content.append(line).append(System.lineSeparator());
             }
         } catch (IOException e) {
             logger.error("Error reading default properties file or it doesn't exists: " + defaultFileName);
             return null;
         }
-
         return content.toString();
     }
 }

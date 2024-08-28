@@ -33,15 +33,15 @@ public interface UsersGatewayService {
 
     void handleGetUserByPhoneNumberResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> updateUser(String userId, UsersDTO usersDTO);
+    CompletableFuture<ResponseEntity<Object>> updateUser(UUID userId, UsersDTO usersDTO);
 
     void handleUpdateUserByIdResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> updatePasswordById(String userId, String newPassword);
+    CompletableFuture<ResponseEntity<Object>> updatePasswordById(UUID userId, String newPassword);
 
     void handleUpdateUserPasswordByIdResponse(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> deleteUserById(String userId);
+    CompletableFuture<ResponseEntity<Object>> deleteUserById(UUID userId);
 
     void handleDeleteUserByIdResponse(String responseMessage, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 

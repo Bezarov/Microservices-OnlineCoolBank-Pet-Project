@@ -4,6 +4,7 @@ import com.example.userscomponent.dto.UsersDTO;
 import com.example.userscomponent.dto.ErrorDTO;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -16,11 +17,13 @@ import java.util.Map;
 
 @Configuration
 public class KafkaProducerConfig {
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String KAFKA_BOOTSTRAP_SERVERS;
 
     @Bean
     public ProducerFactory<String, ErrorDTO> usersErrorDTOProducerFactory() {
         Map<String, Object> usersErrorDTOProducerProp = new HashMap<>();
-        usersErrorDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        usersErrorDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
         usersErrorDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         usersErrorDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(usersErrorDTOProducerProp);
@@ -34,7 +37,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, UsersDTO> usersDTOProducerFactory() {
         Map<String, Object> usersDTOProducerProp = new HashMap<>();
-        usersDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        usersDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
         usersDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         usersDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(usersDTOProducerProp);
@@ -48,7 +51,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, String> stringMessageProduceFactory() {
         Map<String, Object> stringMessageProducerProp = new HashMap<>();
-        stringMessageProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        stringMessageProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
         stringMessageProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         stringMessageProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         return new DefaultKafkaProducerFactory<>(stringMessageProducerProp);

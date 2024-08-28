@@ -1,13 +1,11 @@
 package com.example.cardcomponent.service;
 
 import com.example.cardcomponent.dto.CardDTO;
-import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.UUID;
 
-public interface CardService {
-    CardDTO createCard(UUID accountId);
+public interface RestCardService {
 
     CardDTO getCardById(UUID cardId);
 
@@ -24,14 +22,4 @@ public interface CardService {
     List<CardDTO> getAllExpiredCards(UUID holderId);
 
     List<CardDTO> getAllActiveCards(UUID holderId);
-
-    CardDTO updateCardStatusById(UUID cardId, String status);
-
-    CardDTO updateCardStatusByCardNumber(String cardNumber, String status);
-
-    ResponseEntity<String> deleteCardById(UUID cardId);
-
-    ResponseEntity<String> deleteAllAccountCardsByAccountId(UUID accountId);
-
-    ResponseEntity<String> deleteAllUsersCardsByCardHolderUUID(UUID cardHolderUUID);
 }

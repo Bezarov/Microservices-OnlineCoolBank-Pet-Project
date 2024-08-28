@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -20,7 +21,7 @@ public class CardGatewayController {
     }
 
     @PostMapping("/by-account-id/{accountId}")
-    public CompletableFuture<ResponseEntity<Object>> createCard(@PathVariable String accountId) {
+    public CompletableFuture<ResponseEntity<Object>> createCard(@PathVariable UUID accountId) {
         logger.info("Received POST request to create Card for Account with ID: {}", accountId);
         return cardGatewayService.createCard(accountId)
                 .thenApply(response -> {
@@ -30,7 +31,7 @@ public class CardGatewayController {
     }
 
     @GetMapping("/by-card-id/{cardId}")
-    public CompletableFuture<ResponseEntity<Object>> getCardById(@PathVariable String cardId) {
+    public CompletableFuture<ResponseEntity<Object>> getCardById(@PathVariable UUID cardId) {
         logger.info("Received GET request to get Card by ID: {}", cardId);
         return cardGatewayService.getCardById(cardId)
                 .thenApply(response -> {
@@ -62,7 +63,7 @@ public class CardGatewayController {
 
     @GetMapping("/by-account-id/{accountId}")
     public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountCardsByAccountId(@PathVariable
-                                                                                             String accountId) {
+                                                                                             UUID accountId) {
         logger.info("Received GET request to get All Cards by Account ID: {}", accountId);
         return cardGatewayService.getAllAccountCardsByAccountId(accountId)
                 .thenApply(response -> {
@@ -73,7 +74,7 @@ public class CardGatewayController {
 
     @GetMapping("/by-user-id/{holderId}")
     public CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByCardHolderId(@PathVariable
-                                                                                             String holderId) {
+                                                                                             UUID holderId) {
         logger.info("Received GET request to get All Cards by Card Holder ID: {}", holderId);
         return cardGatewayService.getAllUserCardsByCardHolderId(holderId)
                 .thenApply(response -> {
@@ -83,7 +84,7 @@ public class CardGatewayController {
     }
 
     @GetMapping("/by-user-id/{holderId}/status")
-    public CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByStatus(@PathVariable String holderId,
+    public CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByStatus(@PathVariable UUID holderId,
                                                                  @RequestParam String status) {
         logger.info("Received GET request to get All Cards by Card Holder ID: {}," +
                 " with Status: {}", holderId, status);
@@ -95,7 +96,7 @@ public class CardGatewayController {
     }
 
     @GetMapping("/expired/by-user-id/{holderId}")
-    public CompletableFuture<ResponseEntity<List<Object>>> getAllExpiredCard(@PathVariable String holderId) {
+    public CompletableFuture<ResponseEntity<List<Object>>> getAllExpiredCard(@PathVariable UUID holderId) {
         logger.info("Received GET request to get All Expired Cards by Card Holder ID: {}", holderId);
         return cardGatewayService.getAllExpiredCards(holderId)
                 .thenApply(response -> {
@@ -105,7 +106,7 @@ public class CardGatewayController {
     }
 
     @GetMapping("/active/by-user-id/{holderId}")
-    public CompletableFuture<ResponseEntity<List<Object>>> getAllActiveCards(@PathVariable String holderId) {
+    public CompletableFuture<ResponseEntity<List<Object>>> getAllActiveCards(@PathVariable UUID holderId) {
         logger.info("Received GET request to get All Active Cards by Card Holder ID: {}", holderId);
         return cardGatewayService.getAllActiveCards(holderId)
                 .thenApply(response -> {
@@ -115,7 +116,7 @@ public class CardGatewayController {
     }
 
     @PatchMapping("/by-card-id/{cardId}/status")
-    public CompletableFuture<ResponseEntity<Object>> updateCardStatusById(@PathVariable String cardId,
+    public CompletableFuture<ResponseEntity<Object>> updateCardStatusById(@PathVariable UUID cardId,
                                                                           @RequestParam String status) {
         logger.info("Received PATCH request to update Status of Card by Card ID: {}," +
                 " with Status: {}", cardId, status);
@@ -139,7 +140,7 @@ public class CardGatewayController {
     }
 
     @DeleteMapping("/by-card-id/{cardId}")
-    public CompletableFuture<ResponseEntity<Object>> deleteCardById(@PathVariable String cardId) {
+    public CompletableFuture<ResponseEntity<Object>> deleteCardById(@PathVariable UUID cardId) {
         logger.info("Received DELETE request to remove Card with ID: {}", cardId);
         return cardGatewayService.deleteCardById(cardId)
                 .thenApply(response -> {
@@ -150,7 +151,7 @@ public class CardGatewayController {
 
     @DeleteMapping("/by-account-id/{accountId}")
     public CompletableFuture<ResponseEntity<Object>> deleteAllAccountCardsByAccountId(@PathVariable
-                                                                                      String accountId) {
+                                                                                      UUID accountId) {
         logger.info("Received DELETE request to remove All Account Cards" +
                 " by Account ID: {}", accountId);
         return cardGatewayService.deleteAllAccountCardsByAccountId(accountId)
@@ -162,7 +163,7 @@ public class CardGatewayController {
 
     @DeleteMapping("/by-user-id/{cardHolderUUID}")
     public CompletableFuture<ResponseEntity<Object>> deleteAllUsersCardsByCardHolderUUID(@PathVariable
-                                                                                         String cardHolderUUID) {
+                                                                                         UUID cardHolderUUID) {
         logger.info("Received DELETE request to remove All User Cards" +
                 " by Holder ID: {}", cardHolderUUID);
         return cardGatewayService.deleteAllUsersCardsByCardHolderUUID(cardHolderUUID)

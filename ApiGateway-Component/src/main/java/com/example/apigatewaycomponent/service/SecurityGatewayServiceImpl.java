@@ -26,10 +26,10 @@ public class SecurityGatewayServiceImpl implements SecurityGatewayService {
     private static final Logger logger = LoggerFactory.getLogger(SecurityGatewayServiceImpl.class);
 
     private static final long REQUEST_TIMEOUT = 5;
-    private final KafkaTemplate<String, Object> securityKafkaTemplate;
+    private final KafkaTemplate<String, AuthRequestDTO> securityKafkaTemplate;
     private final Map<String, CompletableFuture<ResponseEntity<Object>>> responseFutures = new ConcurrentHashMap<>();
 
-    public SecurityGatewayServiceImpl(KafkaTemplate<String, Object> securityKafkaTemplate) {
+    public SecurityGatewayServiceImpl(KafkaTemplate<String, AuthRequestDTO> securityKafkaTemplate) {
         this.securityKafkaTemplate = securityKafkaTemplate;
     }
 
@@ -52,10 +52,10 @@ public class SecurityGatewayServiceImpl implements SecurityGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: user-authentication with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("user-authentication", authRequestDTO);
+        ProducerRecord<String, AuthRequestDTO> topic = new ProducerRecord<>("user-authentication", authRequestDTO);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         securityKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
 
         return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
                 .thenApply(response -> {
@@ -93,10 +93,10 @@ public class SecurityGatewayServiceImpl implements SecurityGatewayService {
         responseFutures.put(correlationId, futureResponse);
 
         logger.info("Trying to create topic: component-authentication with correlation id: {} ", correlationId);
-        ProducerRecord<String, Object> topic = new ProducerRecord<>("component-authentication", authRequestDTO);
+        ProducerRecord<String, AuthRequestDTO> topic = new ProducerRecord<>("component-authentication", authRequestDTO);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         securityKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic);
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
 
         return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
                 .thenApply(response -> {

@@ -71,7 +71,7 @@ public class UsersGatewayController {
     }
 
     @PutMapping("/by-id/{userId}")
-    public CompletableFuture<ResponseEntity<Object>> updateUser(@PathVariable String userId,
+    public CompletableFuture<ResponseEntity<Object>> updateUser(@PathVariable UUID userId,
                                                                 @RequestBody UsersDTO usersDTO) {
         logger.info("Received PUT request to update User with ID: {}, UPDATE TO: {}", userId, usersDTO);
         return usersGatewayService.updateUser(userId, usersDTO)
@@ -82,7 +82,7 @@ public class UsersGatewayController {
     }
 
     @PatchMapping("/by-id/{userId}/password/{newPassword}")
-    public CompletableFuture<ResponseEntity<Object>> updatePasswordById(@PathVariable String userId,
+    public CompletableFuture<ResponseEntity<Object>> updatePasswordById(@PathVariable UUID userId,
                                                                         @PathVariable String newPassword) {
         logger.info("Received PATCH request to update User password with ID: {}, New Password: {}", userId, newPassword);
         return usersGatewayService.updatePasswordById(userId, newPassword)
@@ -93,7 +93,7 @@ public class UsersGatewayController {
     }
 
     @DeleteMapping("/by-id/{userId}")
-    public CompletableFuture<ResponseEntity<Object>> deleteUserById(@PathVariable String userId) {
+    public CompletableFuture<ResponseEntity<Object>> deleteUserById(@PathVariable UUID userId) {
         logger.info("Received DELETE request to remove User with ID: {}", userId);
         return usersGatewayService.deleteUserById(userId)
                 .thenApply(response -> {

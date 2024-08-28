@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -22,44 +23,11 @@ public class AccountGatewayController {
     }
 
     @PostMapping("/by-user-id/{userId}")
-    public CompletableFuture<ResponseEntity<Object>> createAccount(@PathVariable String userId,
+    public CompletableFuture<ResponseEntity<Object>> createAccount(@PathVariable UUID userId,
                                                                    @RequestBody AccountDTO accountDTO) {
         logger.info("Received POST request to create Account for User with ID: {}, Account: {}",
                 userId, accountDTO);
         return accountGatewayService.createAccount(userId, accountDTO)
-                .thenApply(response -> {
-                    logger.debug("Request was successfully processed and response was sent: {}", response);
-                    return response;
-                });
-    }
-
-    @GetMapping("/by-account-id/{accountId}")
-    public CompletableFuture<ResponseEntity<Object>> getAccountById(@PathVariable String accountId) {
-        logger.info("Received GET request to get Account by ID: {}", accountId);
-        return accountGatewayService.getAccountById(accountId)
-                .thenApply(response -> {
-                    logger.debug("Request was successfully processed and response was sent: {}", response);
-                    return response;
-                });
-    }
-
-
-    @GetMapping("/by-holder-name/{accountHolderFullName}")
-    public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountsByHolderFullName(@PathVariable
-                                                                                          String accountHolderFullName) {
-        logger.info("Received GET request to get All User Accounts by HOLDER FULL NAME: {}",
-                accountHolderFullName);
-        return accountGatewayService.getAllAccountsByHolderFullName(accountHolderFullName)
-                .thenApply(response -> {
-                    logger.debug("Request was successfully processed and response was sent: {}", response);
-                    return response;
-                });
-    }
-
-    @GetMapping("/by-account-id/{accountId}/balance")
-    public CompletableFuture<ResponseEntity<Object>> getBalanceByAccountId(@PathVariable String accountId) {
-        logger.info("Received GET request to get Account balance by ACCOUNT ID: {}", accountId);
-        return accountGatewayService.getBalanceByAccountId(accountId)
                 .thenApply(response -> {
                     logger.debug("Request was successfully processed and response was sent: {}", response);
                     return response;
@@ -76,8 +44,40 @@ public class AccountGatewayController {
                 });
     }
 
+    @GetMapping("/by-account-id/{accountId}")
+    public CompletableFuture<ResponseEntity<Object>> getAccountById(@PathVariable UUID accountId) {
+        logger.info("Received GET request to get Account by ID: {}", accountId);
+        return accountGatewayService.getAccountById(accountId)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
+    }
+
+    @GetMapping("/by-holder-name/{accountHolderFullName}")
+    public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountsByHolderFullName(@PathVariable
+                                                                                          String accountHolderFullName) {
+        logger.info("Received GET request to get All User Accounts by HOLDER FULL NAME: {}",
+                accountHolderFullName);
+        return accountGatewayService.getAllAccountsByHolderFullName(accountHolderFullName)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
+    }
+
+    @GetMapping("/by-account-id/{accountId}/balance")
+    public CompletableFuture<ResponseEntity<Object>> getBalanceByAccountId(@PathVariable UUID accountId) {
+        logger.info("Received GET request to get Account balance by ACCOUNT ID: {}", accountId);
+        return accountGatewayService.getBalanceByAccountId(accountId)
+                .thenApply(response -> {
+                    logger.debug("Request was successfully processed and response was sent: {}", response);
+                    return response;
+                });
+    }
+
     @GetMapping("/by-user-id/{userId}")
-    public CompletableFuture<ResponseEntity<List<Object>>> getAllUserAccountsByUserId(@PathVariable String userId) {
+    public CompletableFuture<ResponseEntity<List<Object>>> getAllUserAccountsByUserId(@PathVariable UUID userId) {
         logger.info("Received GET request to get All User Accounts by USER ID: {}", userId);
         return accountGatewayService.getAllUserAccountsByUserId(userId)
                 .thenApply(response -> {
@@ -88,7 +88,7 @@ public class AccountGatewayController {
 
     @GetMapping("/by-user-id/{userId}/status")
     public CompletableFuture<ResponseEntity<List<Object>>> getAccountsByStatus(
-            @PathVariable String userId, @RequestParam(name = "status") String accountStatus) {
+            @PathVariable UUID userId, @RequestParam(name = "status") String accountStatus) {
         logger.info("Received GET request to get All User (USER ID: {}), Accounts by ACCOUNT STATUS: {}",
                 userId, accountStatus);
         return accountGatewayService.getAllAccountsByStatus(userId, accountStatus)
@@ -99,7 +99,7 @@ public class AccountGatewayController {
     }
 
     @PatchMapping("/by-account-id/{accountId}/refill")
-    public CompletableFuture<ResponseEntity<Object>> refillAccount(@PathVariable String accountId,
+    public CompletableFuture<ResponseEntity<Object>> refillAccount(@PathVariable UUID accountId,
                                                                    @RequestParam(name = "amount") BigDecimal amount) {
         logger.info("Received PATCH request to refill Account with ID: {}, in AMOUNT OF: {}",
                 accountId, amount);
@@ -111,7 +111,7 @@ public class AccountGatewayController {
     }
 
     @PutMapping("/by-account-id/{accountId}")
-    public CompletableFuture<ResponseEntity<Object>> updateAccountById(@PathVariable String accountId,
+    public CompletableFuture<ResponseEntity<Object>> updateAccountById(@PathVariable UUID accountId,
                                                                        @RequestBody AccountDTO accountDTO) {
         logger.info("Received PUT request to update Account with ID: {}, UPDATE TO: {}",
                 accountId, accountDTO);
@@ -123,7 +123,7 @@ public class AccountGatewayController {
     }
 
     @PatchMapping("/by-account-id/{accountId}/status")
-    public CompletableFuture<ResponseEntity<Object>> updateAccountStatusById(@PathVariable String accountId,
+    public CompletableFuture<ResponseEntity<Object>> updateAccountStatusById(@PathVariable UUID accountId,
                                                                              @RequestParam String status) {
         logger.info("Received PATCH request to update Account Status with ID: {}, TO: {}",
                 accountId, status);
@@ -135,7 +135,7 @@ public class AccountGatewayController {
     }
 
     @PatchMapping("/by-account-id/{accountId}/balance")
-    public CompletableFuture<ResponseEntity<Object>> updateAccountBalanceById(@PathVariable String accountId,
+    public CompletableFuture<ResponseEntity<Object>> updateAccountBalanceById(@PathVariable UUID accountId,
                                                                               @RequestParam BigDecimal balance) {
         logger.info("Received PATCH request to update Account Balance with ID: {}, WITH New Balance: {}",
                 accountId, balance);
@@ -159,7 +159,7 @@ public class AccountGatewayController {
     }
 
     @DeleteMapping("/by-account-id/{accountId}")
-    public CompletableFuture<ResponseEntity<Object>> deleteAccountByAccountId(@PathVariable String accountId) {
+    public CompletableFuture<ResponseEntity<Object>> deleteAccountByAccountId(@PathVariable UUID accountId) {
         logger.info("Received DELETE request to remove Account with ID: {} ", accountId);
         return accountGatewayService.deleteAccountByAccountId(accountId)
                 .thenApply(response -> {
@@ -179,7 +179,7 @@ public class AccountGatewayController {
     }
 
     @DeleteMapping("/by-user-id/{userId}")
-    public CompletableFuture<ResponseEntity<Object>> deleteAllUserAccountsByUserId(@PathVariable String userId) {
+    public CompletableFuture<ResponseEntity<Object>> deleteAllUserAccountsByUserId(@PathVariable UUID userId) {
         logger.info("Received DELETE request to remove All User Accounts with User ID: {} ", userId);
         return accountGatewayService.deleteAllUserAccountsByUserId(userId)
                 .thenApply(response -> {
