@@ -1,4 +1,4 @@
-package com.coolbank.model;
+package com.example.paymentcomponent.model;
 
 import jakarta.persistence.*;
 
@@ -12,12 +12,8 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private BigDecimal amount;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "from_account_id")
-    private Account fromAccount;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "to_account_id")
-    private Account toAccount;
+    private UUID fromAccount;
+    private UUID toAccount;
     private LocalDateTime paymentDate;
     private String paymentType;
     private String status;
@@ -26,16 +22,15 @@ public class Payment {
     public Payment() {
     }
 
-    public Payment(UUID id, BigDecimal amount, LocalDateTime paymentDate,
-                   String paymentType, String status, Account fromAccount,
-                   Account toAccount, String description) {
+    public Payment(UUID id, BigDecimal amount, UUID fromAccount, UUID toAccount,
+                   LocalDateTime paymentDate, String paymentType, String status, String description) {
         this.id = id;
         this.amount = amount;
+        this.fromAccount = fromAccount;
+        this.toAccount = toAccount;
         this.paymentDate = paymentDate;
         this.paymentType = paymentType;
         this.status = status;
-        this.fromAccount = fromAccount;
-        this.toAccount = toAccount;
         this.description = description;
     }
 
@@ -79,22 +74,6 @@ public class Payment {
         this.status = status;
     }
 
-    public Account getFromAccount() {
-        return fromAccount;
-    }
-
-    public void setFromAccount(Account fromAccount) {
-        this.fromAccount = fromAccount;
-    }
-
-    public Account getToAccount() {
-        return toAccount;
-    }
-
-    public void setToAccount(Account toAccount) {
-        this.toAccount = toAccount;
-    }
-
     public String getDescription() {
         return description;
     }
@@ -103,13 +82,29 @@ public class Payment {
         this.description = description;
     }
 
+    public UUID getFromAccount() {
+        return fromAccount;
+    }
+
+    public void setFromAccount(UUID fromAccount) {
+        this.fromAccount = fromAccount;
+    }
+
+    public UUID getToAccount() {
+        return toAccount;
+    }
+
+    public void setToAccount(UUID toAccount) {
+        this.toAccount = toAccount;
+    }
+
     @Override
     public String toString() {
         return "Payment{" +
                 "id=" + id +
                 ", amount=" + amount +
-                ", fromAccount=" + fromAccount.getId() +
-                ", toAccount=" + toAccount.getId() +
+                ", fromAccount=" + fromAccount +
+                ", toAccount=" + toAccount +
                 ", paymentDate=" + paymentDate +
                 ", paymentType='" + paymentType + '\'' +
                 ", status='" + status + '\'' +

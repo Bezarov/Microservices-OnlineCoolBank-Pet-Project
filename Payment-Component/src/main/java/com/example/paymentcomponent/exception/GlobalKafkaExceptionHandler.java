@@ -1,6 +1,6 @@
-package com.example.accountcomponent.exception;
+package com.example.paymentcomponent.exception;
 
-import com.example.accountcomponent.dto.ErrorDTO;
+import com.example.paymentcomponent.dto.ErrorDTO;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -19,10 +19,10 @@ import java.util.List;
 @Component
 public class GlobalKafkaExceptionHandler implements CommonErrorHandler {
     private final static Logger logger = LoggerFactory.getLogger(GlobalKafkaExceptionHandler.class);
-    private final KafkaTemplate<String, ErrorDTO> accountDTOErrorKafkaTemplate;
+    private final KafkaTemplate<String, ErrorDTO> paymentDTOErrorKafkaTemplate;
 
-    public GlobalKafkaExceptionHandler(KafkaTemplate<String, ErrorDTO> accountDTOErrorKafkaTemplate) {
-        this.accountDTOErrorKafkaTemplate = accountDTOErrorKafkaTemplate;
+    public GlobalKafkaExceptionHandler(KafkaTemplate<String, ErrorDTO> paymentDTOErrorKafkaTemplate) {
+        this.paymentDTOErrorKafkaTemplate = paymentDTOErrorKafkaTemplate;
     }
 
 
@@ -57,10 +57,10 @@ public class GlobalKafkaExceptionHandler implements CommonErrorHandler {
         errorDTO.setMessage(exceptionReason);
         errorDTO.setCorrelationId(correlationId);
 
-        logger.info("Trying to create topic: account-error with correlation id: {} ", correlationId);
-        ProducerRecord<String, ErrorDTO> errorTopic = new ProducerRecord<>("account-error", null, errorDTO);
+        logger.info("Trying to create topic: payment-error with correlation id: {} ", correlationId);
+        ProducerRecord<String, ErrorDTO> errorTopic = new ProducerRecord<>("payment-error", null, errorDTO);
         errorTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        accountDTOErrorKafkaTemplate.send(errorTopic);
+        paymentDTOErrorKafkaTemplate.send(errorTopic);
         logger.info("Error topic was created and allocated in kafka broker successfully: {}", errorTopic);
     }
 }

@@ -1,6 +1,6 @@
-package com.coolbank.repository;
+package com.example.paymentcomponent.repository;
 
-import com.coolbank.model.Payment;
+import com.example.paymentcomponent.model.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

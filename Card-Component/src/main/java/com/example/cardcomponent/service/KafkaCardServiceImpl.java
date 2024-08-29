@@ -9,6 +9,7 @@ import com.example.cardcomponent.repository.CardRepository;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -33,8 +34,9 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     private final KafkaTemplate<String, List<CardDTO>> responseListOfDTOSKafkaTemplate;
     private final KafkaTemplate<String, String> responseMessageKafkaTemplate;
 
-    public KafkaCardServiceImpl(CardRepository cardRepository, UsersComponentClient usersComponentClient,
-                                AccountComponentClient accountComponentClient, KafkaTemplate<String, CardDTO> responseDTOKafkaTemplate, KafkaTemplate<String, List<CardDTO>> responseListOfDTOSKafkaTemplate, KafkaTemplate<String, String> responseMessageKafkaTemplate) {
+    public KafkaCardServiceImpl(CardRepository cardRepository,
+                                @Qualifier("Users-Components") UsersComponentClient usersComponentClient,
+                                @Qualifier("Account-Components") AccountComponentClient accountComponentClient, KafkaTemplate<String, CardDTO> responseDTOKafkaTemplate, KafkaTemplate<String, List<CardDTO>> responseListOfDTOSKafkaTemplate, KafkaTemplate<String, String> responseMessageKafkaTemplate) {
         this.cardRepository = cardRepository;
         this.usersComponentClient = usersComponentClient;
         this.accountComponentClient = accountComponentClient;
