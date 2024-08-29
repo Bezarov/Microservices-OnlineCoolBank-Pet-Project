@@ -1,4 +1,4 @@
-package com.example.accountcomponent.dto;
+package com.example.paymentcomponent.dto;
 
 import java.time.LocalDate;
 import java.util.UUID;

@@ -15,7 +15,7 @@ import java.util.UUID;
 @FeignClient(name = "Card-Components", url = "http://localhost:8301/card", fallback = CardComponentClientFallback.class)
 public interface CardComponentClient {
     @GetMapping("/by-account-id/{accountId}")
-//    @CircuitBreaker(name = "cardComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")
+    @CircuitBreaker(name = "cardComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")
     List<CardDTO> findAllCardsByAccountId(@PathVariable UUID accountId);
     @DeleteMapping("/by-account-id/{accountId}")
     @CircuitBreaker(name = "cardComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")

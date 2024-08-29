@@ -62,8 +62,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         ProducerRecord<String, PaymentDTO> topic = new ProducerRecord<>("create-payment-by-accounts", paymentDTO);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         paymentDTOKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
-
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 

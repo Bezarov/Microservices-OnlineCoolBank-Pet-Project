@@ -1,4 +1,4 @@
-package com.coolbank.dto;
+package com.example.paymentcomponent.dto;
 
 
 import java.math.BigDecimal;
