@@ -1,7 +1,7 @@
 package com.example.securitycomponent.jwt;
 
-import com.example.securitycomponent.model.AppComponent;
-import com.example.securitycomponent.model.Users;
+import com.example.securitycomponent.dto.AppComponentDTO;
+import com.example.securitycomponent.dto.UsersDTO;
 import com.example.securitycomponent.service.AuthDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -65,24 +65,24 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             if (jwtUtil.isUserToken(receivedJwtToken) && jwtUtil.validateUserToken(receivedJwtToken)) {
                 logger.debug("JWT Token is not expired");
                 logger.debug("Authenticating user token");
-                Users user = authDetailsService.authenticateUserToken(principal);
+                UsersDTO usersDTO = authDetailsService.authenticateUserToken(principal);
                 logger.debug("Setting security context holder");
-                setUserAuthentication(request, user);
+                setUserAuthentication(request, usersDTO);
             } else if (jwtUtil.isComponentToken(receivedJwtToken) && jwtUtil.validateComponentToken(receivedJwtToken)) {
                 logger.debug("JWT Token is not expired");
                 logger.debug("Authenticating component token");
-                AppComponent appComponent = authDetailsService.authenticateComponentToken(principal);
+                AppComponentDTO appComponentDTO = authDetailsService.authenticateComponentToken(principal);
                 logger.debug("Setting security context holder");
-                setComponentAuthentication(request, appComponent);
+                setComponentAuthentication(request, appComponentDTO);
             }
         }
         filterChain.doFilter(request, response);
     }
 
-    private void setUserAuthentication(HttpServletRequest request, Users user) {
+    private void setUserAuthentication(HttpServletRequest request, UsersDTO usersDTO) {
         try {
             UsernamePasswordAuthenticationToken userNamePassAuthToken = new UsernamePasswordAuthenticationToken(
-                    user.getEmail(), user.getPassword(), new ArrayList<>());
+                    usersDTO.getEmail(), usersDTO.getPassword(), new ArrayList<>());
             userNamePassAuthToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(userNamePassAuthToken);
@@ -94,10 +94,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
     }
 
-    private void setComponentAuthentication(HttpServletRequest request, AppComponent appComponent) {
+    private void setComponentAuthentication(HttpServletRequest request, AppComponentDTO appComponentDTO) {
         try {
             UsernamePasswordAuthenticationToken userNamePassAuthToken = new UsernamePasswordAuthenticationToken(
-                    appComponent.getComponentId(), appComponent.getComponentSecret(), new ArrayList<>());
+                    appComponentDTO.getComponentId(), appComponentDTO.getComponentSecret(), new ArrayList<>());
             userNamePassAuthToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(userNamePassAuthToken);

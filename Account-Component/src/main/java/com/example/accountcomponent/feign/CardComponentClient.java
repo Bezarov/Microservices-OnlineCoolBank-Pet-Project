@@ -17,6 +17,7 @@ public interface CardComponentClient {
     @GetMapping("/by-account-id/{accountId}")
     @CircuitBreaker(name = "cardComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")
     List<CardDTO> findAllCardsByAccountId(@PathVariable UUID accountId);
+
     @DeleteMapping("/by-account-id/{accountId}")
     @CircuitBreaker(name = "cardComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")
     void deleteAllAccountCardsByAccountId(@PathVariable UUID accountId);

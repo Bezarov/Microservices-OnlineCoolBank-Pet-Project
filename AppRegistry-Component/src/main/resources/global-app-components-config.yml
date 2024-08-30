@@ -45,7 +45,7 @@ components:
     kafkaBootstrapAddresses: "localhost:9092, localhost:9092"
     componentAddress: "localhost"
     componentPort: "8401"
-    componentId: "1d8c6259-a859-4e13-88e6-49668a1e39c6"
+    componentId: "cb9b8187-a5cc-408a-801c-ad991747dab3"
     componentSecret: "PaymentServicePassword"
   #Security microservice
   - componentName: "Security-Component-01"

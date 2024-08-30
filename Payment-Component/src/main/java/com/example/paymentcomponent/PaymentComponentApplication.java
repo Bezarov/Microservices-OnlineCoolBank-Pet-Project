@@ -9,7 +9,6 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.example.paymentcomponent.feign")
 public class PaymentComponentApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(PaymentComponentApplication.class, args);
     }

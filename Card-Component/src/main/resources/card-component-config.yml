@@ -1,0 +1,4 @@
+#Card microservice
+componentName: "Card-Component-01"
+componentId: "1d8c6259-a859-4e13-88e6-49668a1e39c6"
+componentSecret: "CardServicePassword"

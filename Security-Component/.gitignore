@@ -36,5 +36,5 @@ out/
 ### VS Code ###
 .vscode/
 
-src/main/java/com/example/userscomponent/log/*
+src/main/java/com/example/securitycomponent/log/*
 src/main/resources/db/*

@@ -31,14 +31,14 @@ public class ComponentConfigReader {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         ComponentConfigReader config = null;
         try {
-            logger.info("Trying to read and deserialize component-config.yml file");
+            logger.info("Trying to read and deserialize: global-app-components-config.yml file");
             config = objectMapper.readValue(new File(
-                    "src/main/resources/component-config.yml"), ComponentConfigReader.class);
+                    "src/main/resources/global-app-components-config.yml"), ComponentConfigReader.class);
         } catch (IOException e) {
             logger.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();
         }
-        config.getComponents().forEach(component -> logger.debug("Deserialization successfully: {}.", component));
+        config.getComponents().forEach(component -> logger.info("Deserialization successfully: {}.", component));
         return config;
     }
 }

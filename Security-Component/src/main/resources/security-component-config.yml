@@ -1,0 +1,4 @@
+#Security microservice
+componentName: "Security-Component-01"
+componentId: "1414fdb6-dbbd-4e44-8db8-618850391e18"
+componentSecret: "SecurityServicePassword"

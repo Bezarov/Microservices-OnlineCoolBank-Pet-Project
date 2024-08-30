@@ -1,7 +1,6 @@
 package com.example.accountcomponent.service;
 
 import com.example.accountcomponent.dto.AccountDTO;
-import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.util.List;

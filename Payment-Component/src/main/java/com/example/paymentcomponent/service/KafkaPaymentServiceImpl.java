@@ -51,8 +51,8 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     private PaymentDTO convertPaymentModelToDTO(Payment payment) {
         PaymentDTO paymentDTO = new PaymentDTO();
         paymentDTO.setId(payment.getId());
-        paymentDTO.setFromAccount(payment.getFromAccount());
-        paymentDTO.setToAccount(payment.getToAccount());
+        paymentDTO.setFromAccount(payment.getFromAccountId());
+        paymentDTO.setToAccount(payment.getToAccountId());
         paymentDTO.setPaymentDate(payment.getPaymentDate());
         paymentDTO.setAmount(payment.getAmount());
         paymentDTO.setStatus(payment.getStatus());
@@ -63,8 +63,8 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
 
     private Payment convertPaymentDTOToModel(UUID fromAccount, UUID toAccount, PaymentDTO paymentDTO) {
         Payment payment = new Payment();
-        payment.setFromAccount(fromAccount);
-        payment.setToAccount(toAccount);
+        payment.setFromAccountId(fromAccount);
+        payment.setToAccountId(toAccount);
         payment.setPaymentDate(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
         payment.setAmount(paymentDTO.getAmount());
         payment.setDescription(paymentDTO.getDescription());
