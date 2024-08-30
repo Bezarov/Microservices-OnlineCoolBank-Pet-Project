@@ -1,0 +1,4 @@
+#ApiGateway microservice
+componentName: "ApiGateway-Component-01"
+componentId: "5bd9e5cc-96d2-4743-b0f9-c71966c4158f"
+componentSecret: "ApiGatewayPassword"

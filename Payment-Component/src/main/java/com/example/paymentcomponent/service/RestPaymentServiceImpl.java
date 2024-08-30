@@ -24,8 +24,8 @@ public class RestPaymentServiceImpl implements RestPaymentService {
     private PaymentDTO convertPaymentModelToDTO(Payment payment) {
         PaymentDTO paymentDTO = new PaymentDTO();
         paymentDTO.setId(payment.getId());
-        paymentDTO.setFromAccount(payment.getFromAccount());
-        paymentDTO.setToAccount(payment.getToAccount());
+        paymentDTO.setFromAccount(payment.getFromAccountId());
+        paymentDTO.setToAccount(payment.getToAccountId());
         paymentDTO.setPaymentDate(payment.getPaymentDate());
         paymentDTO.setAmount(payment.getAmount());
         paymentDTO.setStatus(payment.getStatus());

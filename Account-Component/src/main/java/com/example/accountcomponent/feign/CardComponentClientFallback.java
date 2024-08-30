@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class CardComponentClientFallback implements CardComponentClient{
+public class CardComponentClientFallback implements CardComponentClient {
     @Override
     public List<CardDTO> findAllCardsByAccountId(UUID accountId) {
         return Collections.emptyList();

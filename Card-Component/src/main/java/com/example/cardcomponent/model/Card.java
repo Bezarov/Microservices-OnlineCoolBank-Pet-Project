@@ -10,6 +10,7 @@ public class Card {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+    private UUID accountId;
     private String cardNumber;
     private String cardHolderFullName;
     private UUID cardHolderUUID;
@@ -20,9 +21,10 @@ public class Card {
     public Card() {
     }
 
-    public Card(UUID id, String cardNumber, String cardHolderFullName, UUID cardHolderUUID,
+    public Card(UUID id, UUID accountId, String cardNumber, String cardHolderFullName, UUID cardHolderUUID,
                 LocalDate expirationDate, String cvv, String status) {
         this.id = id;
+        this.accountId = accountId;
         this.cardNumber = cardNumber;
         this.cardHolderFullName = cardHolderFullName;
         this.cardHolderUUID = cardHolderUUID;
@@ -39,6 +41,14 @@ public class Card {
         this.id = id;
     }
 
+    public UUID getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(UUID accountId) {
+        this.accountId = accountId;
+    }
+
     public String getCardNumber() {
         return cardNumber;
     }
@@ -51,8 +61,8 @@ public class Card {
         return cardHolderFullName;
     }
 
-    public void setCardHolderFullName(String cardHolderName) {
-        this.cardHolderFullName = cardHolderName;
+    public void setCardHolderFullName(String cardHolderFullName) {
+        this.cardHolderFullName = cardHolderFullName;
     }
 
     public UUID getCardHolderUUID() {
@@ -91,8 +101,10 @@ public class Card {
     public String toString() {
         return "Card{" +
                 "id=" + id +
+                ", accountId=" + accountId +
                 ", cardNumber='" + cardNumber + '\'' +
                 ", cardHolderFullName='" + cardHolderFullName + '\'' +
+                ", cardHolderUUID=" + cardHolderUUID +
                 ", expirationDate=" + expirationDate +
                 ", cvv='" + cvv + '\'' +
                 ", status='" + status + '\'' +

@@ -1,8 +1,8 @@
 package com.example.securitycomponent.service;
 
+import com.example.securitycomponent.dto.AppComponentDTO;
 import com.example.securitycomponent.dto.AuthRequestDTO;
-import com.example.securitycomponent.model.AppComponent;
-import com.example.securitycomponent.model.Users;
+import com.example.securitycomponent.dto.UsersDTO;
 
 public interface AuthDetailsService {
 
@@ -10,7 +10,7 @@ public interface AuthDetailsService {
 
     void authenticateComponent(AuthRequestDTO authRequestDTO);
 
-    Users authenticateUserToken(String principal);
+    UsersDTO authenticateUserToken(String principal);
 
-    AppComponent authenticateComponentToken(String principal);
+    AppComponentDTO authenticateComponentToken(String principal);
 }

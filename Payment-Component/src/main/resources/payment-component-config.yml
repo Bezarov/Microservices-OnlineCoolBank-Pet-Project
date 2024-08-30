@@ -1,0 +1,4 @@
+#Payment microservice
+componentName: "Payment-Component-01"
+componentId: "cb9b8187-a5cc-408a-801c-ad991747dab3"
+componentSecret: "PaymentServicePassword"

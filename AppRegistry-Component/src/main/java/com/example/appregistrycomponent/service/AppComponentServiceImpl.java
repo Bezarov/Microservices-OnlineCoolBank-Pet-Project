@@ -45,7 +45,7 @@ public class AppComponentServiceImpl implements AppComponentService {
                         component.getComponentSecret().equals(appComponent.getComponentSecret()))
                 .findFirst()
                 .orElseThrow(() -> {
-                    logger.error("Received data was not found in component-config.yml: {}", appComponent);
+                    logger.error("Received data was not found in global-app-components-config.yml: {}", appComponent);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Invalid Component Credentials: " + appComponent);
                 });

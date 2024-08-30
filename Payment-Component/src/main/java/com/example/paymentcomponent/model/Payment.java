@@ -12,8 +12,8 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private BigDecimal amount;
-    private UUID fromAccount;
-    private UUID toAccount;
+    private UUID fromAccountId;
+    private UUID toAccountId;
     private LocalDateTime paymentDate;
     private String paymentType;
     private String status;
@@ -22,12 +22,12 @@ public class Payment {
     public Payment() {
     }
 
-    public Payment(UUID id, BigDecimal amount, UUID fromAccount, UUID toAccount,
-                   LocalDateTime paymentDate, String paymentType, String status, String description) {
+    public Payment(UUID id, BigDecimal amount, UUID fromAccountId, UUID toAccountId, LocalDateTime paymentDate,
+                   String paymentType, String status, String description) {
         this.id = id;
         this.amount = amount;
-        this.fromAccount = fromAccount;
-        this.toAccount = toAccount;
+        this.fromAccountId = fromAccountId;
+        this.toAccountId = toAccountId;
         this.paymentDate = paymentDate;
         this.paymentType = paymentType;
         this.status = status;
@@ -48,6 +48,22 @@ public class Payment {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public UUID getFromAccountId() {
+        return fromAccountId;
+    }
+
+    public void setFromAccountId(UUID fromAccountId) {
+        this.fromAccountId = fromAccountId;
+    }
+
+    public UUID getToAccountId() {
+        return toAccountId;
+    }
+
+    public void setToAccountId(UUID toAccountId) {
+        this.toAccountId = toAccountId;
     }
 
     public LocalDateTime getPaymentDate() {
@@ -82,29 +98,13 @@ public class Payment {
         this.description = description;
     }
 
-    public UUID getFromAccount() {
-        return fromAccount;
-    }
-
-    public void setFromAccount(UUID fromAccount) {
-        this.fromAccount = fromAccount;
-    }
-
-    public UUID getToAccount() {
-        return toAccount;
-    }
-
-    public void setToAccount(UUID toAccount) {
-        this.toAccount = toAccount;
-    }
-
     @Override
     public String toString() {
         return "Payment{" +
                 "id=" + id +
                 ", amount=" + amount +
-                ", fromAccount=" + fromAccount +
-                ", toAccount=" + toAccount +
+                ", fromAccountId=" + fromAccountId +
+                ", toAccountId=" + toAccountId +
                 ", paymentDate=" + paymentDate +
                 ", paymentType='" + paymentType + '\'' +
                 ", status='" + status + '\'' +

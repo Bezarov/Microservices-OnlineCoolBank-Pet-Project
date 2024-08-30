@@ -1,0 +1,4 @@
+#Users microservice
+componentName: "Users-Component-01"
+componentId: "a4ad33d9-382d-4cd4-9ce9-c7b941c14912"
+componentSecret: "UsersServicePassword"

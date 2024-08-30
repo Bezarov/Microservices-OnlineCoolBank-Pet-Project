@@ -1,0 +1,4 @@
+#Account microservice
+componentName: "Account-Component-01"
+componentId: "c5acff7c-77f2-4026-b56e-2612ae7483d2"
+componentSecret: "AccountServicePassword"
