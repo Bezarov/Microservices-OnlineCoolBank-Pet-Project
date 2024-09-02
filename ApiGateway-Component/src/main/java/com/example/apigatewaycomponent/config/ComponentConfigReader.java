@@ -11,10 +11,12 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 public class ComponentConfigReader {
@@ -32,6 +34,7 @@ public class ComponentConfigReader {
     void init() {
         logger.info("Trying to read and deserialize: apigateway-component-config.yml file");
         ApiGatewayAppComponentConfigDTO apiGatewayConfig = readConfig();
+        logger.info("Deserialization successfully: {}", apiGatewayConfig);
         try {
             logger.info("Trying to register myself in: AppRegistry-Component");
             appRegistryComponentClient.registerComponent(apiGatewayConfig);
@@ -44,7 +47,22 @@ public class ComponentConfigReader {
             logger.error(feignResponseError.contentUTF8());
             System.exit(1);
         }
-        logger.info("ApiGateway component registered and authenticated successfully");
+        logger.info("{} registered and authenticated successfully", apiGatewayConfig.getComponentName());
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("{} terminates, the shutdown hook is executed", apiGatewayConfig.getComponentName());
+            cleanUp(apiGatewayConfig.getComponentId());
+        }));
+    }
+
+    public void cleanUp(UUID componentId) {
+        logger.info("Trying to deregister myself in: AppRegistry-Component");
+        try {
+            ResponseEntity<String> responseEntity = appRegistryComponentClient.deregisterComponent(componentId);
+            logger.info(responseEntity.getBody());
+        } catch (FeignException feignResponseError) {
+            logger.error(feignResponseError.contentUTF8());
+            System.exit(1);
+        }
     }
 
     public static ApiGatewayAppComponentConfigDTO readConfig() {
