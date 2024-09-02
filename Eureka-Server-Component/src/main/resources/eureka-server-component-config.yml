@@ -1,0 +1,4 @@
+#Users microservice
+componentName: "EurekaServer-Component-01"
+componentId: "0d9ac6d0-c62d-487f-9575-9b2b48837123"
+componentSecret: "EurekaServerPassword"

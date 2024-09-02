@@ -7,6 +7,7 @@ import com.example.cardcomponent.model.Card;
 import com.example.cardcomponent.repository.CardRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,8 +25,9 @@ public class RestCardServiceImpl implements RestCardService {
 
     private final AccountComponentClient accountComponentClient;
 
-    public RestCardServiceImpl(CardRepository cardRepository, UsersComponentClient usersComponentClient,
-                               AccountComponentClient accountComponentClient) {
+    public RestCardServiceImpl(CardRepository cardRepository,
+                               @Qualifier("Users-Components") UsersComponentClient usersComponentClient,
+                               @Qualifier("Account-Components") AccountComponentClient accountComponentClient) {
         this.cardRepository = cardRepository;
         this.usersComponentClient = usersComponentClient;
         this.accountComponentClient = accountComponentClient;

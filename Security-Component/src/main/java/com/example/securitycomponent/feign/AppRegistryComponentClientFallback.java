@@ -5,6 +5,7 @@ import com.example.securitycomponent.dto.SecurityAppComponentConfigDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -24,6 +25,11 @@ public class AppRegistryComponentClientFallback implements AppRegistryComponentC
     public Optional<AppComponentDTO> findById(UUID componentId) {
         appRegistryComponentFallback(UUID.randomUUID());
         return Optional.empty();
+    }
+
+    @Override
+    public ResponseEntity<String> deregisterComponent(UUID componentId) {
+        return null;
     }
 
     @Override

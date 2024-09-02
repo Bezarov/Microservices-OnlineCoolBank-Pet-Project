@@ -42,4 +42,12 @@ public class AppComponentController {
         logger.debug("Request was successfully processed and response was sent: {}", responseAppComponent);
         return ResponseEntity.ok(responseAppComponent);
     }
+
+    @DeleteMapping("/by-id/{componentId}")
+    public ResponseEntity<String> deleteById(@PathVariable UUID componentId){
+        logger.info("Received DELETE request to remove Component by id: {}", componentId);
+        ResponseEntity<String> responseMessage = appComponentService.deleteById(componentId);
+        logger.debug("Request was successfully processed and response message was sent: {}", responseMessage);
+        return responseMessage;
+    }
 }
