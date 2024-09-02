@@ -1,7 +1,6 @@
 package com.example.userscomponent.service;
 
 import com.example.userscomponent.dto.UsersDTO;
-import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
 

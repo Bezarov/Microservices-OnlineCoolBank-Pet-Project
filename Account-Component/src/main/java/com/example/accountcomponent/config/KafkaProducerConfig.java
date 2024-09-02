@@ -52,11 +52,11 @@ public class KafkaProducerConfig {
 
     @Bean
     ProducerFactory<String, BigDecimal> bigDecimalProducerFactory() {
-        Map<String, Object> accountDTOProducerProp = new HashMap<>();
-        accountDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        accountDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        accountDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(accountDTOProducerProp);
+        Map<String, Object> bigDecimalProducerProp = new HashMap<>();
+        bigDecimalProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        bigDecimalProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        bigDecimalProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        return new DefaultKafkaProducerFactory<>(bigDecimalProducerProp);
     }
 
     @Bean
@@ -66,11 +66,11 @@ public class KafkaProducerConfig {
 
     @Bean
     ProducerFactory<String, List<AccountDTO>> accountDTOSProducerFactory() {
-        Map<String, Object> accountDTOProducerProp = new HashMap<>();
-        accountDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        accountDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        accountDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(accountDTOProducerProp);
+        Map<String, Object> ListOfAccountDTOSProducerProp = new HashMap<>();
+        ListOfAccountDTOSProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        ListOfAccountDTOSProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        ListOfAccountDTOSProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        return new DefaultKafkaProducerFactory<>(ListOfAccountDTOSProducerProp);
     }
 
     @Bean

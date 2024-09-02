@@ -5,7 +5,7 @@ components:
   #    kafkaBootstrapAddresses: "localhost:9092, localhost:9092"
   #    componentAddress: "localhost" # <- Change it.
   #    componentPort: "8102" # <- Change it.
-  #    componentId: "a4ad33d9-382d-4cd4-9ce9-c7b941c14912" # <- Change it.
+  #    componentId: "44f7da34-0adf-4efd-baae-43aaa9c8b5a6" # <- Change it.
   #    componentSecret: "UsersServicePassword" # <- Change it.
   #API-Gateway microservice
   - componentName: "ApiGateway-Component-01"

@@ -59,6 +59,7 @@ public class ComponentConfigReader {
         try {
             ResponseEntity<String> responseEntity = appRegistryComponentClient.deregisterComponent(componentId);
             logger.info(responseEntity.getBody());
+            System.exit(1);
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
             System.exit(1);

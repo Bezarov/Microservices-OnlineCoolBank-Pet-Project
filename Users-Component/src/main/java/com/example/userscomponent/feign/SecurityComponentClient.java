@@ -11,5 +11,4 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface SecurityComponentClient {
     @PostMapping("/component")
     String authenticateComponent(@RequestBody AuthRequestDTO authRequestDTO);
-
 }

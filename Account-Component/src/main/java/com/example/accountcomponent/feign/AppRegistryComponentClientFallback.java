@@ -10,7 +10,6 @@ import java.util.UUID;
 public class AppRegistryComponentClientFallback implements AppRegistryComponentClient {
     @Override
     public void registerComponent(AccountAppComponentConfigDTO accountAppComponentConfigDTO) {
-
     }
 
     @Override

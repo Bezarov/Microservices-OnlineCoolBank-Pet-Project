@@ -1,11 +1,9 @@
 package com.example.userscomponent.service;
 
 import com.example.userscomponent.dto.UsersDTO;
-import com.example.userscomponent.model.Users;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 

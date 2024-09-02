@@ -1,6 +1,5 @@
 package com.example.accountcomponent.config;
 
-import com.example.accountcomponent.dto.AccountDTO;
 import com.example.accountcomponent.exception.GlobalKafkaExceptionHandler;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -32,29 +31,6 @@ public class KafkaConsumerConfig {
 
     public KafkaConsumerConfig(GlobalKafkaExceptionHandler globalKafkaExceptionHandler) {
         this.globalKafkaExceptionHandler = globalKafkaExceptionHandler;
-    }
-
-    @Bean
-    public ConsumerFactory<String, AccountDTO> accountDTOConsumerFactory() {
-        Map<String, Object> accountDTOConsumerProp = new HashMap<>();
-        accountDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        accountDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_ACCOUNT_COMPONENT_GROUP_ID);
-        accountDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        accountDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        accountDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        accountDTOConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.accountcomponent.dto.AccountDTO");
-        accountDTOConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        accountDTOConsumerProp.put(JsonDeserializer.TYPE_MAPPINGS,
-                "com.example.apigatewaycomponent.dto.AccountDTO:com.example.accountcomponent.dto.AccountDTO");
-        return new DefaultKafkaConsumerFactory<>(accountDTOConsumerProp);
-    }
-
-    @Bean
-    ConcurrentKafkaListenerContainerFactory<String, AccountDTO> accountDTOKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, AccountDTO> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(accountDTOConsumerFactory());
-        factory.setCommonErrorHandler(globalKafkaExceptionHandler);
-        return factory;
     }
 
     @Bean

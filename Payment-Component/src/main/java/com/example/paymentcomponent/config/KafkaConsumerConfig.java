@@ -101,15 +101,15 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConsumerFactory<String, Map<Object, Object>> mapObjectToObjectConsumerFactory() {
-        Map<String, Object> mapUUIDToObjectConsumerProp = new HashMap<>();
-        mapUUIDToObjectConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        mapUUIDToObjectConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_PAYMENT_COMPONENT_GROUP_ID);
-        mapUUIDToObjectConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        mapUUIDToObjectConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        mapUUIDToObjectConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        mapUUIDToObjectConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "java.util.HashMap");
-        mapUUIDToObjectConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        return new DefaultKafkaConsumerFactory<>(mapUUIDToObjectConsumerProp);
+        Map<String, Object> mapObjectToObjectConsumerProp = new HashMap<>();
+        mapObjectToObjectConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        mapObjectToObjectConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_PAYMENT_COMPONENT_GROUP_ID);
+        mapObjectToObjectConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        mapObjectToObjectConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        mapObjectToObjectConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
+        mapObjectToObjectConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "java.util.HashMap");
+        mapObjectToObjectConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        return new DefaultKafkaConsumerFactory<>(mapObjectToObjectConsumerProp);
     }
 
     @Bean
