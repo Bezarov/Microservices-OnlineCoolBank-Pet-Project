@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-public class AccountComponentClientFallback implements AccountComponentClient{
+public class AccountComponentClientFallback implements AccountComponentClient {
     @Override
     public Optional<AccountDTO> findById(UUID accountId) {
         return Optional.empty();

@@ -94,7 +94,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
                 createPaymentByCardsRequestList);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         listObjectKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
 
         return getResponseEntityCompletableFuture(futureResponse);
     }
@@ -123,7 +123,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-payment-by-id", paymentId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
 
         return getResponseEntityCompletableFuture(futureResponse);
     }
@@ -151,7 +151,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         logger.info("Trying to create topic: get-all-payments-by-from-account-id with correlation id: {} ", correlationId);
         ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-all-payments-by-from-account-id", fromAccountId);
         uuidKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -179,7 +179,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         Map<UUID, String> getPaymentByStatusRequestList = Map.of(fromAccountId, status);
         ProducerRecord<String, Map<UUID, String>> topic = new ProducerRecord<>("get-payments-by-status", getPaymentByStatusRequestList);
         mapUUIDToStringKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -206,7 +206,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         logger.info("Trying to create topic: get-all-payments-by-to-account with correlation id: {} ", correlationId);
         ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-all-payments-by-to-account", toAccountId);
         uuidKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -236,7 +236,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         ProducerRecord<String, Map<UUID, String>> topic = new ProducerRecord<>(
                 "get-all-payments-by-payment-type", getPaymentByTypeRequestList);
         mapUUIDToStringKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -266,7 +266,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         ProducerRecord<String, List<Object>> topic = new ProducerRecord<>(
                 "get-all-from-account-payments-by-date-range", getPaymentByDateRangeRequestList);
         listObjectKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -296,7 +296,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         ProducerRecord<String, List<Object>> topic = new ProducerRecord<>(
                 "get-all-to-account-payments-by-date-range", getPaymentByDateRangeRequestList);
         listObjectKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 

@@ -1,6 +1,5 @@
 package com.example.paymentcomponent.dto;
 
-
 public class ErrorDTO {
     private String message;
     private int status;

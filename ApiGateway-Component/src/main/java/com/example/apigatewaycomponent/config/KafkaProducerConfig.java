@@ -65,19 +65,6 @@ public class KafkaProducerConfig {
         return new KafkaTemplate<>(authRequestDTOProducerFactory());
     }
 
-    public ProducerFactory<String, Object> objectProducerFactory() {
-        Map<String, Object> usersDTOProducerProp = new HashMap<>();
-        usersDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        usersDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        usersDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(usersDTOProducerProp);
-    }
-
-    @Bean
-    public KafkaTemplate<String, Object> objectDTOKafkaTemplate() {
-        return new KafkaTemplate<>(objectProducerFactory());
-    }
-
     @Bean
     public ProducerFactory<String, UUID> uuidProducerFactory() {
         Map<String, Object> uuidProducerProp = new HashMap<>();
@@ -186,7 +173,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, Map<String, String >> mapStringToStringKafkaTemplate() {
+    public KafkaTemplate<String, Map<String, String>> mapStringToStringKafkaTemplate() {
         return new KafkaTemplate<>(mapStringToStringProducerFactory());
     }
 

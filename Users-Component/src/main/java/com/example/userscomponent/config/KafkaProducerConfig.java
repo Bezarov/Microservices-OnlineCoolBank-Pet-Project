@@ -61,6 +61,4 @@ public class KafkaProducerConfig {
     public KafkaTemplate<String, String> stringMessageKafkaTemplate() {
         return new KafkaTemplate<>(stringMessageProduceFactory());
     }
-
 }
-

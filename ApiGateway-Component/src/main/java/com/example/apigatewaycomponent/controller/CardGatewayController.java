@@ -52,7 +52,7 @@ public class CardGatewayController {
 
     @GetMapping("/by-user-name/{cardHolderFullName}")
     public CompletableFuture<ResponseEntity<List<Object>>> getCardsByCardHolderFullName(@PathVariable
-                                                                                            String cardHolderFullName) {
+                                                                                        String cardHolderFullName) {
         logger.info("Received GET request to get All Cards by Card Holder Name: {}", cardHolderFullName);
         return cardGatewayService.getCardsByCardHolderFullName(cardHolderFullName)
                 .thenApply(response -> {
@@ -63,7 +63,7 @@ public class CardGatewayController {
 
     @GetMapping("/by-account-id/{accountId}")
     public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountCardsByAccountId(@PathVariable
-                                                                                             UUID accountId) {
+                                                                                         UUID accountId) {
         logger.info("Received GET request to get All Cards by Account ID: {}", accountId);
         return cardGatewayService.getAllAccountCardsByAccountId(accountId)
                 .thenApply(response -> {
@@ -74,7 +74,7 @@ public class CardGatewayController {
 
     @GetMapping("/by-user-id/{holderId}")
     public CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByCardHolderId(@PathVariable
-                                                                                             UUID holderId) {
+                                                                                         UUID holderId) {
         logger.info("Received GET request to get All Cards by Card Holder ID: {}", holderId);
         return cardGatewayService.getAllUserCardsByCardHolderId(holderId)
                 .thenApply(response -> {
@@ -85,7 +85,7 @@ public class CardGatewayController {
 
     @GetMapping("/by-user-id/{holderId}/status")
     public CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByStatus(@PathVariable UUID holderId,
-                                                                 @RequestParam String status) {
+                                                                                   @RequestParam String status) {
         logger.info("Received GET request to get All Cards by Card Holder ID: {}," +
                 " with Status: {}", holderId, status);
         return cardGatewayService.getAllUserCardsByStatus(holderId, status)

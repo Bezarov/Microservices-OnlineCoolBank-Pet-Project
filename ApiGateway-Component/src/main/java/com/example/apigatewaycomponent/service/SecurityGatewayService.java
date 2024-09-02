@@ -20,5 +20,5 @@ public interface SecurityGatewayService {
     CompletableFuture<ResponseEntity<Object>> authenticateComponent(AuthRequestDTO authRequestDTO);
 
     void handleComponentAuthenticationResponse(AuthResponseDTO authResponseDTO,
-                                          @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+                                               @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 }

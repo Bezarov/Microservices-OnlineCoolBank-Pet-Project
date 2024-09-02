@@ -46,22 +46,22 @@ public interface PaymentGatewayService {
                                                 @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     CompletableFuture<ResponseEntity<List<Object>>> getAllAccountPaymentsByPaymentType(UUID fromAccountId,
-                                                        String paymentType);
+                                                                                       String paymentType);
 
     void handleGetAllPaymentByPaymentTypeResponse(List<PaymentDTO> paymentDTOS,
                                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     CompletableFuture<ResponseEntity<List<Object>>> getAllFromAccountPaymentsByPaymentDateRange(UUID fromAccountId,
-                                                                 LocalDateTime fromPaymentDate,
-                                                                 LocalDateTime toPaymentDate);
+                                                                                                LocalDateTime fromPaymentDate,
+                                                                                                LocalDateTime toPaymentDate);
 
     void handleGetAllPaymentFromAccountByPaymentDateRangeResponse(List<PaymentDTO> paymentDTOS,
-                                                  @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+                                                                  @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     CompletableFuture<ResponseEntity<List<Object>>> getAllToAccountPaymentsByPaymentDateRange(UUID toAccountId,
-                                                               LocalDateTime fromPaymentDate,
-                                                               LocalDateTime toPaymentDate);
+                                                                                              LocalDateTime fromPaymentDate,
+                                                                                              LocalDateTime toPaymentDate);
 
     void handleGetAllPaymentToAccountByFromAccountResponse(List<PaymentDTO> paymentDTOS,
-                                                  @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+                                                           @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 }

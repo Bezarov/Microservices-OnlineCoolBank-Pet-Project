@@ -55,7 +55,7 @@ public class SecurityGatewayServiceImpl implements SecurityGatewayService {
         ProducerRecord<String, AuthRequestDTO> topic = new ProducerRecord<>("user-authentication", authRequestDTO);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         securityKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
 
         return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
                 .thenApply(response -> {
@@ -96,7 +96,7 @@ public class SecurityGatewayServiceImpl implements SecurityGatewayService {
         ProducerRecord<String, AuthRequestDTO> topic = new ProducerRecord<>("component-authentication", authRequestDTO);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         securityKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
 
         return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
                 .thenApply(response -> {

@@ -71,7 +71,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
                 createAccountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToDTOKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -99,7 +99,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         ProducerRecord<String, String> topic = new ProducerRecord<>("get-account-by-account-name", accountName);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -127,7 +127,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-account-by-account-id", accountId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -155,7 +155,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-all-accounts-by-user-id", userId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -184,7 +184,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
                 "get-all-accounts-by-holder-full-name", accountHolderFullName);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -212,7 +212,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-balance-by-account-id", accountId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -241,7 +241,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         ProducerRecord<String, Map<UUID, String>> topic = new ProducerRecord<>("get-all-accounts-by-status", accountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToStringKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntitysCompletableFuture(futureResponse);
     }
 
@@ -271,7 +271,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
                 "refill-account-by-account-id", accountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToBigDecimalKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -301,7 +301,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
                 createAccountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToDTOKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -331,7 +331,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
                 createAccountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToStringKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -361,7 +361,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
                 createAccountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToBigDecimalKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -392,7 +392,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
                 createAccountRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapStringToBigDecimalKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -420,7 +420,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         ProducerRecord<String, UUID> topic = new ProducerRecord<>("delete-account-by-account-id", accountId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -448,7 +448,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         ProducerRecord<String, String> topic = new ProducerRecord<>("delete-account-by-account-name", accountName);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 
@@ -476,7 +476,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         ProducerRecord<String, UUID> topic = new ProducerRecord<>("delete-account-by-account-id", userId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value()); 
+        logger.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
         return getResponseEntityCompletableFuture(futureResponse);
     }
 

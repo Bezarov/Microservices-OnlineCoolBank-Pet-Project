@@ -66,11 +66,11 @@ public class KafkaProducerConfig {
 
     @Bean
     ProducerFactory<String, List<PaymentDTO>> paymentDTOSProducerFactory() {
-        Map<String, Object> paymentDTOProducerProp = new HashMap<>();
-        paymentDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        paymentDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        paymentDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(paymentDTOProducerProp);
+        Map<String, Object> listOfPaymentDTOSProducerProp = new HashMap<>();
+        listOfPaymentDTOSProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        listOfPaymentDTOSProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        listOfPaymentDTOSProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        return new DefaultKafkaProducerFactory<>(listOfPaymentDTOSProducerProp);
     }
 
     @Bean

@@ -7,10 +7,9 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 
 @Component
-public class AppRegistryComponentClientFallback implements AppRegistryComponentClient{
+public class AppRegistryComponentClientFallback implements AppRegistryComponentClient {
     @Override
     public void registerComponent(CardAppComponentConfigDTO cardAppComponentConfigDTO) {
-
     }
 
     @Override

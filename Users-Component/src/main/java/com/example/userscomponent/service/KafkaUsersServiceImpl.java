@@ -63,8 +63,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     }
 
     @Override
-    @KafkaListener(topics = "create-user", groupId = "users-component",
-            containerFactory = "usersDTOKafkaListenerFactory")
+    @KafkaListener(topics = "create-user", containerFactory = "usersDTOKafkaListenerFactory")
     public void createUser(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: create-user with correlation id: {} ", correlationId);
         logger.info("Trying to find User with email: {}", usersDTO.getEmail());
@@ -87,7 +86,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     }
 
     @Override
-    @KafkaListener(topics = "get-user-by-id", groupId = "users-component",
+    @KafkaListener(topics = "get-user-by-id", groupId = "users-components",
             containerFactory = "uuidKafkaListenerFactory")
     public void getUserById(UUID userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-user-by-id with correlation id: {} ", correlationId);
@@ -112,7 +111,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     }
 
     @Override
-    @KafkaListener(topics = "get-user-by-email", groupId = "users-component",
+    @KafkaListener(topics = "get-user-by-email", groupId = "users-components",
             containerFactory = "stringKafkaListenerFactory")
     public void getUserByEmail(String userEmail, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-user-by-email with correlation id: {} ", correlationId);
@@ -137,7 +136,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     }
 
     @Override
-    @KafkaListener(topics = "get-user-by-full-name", groupId = "users-component",
+    @KafkaListener(topics = "get-user-by-full-name", groupId = "users-components",
             containerFactory = "stringKafkaListenerFactory")
     public void getUserByFullName(String userFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-user-by-full-name with correlation id: {} ", correlationId);
@@ -162,7 +161,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     }
 
     @Override
-    @KafkaListener(topics = "get-user-by-phone-number", groupId = "users-component",
+    @KafkaListener(topics = "get-user-by-phone-number", groupId = "users-components",
             containerFactory = "stringKafkaListenerFactory")
     public void getUserByPhoneNumber(String userPhoneNumber, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-user-by-phone-number with correlation id: {} ", correlationId);
@@ -187,8 +186,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     }
 
     @Override
-    @KafkaListener(topics = "update-user-by-id", groupId = "users-component",
-            containerFactory = "mapUUIDToDTOKafkaListenerFactory")
+    @KafkaListener(topics = "update-user-by-id", containerFactory = "mapUUIDToDTOKafkaListenerFactory")
     public void updateUser(Map<String, UsersDTO> mapUUIDToDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: update-user-by-id with correlation id: {} ", correlationId);
         ObjectMapper objectMapper = new ObjectMapper();
@@ -223,8 +221,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     }
 
     @Override
-    @KafkaListener(topics = "update-user-password-by-id", groupId = "users-component",
-            containerFactory = "mapUUIDToStringKafkaListenerFactory")
+    @KafkaListener(topics = "update-user-password-by-id", containerFactory = "mapUUIDToStringKafkaListenerFactory")
     public void updatePasswordById(Map<String, String> mapUUIDToString, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: update-user-password-by-id with correlation id: {} ", correlationId);
         String userId = mapUUIDToString.keySet().iterator().next().replaceAll("\"", "");
@@ -256,8 +253,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
 
     @Transactional
     @Override
-    @KafkaListener(topics = "delete-user-by-id", groupId = "users-component",
-            containerFactory = "uuidKafkaListenerFactory")
+    @KafkaListener(topics = "delete-user-by-id", containerFactory = "uuidKafkaListenerFactory")
     public void deleteUserById(UUID userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: delete-user-by-id with correlation id: {} ", correlationId);
         logger.info("Trying to find User with ID: {}", userId);
@@ -280,8 +276,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
 
     @Transactional
     @Override
-    @KafkaListener(topics = "delete-user-by-email", groupId = "users-component",
-            containerFactory = "stringKafkaListenerFactory")
+    @KafkaListener(topics = "delete-user-by-email", containerFactory = "stringKafkaListenerFactory")
     public void deleteUserByEmail(String userEmail, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: delete-user-by-email with correlation id: {} ", correlationId);
         logger.info("Trying to find User with email: {}", userEmail.replaceAll("\"", ""));
@@ -304,8 +299,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
 
     @Transactional
     @Override
-    @KafkaListener(topics = "delete-user-by-full-name", groupId = "users-component",
-            containerFactory = "stringKafkaListenerFactory")
+    @KafkaListener(topics = "delete-user-by-full-name", containerFactory = "stringKafkaListenerFactory")
     public void deleteUserByFullName(String userFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: delete-user-by-full-name with correlation id: {} ", correlationId);
         logger.info("Trying to find User with name: {}", userFullName);

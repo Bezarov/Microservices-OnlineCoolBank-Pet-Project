@@ -1,7 +1,6 @@
 package com.example.cardcomponent.feign;
 
 import com.example.cardcomponent.dto.AccountDTO;
-import com.example.cardcomponent.dto.UsersDTO;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.openfeign.FeignClient;

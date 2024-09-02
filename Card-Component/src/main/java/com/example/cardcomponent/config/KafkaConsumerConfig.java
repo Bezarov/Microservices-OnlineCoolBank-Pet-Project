@@ -35,29 +35,6 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConsumerFactory<String, CardDTO> cardDTOConsumerFactory() {
-        Map<String, Object> cardDTOConsumerProp = new HashMap<>();
-        cardDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        cardDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_CARD_COMPONENT_GROUP_ID);
-        cardDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        cardDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        cardDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        cardDTOConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.cardcomponent.dto.CardDTO");
-        cardDTOConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        cardDTOConsumerProp.put(JsonDeserializer.TYPE_MAPPINGS,
-                "com.example.apigatewaycomponent.dto.CardDTO:com.example.cardcomponent.dto.CardDTO");
-        return new DefaultKafkaConsumerFactory<>(cardDTOConsumerProp);
-    }
-
-    @Bean
-    ConcurrentKafkaListenerContainerFactory<String, CardDTO> cardDTOKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, CardDTO> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(cardDTOConsumerFactory());
-        factory.setCommonErrorHandler(globalKafkaExceptionHandler);
-        return factory;
-    }
-
-    @Bean
     public ConsumerFactory<String, UUID> uuidConsumerFactory() {
         Map<String, Object> uuidConsumerProp = new HashMap<>();
         uuidConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
