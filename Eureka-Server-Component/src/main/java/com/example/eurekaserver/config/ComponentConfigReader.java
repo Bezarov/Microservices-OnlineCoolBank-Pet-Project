@@ -1,9 +1,9 @@
-package com.example.securitycomponent.config;
+package com.example.eurekaserver.config;
 
-import com.example.securitycomponent.dto.AuthRequestDTO;
-import com.example.securitycomponent.dto.SecurityAppComponentConfigDTO;
-import com.example.securitycomponent.feign.AppRegistryComponentClient;
-import com.example.securitycomponent.service.AuthService;
+import com.example.eurekaserver.dto.AuthRequestDTO;
+import com.example.eurekaserver.dto.EurekaServerAppComponentDTO;
+import com.example.eurekaserver.feign.AppRegistryComponentClient;
+import com.example.eurekaserver.feign.SecurityComponentClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import feign.FeignException;
@@ -22,37 +22,34 @@ import java.util.UUID;
 public class ComponentConfigReader {
     private static final Logger logger = LoggerFactory.getLogger(ComponentConfigReader.class);
     private final AppRegistryComponentClient appRegistryComponentClient;
-    private final AuthService authService;
+    private final SecurityComponentClient securityComponentClient;
 
     public ComponentConfigReader(@Qualifier("AppRegistry-Components") AppRegistryComponentClient appRegistryComponentClient,
-                                 AuthService authService) {
+                                 @Qualifier("Security-Components") SecurityComponentClient securityComponentClient) {
         this.appRegistryComponentClient = appRegistryComponentClient;
-        this.authService = authService;
+        this.securityComponentClient = securityComponentClient;
     }
 
     @PostConstruct
     void init() {
-        logger.info("Trying to read and deserialize: security-component-config.yml file");
-        SecurityAppComponentConfigDTO securityConfig = readConfig();
-        logger.info("Deserialization successfully: {}", securityConfig);
+        logger.info("Trying to read and deserialize: eureka-server-component-config.yml file");
+        EurekaServerAppComponentDTO eurekaServerConfig = readConfig();
         try {
             logger.info("Trying to register myself in: AppRegistry-Component");
-            appRegistryComponentClient.registerComponent(securityConfig);
-            logger.info("Component registered successfully: {}", securityConfig);
+            appRegistryComponentClient.registerComponent(eurekaServerConfig);
+            logger.info("Component registered successfully: {}", eurekaServerConfig);
             logger.info("Trying to authenticate myself in: Security-Component");
-
-            securityConfig.setToken(authService.authenticateComponent(
-                    new AuthRequestDTO(securityConfig.getComponentId(), securityConfig.getComponentSecret())
-            ));
-            logger.info("Component authenticated successfully: {}", securityConfig.getToken());
+            eurekaServerConfig.setToken(securityComponentClient.authenticateComponent(new AuthRequestDTO(
+                    eurekaServerConfig.getComponentId(), eurekaServerConfig.getComponentSecret())));
+            logger.info("Component authenticated successfully: {}", eurekaServerConfig.getToken());
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
             System.exit(1);
         }
-        logger.info("{} registered and authenticated successfully", securityConfig.getComponentName());
+        logger.info("{} registered and authenticated successfully", eurekaServerConfig.getComponentName());
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("{} terminates, the shutdown hook is executed", securityConfig.getComponentName());
-            cleanUp(securityConfig.getComponentId());
+            logger.info("{} terminates, the shutdown hook is executed", eurekaServerConfig.getComponentName());
+            cleanUp(eurekaServerConfig.getComponentId());
         }));
     }
 
@@ -67,16 +64,16 @@ public class ComponentConfigReader {
         }
     }
 
-    public static SecurityAppComponentConfigDTO readConfig() {
+    public static EurekaServerAppComponentDTO readConfig() {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        SecurityAppComponentConfigDTO securityConfig = null;
+        EurekaServerAppComponentDTO eurekaServerConfig = null;
         try {
-            securityConfig = objectMapper.readValue(new File(
-                    "src/main/resources/security-component-config.yml"), SecurityAppComponentConfigDTO.class);
+            eurekaServerConfig = objectMapper.readValue(new File(
+                    "src/main/resources/eureka-server-component-config.yml"), EurekaServerAppComponentDTO.class);
         } catch (IOException e) {
             logger.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();
         }
-        return securityConfig;
+        return eurekaServerConfig;
     }
 }

@@ -33,7 +33,7 @@ public class RestUsersServiceImpl implements RestUsersService {
     @Override
     public UsersDTO getUserById(UUID userId) {
         logger.info("Trying to find User with ID: {}", userId);
-        UsersDTO usersDTO = usersRepository.findById(userId)
+        return usersRepository.findById(userId)
                 .map(UserEntity -> {
                     logger.info("User was found and received to the Controller: {}", UserEntity);
                     return convertUsersModelToDTO(UserEntity);
@@ -43,13 +43,12 @@ public class RestUsersServiceImpl implements RestUsersService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found");
                 });
-        return usersDTO;
     }
 
     @Override
     public UsersDTO getUserByEmail(String userEmail) {
         logger.info("Trying to find User with email: {}", userEmail);
-        UsersDTO usersDTO = usersRepository.findByEmail(userEmail)
+        return usersRepository.findByEmail(userEmail)
                 .map(UserEntity -> {
                     logger.info("User was found and received to the Controller: {}", UserEntity);
                     return convertUsersModelToDTO(UserEntity);
@@ -59,13 +58,12 @@ public class RestUsersServiceImpl implements RestUsersService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such email: " + userEmail + " was not found");
                 });
-        return usersDTO;
     }
 
     @Override
     public UsersDTO getUserByFullName(String userFullName) {
         logger.info("Trying to find User with name: {}", userFullName);
-        UsersDTO usersDTO = usersRepository.findByFullName(userFullName)
+        return usersRepository.findByFullName(userFullName)
                 .map(UserEntity -> {
                     logger.info("User was found and received to the Controller: {}", UserEntity);
                     return convertUsersModelToDTO(UserEntity);
@@ -75,13 +73,12 @@ public class RestUsersServiceImpl implements RestUsersService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such full name: " + userFullName + " was not found");
                 });
-        return usersDTO;
     }
 
     @Override
     public UsersDTO getUserByPhoneNumber(String userPhoneNumber) {
         logger.info("Trying to find User with phone number: {}", userPhoneNumber);
-        UsersDTO usersDTO = usersRepository.findByPhoneNumber(userPhoneNumber)
+        return usersRepository.findByPhoneNumber(userPhoneNumber)
                 .map(UserEntity -> {
                     logger.info("User was found and received to the Controller: {}", UserEntity);
                     return convertUsersModelToDTO(UserEntity);
@@ -91,6 +88,5 @@ public class RestUsersServiceImpl implements RestUsersService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such phone number: " + userPhoneNumber + " was not found");
                 });
-        return usersDTO;
     }
 }

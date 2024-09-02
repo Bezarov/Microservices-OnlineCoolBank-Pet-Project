@@ -8,10 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
@@ -28,6 +26,9 @@ public interface AppRegistryComponentClient {
     @GetMapping("/by-id/{componentId}")
     @CircuitBreaker(name = "appRegistryComponentCircuitBreaker", fallbackMethod = "appRegistryComponentFallback")
     Optional<AppComponentDTO> findById(@PathVariable UUID componentId);
+
+    @DeleteMapping("/by-id/{componentId}")
+    ResponseEntity<String> deregisterComponent(@PathVariable UUID componentId);
 
     default void appRegistryComponentFallback(UUID componentId) {
         logger.error("To many errors authentication failed for component with id: {}  generate exception", componentId);

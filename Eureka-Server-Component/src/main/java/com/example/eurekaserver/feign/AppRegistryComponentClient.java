@@ -1,6 +1,6 @@
-package com.example.accountcomponent.feign;
+package com.example.eurekaserver.feign;
 
-import com.example.accountcomponent.dto.AccountAppComponentConfigDTO;
+import com.example.eurekaserver.dto.EurekaServerAppComponentDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,7 @@ import java.util.UUID;
 @FeignClient(name = "APPREGISTRY-COMPONENTS", url = "http://localhost:8601/components", fallback = AppRegistryComponentClientFallback.class)
 public interface AppRegistryComponentClient {
     @PostMapping
-    void registerComponent(@RequestBody AccountAppComponentConfigDTO accountAppComponentConfigDTO);
+    void registerComponent(@RequestBody EurekaServerAppComponentDTO eurekaServerAppComponentDTO);
 
     @DeleteMapping("/by-id/{componentId}")
     ResponseEntity<String> deregisterComponent(@PathVariable UUID componentId);

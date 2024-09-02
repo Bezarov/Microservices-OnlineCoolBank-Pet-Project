@@ -7,6 +7,7 @@ import com.example.appregistrycomponent.config.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -86,5 +87,19 @@ public class AppComponentServiceImpl implements AppComponentService {
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Component with such name: " + componentName + " was not found");
                 });
+    }
+
+    @Override
+    public ResponseEntity<String> deleteById(UUID componentId) {
+        logger.info("Trying to find Component with id: {}", componentId);
+        AppComponent appComponent = appComponentRepository.findById(componentId)
+                .orElseThrow(() -> {
+                    logger.error("Component with such ID was not found: {}", componentId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Component with such ID:" + componentId + " was not found");
+                });
+        appComponentRepository.deleteById(componentId);
+        logger.info("Component was found and deleted successfully: {}", appComponent);
+        return new ResponseEntity<>("Component: " + appComponent.getComponentName() + " deregistered successfully", HttpStatus.ACCEPTED);
     }
 }
