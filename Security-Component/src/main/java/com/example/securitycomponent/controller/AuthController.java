@@ -18,20 +18,17 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/user")
-    public ResponseEntity<String> authenticateUser(@RequestBody AuthRequestDTO authRequestDTO) {
-        logger.info("Received POST request to Authenticate User with Credentials: {}", authRequestDTO);
-        String responseToken = authService.authenticateUser(authRequestDTO);
-        logger.debug("Request was successfully processed and response was sent: Token={}", responseToken);
-        return ResponseEntity.ok("Authentication successfully!" +
-                "\nPlease use this JWT Token for further Access \n" + new AuthResponseDTO(responseToken));
-    }
-
     @PostMapping("/component")
     public ResponseEntity<String> authenticateComponent(@RequestBody AuthRequestDTO authRequestDTO) {
         logger.info("Received POST request to Authenticate Component with Credentials: {}", authRequestDTO);
         String responseToken = authService.authenticateComponent(authRequestDTO);
         logger.debug("Request was successfully processed and response was sent: Token={}", responseToken);
         return ResponseEntity.ok(new AuthResponseDTO(responseToken).toString());
+    }
+
+    @PostMapping("/component/token")
+    public ResponseEntity<Boolean> authenticateComponentToken(@RequestBody String jwtToken, String requestURI) {
+        logger.info("Received GET request to Authenticate Component token: {}", jwtToken);
+        return ResponseEntity.ok(authService.authenticateComponentToken(jwtToken, requestURI));
     }
 }
