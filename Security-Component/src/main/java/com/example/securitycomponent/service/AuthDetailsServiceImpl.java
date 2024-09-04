@@ -43,7 +43,7 @@ public class AuthDetailsServiceImpl implements AuthDetailsService {
                 });
 
         logger.debug("User was found successfully");
-        logger.info("User successfully authenticated: {}", authRequestDTO);
+        logger.info("User successfully authenticated with: {}", authRequestDTO);
     }
 
     public UsersDTO authenticateUserToken(String principal) {

@@ -22,24 +22,14 @@ public class SecurityGatewayController {
         this.securityGatewayService = securityGatewayService;
     }
 
-    @PostMapping("/user")
+    @PostMapping
     public CompletableFuture<ResponseEntity<Object>> authenticateUser(@RequestBody AuthRequestDTO authRequestDTO) {
         logger.info("Received POST request to Authenticate User with Credentials: {}", authRequestDTO);
         return securityGatewayService.authenticateUser(authRequestDTO)
                 .thenApply(response -> {
                     logger.debug("Request was successfully processed and response was sent: Token={}", response);
                     return ResponseEntity.ok("Authentication successfully!" +
-                            "\nPlease use this JWT Token for further Access \n" + response);
-                });
-    }
-
-    @PostMapping("/component")
-    public CompletableFuture<ResponseEntity<Object>> authenticateComponent(@RequestBody AuthRequestDTO authRequestDTO) {
-        logger.info("Received POST request to Authenticate Component with Credentials: {}", authRequestDTO);
-        return securityGatewayService.authenticateComponent(authRequestDTO)
-                .thenApply(response -> {
-                    logger.debug("Request was successfully processed and response was sent: Token={}", response);
-                    return ResponseEntity.ok(response.toString());
+                            "\nPlease use this JWT Token for further Access \n" + response.getBody());
                 });
     }
 }
