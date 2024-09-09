@@ -4,6 +4,7 @@ import com.example.securitycomponent.dto.AppComponentDTO;
 import com.example.securitycomponent.dto.UsersDTO;
 import com.example.securitycomponent.service.AuthDetailsService;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -28,10 +29,10 @@ public class JwtTokenAuthenticator {
 
     public SecurityContext doTokenAuthentication(String jwtToken) {
         String principal = null;
-        logger.info("Extracting identity from Token: {}", jwtToken);
-        principal = jwtUtil.getIdentityFromToken(jwtToken);
-        logger.debug("JWT Token issued to: " + principal);
         try {
+            logger.info("Extracting identity from Token: {}", jwtToken);
+            principal = jwtUtil.getIdentityFromToken(jwtToken);
+            logger.debug("JWT Token issued to: " + principal);
             if (principal != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (jwtUtil.isUserToken(jwtToken) && jwtUtil.validateUserToken(jwtToken)) {
                     logger.debug("Authenticating extracted user email: {} from Token", principal);
@@ -49,6 +50,10 @@ public class JwtTokenAuthenticator {
             logger.warn("Expired JWT token: {}", jwtToken);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
                     "JWT token is expired, refresh it");
+        } catch (JwtException exception) {
+            logger.warn("Unable to extract from JWT Token identity: {}", jwtToken);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Unable to process JWT Token, please get an acceptable JWT Token");
         }
         return SecurityContextHolder.getContext();
     }

@@ -1,4 +1,4 @@
-package com.example.apigatewaycomponent.jwt;
+package com.example.apigatewaycomponent.filter;
 
 import com.example.apigatewaycomponent.service.SecurityGatewayService;
 import jakarta.servlet.FilterChain;

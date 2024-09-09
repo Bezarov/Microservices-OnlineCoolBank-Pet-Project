@@ -2,6 +2,7 @@ package com.example.securitycomponent.controller;
 
 import com.example.securitycomponent.dto.AuthRequestDTO;
 import com.example.securitycomponent.dto.AuthResponseDTO;
+import com.example.securitycomponent.dto.TokenAuthRequestDTO;
 import com.example.securitycomponent.service.AuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +28,8 @@ public class AuthController {
     }
 
     @PostMapping("/component/token")
-    public ResponseEntity<Boolean> authenticateComponentToken(@RequestBody String jwtToken, String requestURI) {
-        logger.info("Received GET request to Authenticate Component token: {}", jwtToken);
-        return ResponseEntity.ok(authService.authenticateComponentToken(jwtToken, requestURI));
+    public ResponseEntity<Boolean> authenticateComponentToken(@RequestBody TokenAuthRequestDTO tokenAuthRequestDTO) {
+        logger.info("Received POST request to Authenticate Component token: {}", tokenAuthRequestDTO);
+        return ResponseEntity.ok(authService.authenticateComponentToken(tokenAuthRequestDTO));
     }
 }

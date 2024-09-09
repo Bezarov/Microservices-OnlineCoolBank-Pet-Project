@@ -24,16 +24,19 @@ ext {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.security:spring-security-crypto'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.cloud:spring-cloud-config-server'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3'
     runtimeOnly 'com.h2database:h2'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.17.2'
     testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.5.6'
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.13'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
 dependencyManagement {

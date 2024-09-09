@@ -2,6 +2,7 @@ package com.example.securitycomponent.service;
 
 import com.example.securitycomponent.dto.AuthRequestDTO;
 import com.example.securitycomponent.dto.AuthResponseDTO;
+import com.example.securitycomponent.dto.TokenAuthRequestDTO;
 import com.example.securitycomponent.jwt.JwtTokenAuthenticator;
 import com.example.securitycomponent.jwt.JwtTokenTypeAuthorizer;
 import com.example.securitycomponent.jwt.JwtUtil;
@@ -79,7 +80,7 @@ public class KafkaAuthServiceImpl implements KafkaAuthService {
         SecurityContext responseSecurityContext = jwtTokenAuthenticator.doTokenAuthentication(jwtToken);
         logger.info("Authentication successfully");
         logger.info("Authorizing user Token: {} and requested URI: {}", jwtToken, requestURI);
-        jwtTokenTypeAuthorizer.doTokenAuthorization(jwtToken, requestURI);
+        jwtTokenTypeAuthorizer.doTokenAuthorization(new TokenAuthRequestDTO(jwtToken, requestURI));
         logger.info("Authentication and authorization successfully");
         logger.info("Trying to create topic: user-token-authentication-response with correlation id: {} ", correlationId);
         ProducerRecord<String, SecurityContext> responseTopic = new ProducerRecord<>(
