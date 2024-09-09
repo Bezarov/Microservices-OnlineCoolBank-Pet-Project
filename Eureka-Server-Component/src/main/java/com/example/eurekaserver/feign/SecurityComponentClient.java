@@ -1,6 +1,7 @@
 package com.example.eurekaserver.feign;
 
 import com.example.eurekaserver.dto.AuthRequestDTO;
+import com.example.eurekaserver.dto.TokenAuthRequestDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,4 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface SecurityComponentClient {
     @PostMapping("/component")
     String authenticateComponent(@RequestBody AuthRequestDTO authRequestDTO);
+
+    @PostMapping("/component/token")
+    Boolean authenticateComponentToken(@RequestBody TokenAuthRequestDTO tokenAuthRequestDTO);
 }

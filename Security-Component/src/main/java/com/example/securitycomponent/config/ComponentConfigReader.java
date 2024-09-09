@@ -1,9 +1,8 @@
 package com.example.securitycomponent.config;
 
-import com.example.securitycomponent.dto.AuthRequestDTO;
 import com.example.securitycomponent.dto.SecurityAppComponentConfigDTO;
 import com.example.securitycomponent.feign.AppRegistryComponentClient;
-import com.example.securitycomponent.service.AuthService;
+import com.example.securitycomponent.jwt.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import feign.FeignException;
@@ -22,37 +21,38 @@ import java.util.UUID;
 public class ComponentConfigReader {
     private static final Logger logger = LoggerFactory.getLogger(ComponentConfigReader.class);
     private final AppRegistryComponentClient appRegistryComponentClient;
-    private final AuthService authService;
+    private SecurityAppComponentConfigDTO securityAppComponentConfigDTO;
+    private final JwtUtil jwtUtil;
 
     public ComponentConfigReader(@Qualifier("AppRegistry-Components") AppRegistryComponentClient appRegistryComponentClient,
-                                 AuthService authService) {
+                                 SecurityAppComponentConfigDTO securityAppComponentConfigDTO, JwtUtil jwtUtil) {
         this.appRegistryComponentClient = appRegistryComponentClient;
-        this.authService = authService;
+        this.securityAppComponentConfigDTO = securityAppComponentConfigDTO;
+        this.jwtUtil = jwtUtil;
     }
+
 
     @PostConstruct
     void init() {
         logger.info("Trying to read and deserialize: security-component-config.yml file");
-        SecurityAppComponentConfigDTO securityConfig = readConfig();
-        logger.info("Deserialization successfully: {}", securityConfig);
+        securityAppComponentConfigDTO = readConfig();
+        logger.info("Deserialization successfully: {}", securityAppComponentConfigDTO);
         try {
-            logger.info("Trying to register myself in: AppRegistry-Component");
-            appRegistryComponentClient.registerComponent(securityConfig);
-            logger.info("Component registered successfully: {}", securityConfig);
-            logger.info("Trying to authenticate myself in: Security-Component");
+            logger.info("Trying to authenticate myself");
+            SecurityAppComponentConfigDTO.setJwtToken(jwtUtil.componentTokenGenerator(securityAppComponentConfigDTO.getComponentId().toString()));
+            logger.info("Component authenticated successfully: {}", SecurityAppComponentConfigDTO.getJwtToken());
 
-            securityConfig.setToken(authService.authenticateComponent(
-                    new AuthRequestDTO(securityConfig.getComponentId(), securityConfig.getComponentSecret())
-            ));
-            logger.info("Component authenticated successfully: {}", securityConfig.getToken());
+            logger.info("Trying to register myself in: AppRegistry-Component");
+            appRegistryComponentClient.registerComponent(securityAppComponentConfigDTO);
+            logger.info("Component registered successfully: {}", securityAppComponentConfigDTO);
+            logger.info("{} authenticated and registered successfully", securityAppComponentConfigDTO.getComponentName());
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
             System.exit(1);
         }
-        logger.info("{} registered and authenticated successfully", securityConfig.getComponentName());
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("{} terminates, the shutdown hook is executed", securityConfig.getComponentName());
-            cleanUp(securityConfig.getComponentId());
+            logger.info("{} terminates, the shutdown hook is executed", securityAppComponentConfigDTO.getComponentName());
+            cleanUp(securityAppComponentConfigDTO.getComponentId());
         }));
     }
 

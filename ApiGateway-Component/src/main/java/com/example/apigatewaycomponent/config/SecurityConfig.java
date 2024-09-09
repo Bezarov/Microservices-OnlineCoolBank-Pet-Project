@@ -1,6 +1,6 @@
 package com.example.apigatewaycomponent.config;
 
-import com.example.apigatewaycomponent.jwt.JwtAuthenticationFilter;
+import com.example.apigatewaycomponent.filter.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;

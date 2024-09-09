@@ -1,6 +1,7 @@
 package com.example.securitycomponent.service;
 
 import com.example.securitycomponent.dto.AuthRequestDTO;
+import com.example.securitycomponent.dto.TokenAuthRequestDTO;
 import com.example.securitycomponent.jwt.JwtTokenAuthenticator;
 import com.example.securitycomponent.jwt.JwtTokenTypeAuthorizer;
 import com.example.securitycomponent.jwt.JwtUtil;
@@ -15,10 +16,8 @@ public class AuthServiceImpl implements AuthService {
     private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
     private final AuthDetailsService authDetailsService;
     private final JwtUtil jwtUtil;
-
     private final JwtTokenAuthenticator jwtTokenAuthenticator;
     private final JwtTokenTypeAuthorizer jwtTokenTypeAuthorizer;
-
     @Autowired
     public AuthServiceImpl(AuthDetailsService authDetailsService, JwtUtil jwtUtil, JwtTokenAuthenticator
             jwtTokenAuthenticator, JwtTokenTypeAuthorizer jwtTokenTypeAuthorizer) {
@@ -41,13 +40,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Boolean authenticateComponentToken(String jwtToken, String requestURI) {
-        logger.info("Authenticating component Token: {}", jwtToken);
-        SecurityContext responseSecurityContext = jwtTokenAuthenticator.doTokenAuthentication(jwtToken);
+    public Boolean authenticateComponentToken(TokenAuthRequestDTO tokenAuthRequestDTO) {
+        logger.info("Authenticating component Token: {}", tokenAuthRequestDTO.jwtToken());
+        SecurityContext responseSecurityContext = jwtTokenAuthenticator.doTokenAuthentication(tokenAuthRequestDTO.jwtToken());
         logger.info("Authentication successfully");
 
-        logger.info("Authorizing user Token: {} and requested URI: {}", jwtToken, requestURI);
-        jwtTokenTypeAuthorizer.doTokenAuthorization(jwtToken, requestURI);
+        logger.info("Authorizing token type and requested URI: {}", tokenAuthRequestDTO.requestURI());
+        jwtTokenTypeAuthorizer.doTokenAuthorization(tokenAuthRequestDTO);
         logger.info("Authentication and authorization successfully");
         return responseSecurityContext.getAuthentication().isAuthenticated();
     }
