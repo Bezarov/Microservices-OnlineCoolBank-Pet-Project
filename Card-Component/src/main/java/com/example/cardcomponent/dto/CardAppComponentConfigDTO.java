@@ -2,9 +2,13 @@ package com.example.cardcomponent.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+@Component
+@Scope("singleton")
 public class CardAppComponentConfigDTO {
     @JsonProperty("componentName")
     private String componentName;
@@ -13,8 +17,16 @@ public class CardAppComponentConfigDTO {
     @JsonProperty("componentSecret")
     private String componentSecret;
 
-    @JsonIgnore
-    private String token;
+    private static String jwtToken;
+
+    public CardAppComponentConfigDTO() {
+    }
+
+    public CardAppComponentConfigDTO(String componentName, UUID componentId, String componentSecret) {
+        this.componentName = componentName;
+        this.componentId = componentId;
+        this.componentSecret = componentSecret;
+    }
 
     public UUID getComponentId() {
         return componentId;
@@ -40,12 +52,12 @@ public class CardAppComponentConfigDTO {
         this.componentSecret = componentSecret;
     }
 
-    public String getToken() {
-        return token;
+    public static String getJwtToken() {
+        return jwtToken;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public static void setJwtToken(String jwtToken) {
+        CardAppComponentConfigDTO.jwtToken = jwtToken;
     }
 
     @Override
@@ -54,7 +66,7 @@ public class CardAppComponentConfigDTO {
                 "componentName='" + componentName + '\'' +
                 ", componentId=" + componentId +
                 ", componentSecret='" + componentSecret + '\'' +
-                ", token='" + token + '\'' +
+                ", jwtToken='" + jwtToken + '\'' +
                 '}';
     }
 }

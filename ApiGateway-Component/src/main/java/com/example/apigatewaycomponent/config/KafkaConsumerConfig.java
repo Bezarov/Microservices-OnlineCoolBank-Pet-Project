@@ -204,8 +204,7 @@ public class KafkaConsumerConfig {
         securityContextConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_GATEWAY_COMPONENT_GROUP_ID);
         securityContextConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         securityContextConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class.getName());
-        securityContextConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "org.springframework.security.core.context.SecurityContextImpl");
-        securityContextConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        securityContextConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "org.springframework.security.authentication.UsernamePasswordAuthenticationToken");        securityContextConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         return new DefaultKafkaConsumerFactory<>(securityContextConsumerProp);
     }
 

@@ -39,9 +39,9 @@ public class ComponentConfigReader {
             appRegistryComponentClient.registerComponent(eurekaServerConfig);
             logger.info("Component registered successfully: {}", eurekaServerConfig);
             logger.info("Trying to authenticate myself in: Security-Component");
-            eurekaServerConfig.setToken(securityComponentClient.authenticateComponent(new AuthRequestDTO(
+            EurekaServerAppComponentDTO.setJwtToken(securityComponentClient.authenticateComponent(new AuthRequestDTO(
                     eurekaServerConfig.getComponentId(), eurekaServerConfig.getComponentSecret())));
-            logger.info("Component authenticated successfully: {}", eurekaServerConfig.getToken());
+            logger.info("Authentication successfully set up JWT Token: {}", EurekaServerAppComponentDTO.getJwtToken());
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
             System.exit(1);

@@ -17,19 +17,15 @@ public class JwtTokenTypeAuthorizer {
     }
 
     public void doTokenAuthorization(TokenAuthRequestDTO tokenAuthRequestDTO) {
-        logger.info("Extracting token type");
+        logger.debug("Extracting token type");
         String jwtTokenType = jwtUtil.extractClaim(tokenAuthRequestDTO.jwtToken(), claims -> claims.get("tokenType", String.class));
-        logger.info("Extracted token type is: {}", jwtTokenType);
+        logger.debug("Extracted token type is: \"{}\"", jwtTokenType);
         if (tokenAuthRequestDTO.requestURI().startsWith("/component") && !"component".equals(jwtTokenType)) {
-            logger.error("Extracted token type: {}, access to resource: {}  denied",
-                    jwtTokenType, tokenAuthRequestDTO.requestURI());
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization failed");
-        } else if (!tokenAuthRequestDTO.requestURI().startsWith("/component") && !"user".equals(jwtTokenType)) {
-            logger.error("Extracted token type : {}, access to resource: {}  denied",
+            logger.error("Extracted token type: \"{}\", access to resource: \"{}\"  denied",
                     jwtTokenType, tokenAuthRequestDTO.requestURI());
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization failed");
         }
-        logger.info("Authorization successfully for token: {}, with type: {}, to resource: {}",
+        logger.info("Authorization successfully for token: \"{}\", with type: \"{}\", to resource: \"{}\"",
                 tokenAuthRequestDTO.jwtToken(), jwtTokenType, tokenAuthRequestDTO.requestURI());
     }
 }

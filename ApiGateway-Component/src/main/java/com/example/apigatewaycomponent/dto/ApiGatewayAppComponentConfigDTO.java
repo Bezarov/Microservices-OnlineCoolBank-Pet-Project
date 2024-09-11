@@ -1,12 +1,13 @@
 package com.example.apigatewaycomponent.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
 @Component
+@Scope("singleton")
 public class ApiGatewayAppComponentConfigDTO {
     @JsonProperty("componentName")
     private String componentName;
@@ -14,9 +15,16 @@ public class ApiGatewayAppComponentConfigDTO {
     private UUID componentId;
     @JsonProperty("componentSecret")
     private String componentSecret;
+    private static String jwtToken;
 
-    @JsonIgnore
-    private String token;
+    public ApiGatewayAppComponentConfigDTO() {
+    }
+
+    public ApiGatewayAppComponentConfigDTO(String componentName, UUID componentId, String componentSecret) {
+        this.componentName = componentName;
+        this.componentId = componentId;
+        this.componentSecret = componentSecret;
+    }
 
     public UUID getComponentId() {
         return componentId;
@@ -42,12 +50,12 @@ public class ApiGatewayAppComponentConfigDTO {
         this.componentSecret = componentSecret;
     }
 
-    public String getToken() {
-        return token;
+    public static String getJwtToken() {
+        return jwtToken;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public static void setJwtToken(String jwtToken) {
+        ApiGatewayAppComponentConfigDTO.jwtToken = jwtToken;
     }
 
     @Override
@@ -56,7 +64,7 @@ public class ApiGatewayAppComponentConfigDTO {
                 "componentName='" + componentName + '\'' +
                 ", componentId=" + componentId +
                 ", componentSecret='" + componentSecret + '\'' +
-                ", token='" + token + '\'' +
+                ", jwtToken='" + jwtToken + '\'' +
                 '}';
     }
 }
