@@ -30,28 +30,28 @@ public class JwtTokenAuthenticator {
     public SecurityContext doTokenAuthentication(String jwtToken) {
         String principal = null;
         try {
-            logger.info("Extracting identity from Token: {}", jwtToken);
+            logger.info("Extracting identity from Token: \"{}\"", jwtToken);
             principal = jwtUtil.getIdentityFromToken(jwtToken);
-            logger.debug("JWT Token issued to: " + principal);
+            logger.debug("JWT Token issued to: \"{}\"", principal);
             if (principal != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (jwtUtil.isUserToken(jwtToken) && jwtUtil.validateUserToken(jwtToken)) {
-                    logger.debug("Authenticating extracted user email: {} from Token", principal);
+                    logger.debug("Authenticating extracted user email: \"{}\" from Token", principal);
                     UsersDTO usersDTO = authDetailsService.authenticateUserToken(principal);
                     logger.debug("Setting security context holder");
                     return setUserAuthentication(usersDTO);
                 } else if (jwtUtil.isComponentToken(jwtToken) && jwtUtil.validateComponentToken(jwtToken)) {
-                    logger.debug("Authenticating extracted component id: {} from Token", principal);
+                    logger.debug("Authenticating extracted component id: \"{}\" from Token", principal);
                     AppComponentDTO appComponentDTO = authDetailsService.authenticateComponentToken(principal);
                     logger.debug("Setting security context holder");
                     return setComponentAuthentication(appComponentDTO);
                 }
             }
         } catch (ExpiredJwtException exception) {
-            logger.warn("Expired JWT token: {}", jwtToken);
+            logger.warn("Expired JWT token: \"{}\"", jwtToken);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
                     "JWT token is expired, refresh it");
         } catch (JwtException exception) {
-            logger.warn("Unable to extract from JWT Token identity: {}", jwtToken);
+            logger.warn("Unable to extract from JWT Token identity: \"{}\"", jwtToken);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Unable to process JWT Token, please get an acceptable JWT Token");
         }

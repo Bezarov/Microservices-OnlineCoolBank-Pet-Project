@@ -40,9 +40,9 @@ public class ComponentConfigReader {
             appRegistryComponentClient.registerComponent(usersConfig);
             logger.info("Component registered successfully: {}", usersConfig);
             logger.info("Trying to authenticate myself in: Security-Component");
-            usersConfig.setToken(securityComponentClient.authenticateComponent(new AuthRequestDTO(
+            UsersAppComponentConfigDTO.setJwtToken(securityComponentClient.authenticateComponent(new AuthRequestDTO(
                     usersConfig.getComponentId(), usersConfig.getComponentSecret())));
-            logger.info("Component authenticated successfully: {}", usersConfig.getToken());
+            logger.info("Authentication successfully set up JWT Token: {}", UsersAppComponentConfigDTO.getJwtToken());
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
             System.exit(1);

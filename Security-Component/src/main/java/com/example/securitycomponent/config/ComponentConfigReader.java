@@ -40,7 +40,7 @@ public class ComponentConfigReader {
         try {
             logger.info("Trying to authenticate myself");
             SecurityAppComponentConfigDTO.setJwtToken(jwtUtil.componentTokenGenerator(securityAppComponentConfigDTO.getComponentId().toString()));
-            logger.info("Component authenticated successfully: {}", SecurityAppComponentConfigDTO.getJwtToken());
+            logger.info("Authentication successfully set up JWT Token: {}", SecurityAppComponentConfigDTO.getJwtToken());
 
             logger.info("Trying to register myself in: AppRegistry-Component");
             appRegistryComponentClient.registerComponent(securityAppComponentConfigDTO);
