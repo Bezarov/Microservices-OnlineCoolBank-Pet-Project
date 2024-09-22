@@ -1,5 +1,6 @@
 package com.example.apigatewaycomponent.config;
 
+import com.example.apigatewaycomponent.deserializer.SecurityContextDeserializer;
 import com.example.apigatewaycomponent.dto.*;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -12,7 +13,7 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextImpl;
 
 import java.util.HashMap;
 import java.util.List;
@@ -37,8 +38,11 @@ public class KafkaConsumerConfig {
         errorDTOConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.ErrorDTO");
         errorDTOConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         errorDTOConsumerProp.put(JsonDeserializer.TYPE_MAPPINGS,
-                "com.example.userscomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO," +
-                        "com.example.accountcomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO");
+                        "com.example.securitycomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO," +
+                        "com.example.userscomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO," +
+                        "com.example.accountcomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO," +
+                        "com.example.cardcomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO," +
+                        "com.example.paymentcomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO");
         return new DefaultKafkaConsumerFactory<>(errorDTOConsumerProp);
     }
 
@@ -198,19 +202,20 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConsumerFactory<String, SecurityContext> securityContextConsumerFactory() {
+    public ConsumerFactory<String, SecurityContextImpl> securityContextConsumerFactory() {
         Map<String, Object> securityContextConsumerProp = new HashMap<>();
         securityContextConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        securityContextConsumerProp.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         securityContextConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_GATEWAY_COMPONENT_GROUP_ID);
         securityContextConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        securityContextConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class.getName());
-        securityContextConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "org.springframework.security.authentication.UsernamePasswordAuthenticationToken");        securityContextConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        securityContextConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SecurityContextDeserializer.class);
+        securityContextConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         return new DefaultKafkaConsumerFactory<>(securityContextConsumerProp);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, SecurityContext> securityContextKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, SecurityContext> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    public ConcurrentKafkaListenerContainerFactory<String, SecurityContextImpl> securityContextKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, SecurityContextImpl> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(securityContextConsumerFactory());
         return factory;
     }

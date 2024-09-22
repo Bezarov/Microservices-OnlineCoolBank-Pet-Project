@@ -3,7 +3,6 @@ package com.example.userscomponent.dto;
 public class ErrorDTO {
     private String message;
     private int status;
-    private String correlationId;
 
     public String getMessage() {
         return message;
@@ -21,11 +20,11 @@ public class ErrorDTO {
         this.status = status;
     }
 
-    public String getCorrelationId() {
-        return correlationId;
-    }
-
-    public void setCorrelationId(String correlationId) {
-        this.correlationId = correlationId;
+    @Override
+    public String toString() {
+        return "ErrorDTO{" +
+                "message='" + message + '\'' +
+                ", status=" + status +
+                '}';
     }
 }

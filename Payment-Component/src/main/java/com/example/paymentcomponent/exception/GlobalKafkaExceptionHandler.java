@@ -55,12 +55,11 @@ public class GlobalKafkaExceptionHandler implements CommonErrorHandler {
         ErrorDTO errorDTO = new ErrorDTO();
         errorDTO.setStatus(exception.getStatusCode().value());
         errorDTO.setMessage(exceptionReason);
-        errorDTO.setCorrelationId(correlationId);
 
         logger.info("Trying to create topic: payment-error with correlation id: {} ", correlationId);
         ProducerRecord<String, ErrorDTO> errorTopic = new ProducerRecord<>("payment-error", null, errorDTO);
         errorTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         paymentDTOErrorKafkaTemplate.send(errorTopic);
-        logger.info("Error topic was created and allocated in kafka broker successfully: {}", errorTopic);
+        logger.info("Error topic was created and allocated in kafka broker successfully: {}", errorTopic.value());
     }
 }

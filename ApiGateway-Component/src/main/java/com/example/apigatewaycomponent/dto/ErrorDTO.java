@@ -3,7 +3,6 @@ package com.example.apigatewaycomponent.dto;
 public class ErrorDTO {
     private String message;
     private int status;
-    private String correlationId;
 
     public String getMessage() {
         return message;
@@ -19,14 +18,6 @@ public class ErrorDTO {
 
     public void setStatus(int status) {
         this.status = status;
-    }
-
-    public String getCorrelationId() {
-        return correlationId;
-    }
-
-    public void setCorrelationId(String correlationId) {
-        this.correlationId = correlationId;
     }
 
     @Override

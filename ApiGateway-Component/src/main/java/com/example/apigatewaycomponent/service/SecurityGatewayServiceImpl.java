@@ -3,7 +3,6 @@ package com.example.apigatewaycomponent.service;
 import com.example.apigatewaycomponent.dto.AuthRequestDTO;
 import com.example.apigatewaycomponent.dto.AuthResponseDTO;
 import com.example.apigatewaycomponent.dto.ErrorDTO;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +12,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -40,7 +38,8 @@ public class SecurityGatewayServiceImpl implements SecurityGatewayService {
     @Override
     @KafkaListener(topics = "security-error", groupId = "api-gateway",
             containerFactory = "errorDTOKafkaListenerFactory")
-    public void handleSecurityErrors(ErrorDTO securityErrorDTO, String correlationId) {
+    public void handleSecurityErrors(ErrorDTO securityErrorDTO,
+                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.error("Received error topic: security-error with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.remove(correlationId);
         logger.info("Complete CompletableFuture exceptionally with message: {} ", securityErrorDTO.toString());

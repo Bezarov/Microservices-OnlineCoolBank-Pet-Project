@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
 
 @ControllerAdvice
-public class GlobalExceptionHandler {
-    private final static Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+public class GlobalRestExceptionHandler {
+    private final static Logger logger = LoggerFactory.getLogger(GlobalRestExceptionHandler.class);
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException exception) {

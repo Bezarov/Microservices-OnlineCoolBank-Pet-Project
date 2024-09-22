@@ -44,7 +44,7 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     @Override
     @KafkaListener(topics = "card-error", groupId = "api-gateway",
             containerFactory = "errorDTOKafkaListenerFactory")
-    public void handleCardErrors(ErrorDTO cardErrorDTO, String correlationId) {
+    public void handleCardErrors(ErrorDTO cardErrorDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.error("Received error topic with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.remove(correlationId);
         logger.info("Complete CompletableFuture exceptionally with message: {} ", cardErrorDTO.toString());
