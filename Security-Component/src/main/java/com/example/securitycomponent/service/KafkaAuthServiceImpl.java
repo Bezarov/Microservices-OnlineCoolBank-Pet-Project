@@ -64,7 +64,7 @@ public class KafkaAuthServiceImpl implements KafkaAuthService {
             logger.error("Authentication failed for User with Email: {} Password: {}",
                     authRequestDTO.principal(), authRequestDTO.credentials());
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-                    "Authentication failed \nInvalid Email or Password");
+                    "Authentication failed \nInvalid Email or Password correlationId:" + correlationId);
         }
     }
 
@@ -76,17 +76,22 @@ public class KafkaAuthServiceImpl implements KafkaAuthService {
         String jwtToken = mapJwtTokenToRequestURI.keySet().iterator().next();
         String requestURI = mapJwtTokenToRequestURI.get(jwtToken);
 
-        logger.info("Authenticating user Token: {}", jwtToken);
-        SecurityContext responseSecurityContext = jwtTokenAuthenticator.doTokenAuthentication(jwtToken);
-        logger.info("Authentication successfully");
-        logger.info("Authorizing user Token: {} and requested URI: {}", jwtToken, requestURI);
-        jwtTokenTypeAuthorizer.doTokenAuthorization(new TokenAuthRequestDTO(jwtToken, requestURI));
-        logger.info("Authentication and authorization successfully");
-        logger.info("Trying to create topic: user-token-authentication-response with correlation id: {} ", correlationId);
-        ProducerRecord<String, SecurityContext> responseTopic = new ProducerRecord<>(
-                "user-token-authentication-response", null, responseSecurityContext);
-        responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        responseSecurityContextKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
+        try {
+            logger.info("Authenticating user Token: {}", jwtToken);
+            SecurityContext responseSecurityContext = jwtTokenAuthenticator.doTokenAuthentication(jwtToken);
+            logger.info("Authentication successfully");
+            logger.info("Authorizing user Token: {} and requested URI: {}", jwtToken, requestURI);
+            jwtTokenTypeAuthorizer.doTokenAuthorization(new TokenAuthRequestDTO(jwtToken, requestURI));
+            logger.info("Authentication and authorization successfully");
+            logger.info("Trying to create topic: user-token-authentication-response with correlation id: {} ", correlationId);
+            ProducerRecord<String, SecurityContext> responseTopic = new ProducerRecord<>(
+                    "user-token-authentication-response", null, responseSecurityContext);
+            responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
+            responseSecurityContextKafkaTemplate.send(responseTopic);
+            logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
+        } catch (ResponseStatusException exception){
+            throw new ResponseStatusException(exception.getStatusCode(), exception.getReason() + " correlationId:" + correlationId);
+        }
+
     }
 }

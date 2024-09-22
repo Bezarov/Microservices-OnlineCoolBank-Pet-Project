@@ -61,6 +61,6 @@ public class GlobalKafkaExceptionHandler implements CommonErrorHandler {
         ProducerRecord<String, ErrorDTO> errorTopic = new ProducerRecord<>("card-error", null, errorDTO);
         errorTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         cardDTOErrorKafkaTemplate.send(errorTopic);
-        logger.info("Error topic was created and allocated in kafka broker successfully: {}", errorTopic);
+        logger.info("Error topic was created and allocated in kafka broker successfully: {}", errorTopic.value());
     }
 }
