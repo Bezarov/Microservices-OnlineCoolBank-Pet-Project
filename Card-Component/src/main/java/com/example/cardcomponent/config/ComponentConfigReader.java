@@ -71,7 +71,8 @@ public class ComponentConfigReader {
         CardAppComponentConfigDTO cardConfig = null;
         try {
             cardConfig = objectMapper.readValue(new File(
-                    "src/main/resources/card-component-config.yml"), CardAppComponentConfigDTO.class);
+                    "Card-Component/src/main/resources/card-component-config.yml"),
+                    CardAppComponentConfigDTO.class);
         } catch (IOException e) {
             logger.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();

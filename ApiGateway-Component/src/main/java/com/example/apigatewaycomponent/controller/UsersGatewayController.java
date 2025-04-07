@@ -5,6 +5,8 @@ import com.example.apigatewaycomponent.service.UsersGatewayService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -32,10 +34,13 @@ public class UsersGatewayController {
 
     @GetMapping("/by-id/{userId}")
     public CompletableFuture<ResponseEntity<Object>> getUserById(@PathVariable UUID userId) {
+        SecurityContext context = SecurityContextHolder.getContext();
         logger.info("Received GET request to get User by ID: {}", userId);
         return usersGatewayService.getUserById(userId)
                 .thenApply(response -> {
                     logger.debug("Request was successfully processed and response was sent: {}", response);
+                    SecurityContextHolder.setContext(context);
+                    logger.info(SecurityContextHolder.getContext().toString());
                     return response;
                 });
     }

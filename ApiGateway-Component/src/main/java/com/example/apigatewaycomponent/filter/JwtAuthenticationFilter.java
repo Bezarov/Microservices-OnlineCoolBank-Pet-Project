@@ -16,11 +16,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private static final Logger logWritter = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final SecurityGatewayService securityGatewayService;
     private static final long REQUEST_TIMEOUT = 6;
 
@@ -36,27 +38,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
 
         if (requestJwtToken != null && requestJwtToken.startsWith("Bearer ") && requestURI.startsWith("/api/")) {
+            logWritter.debug("JwtAuthenticationFilter intercepted request to URI: {}", requestURI);
             CompletableFuture<ResponseEntity<Object>> tokenAuthResponse = securityGatewayService.authenticateUserToken(
                     requestJwtToken.substring(7), requestURI);
             try {
                 ResponseEntity<Object> authResponse = tokenAuthResponse.get(REQUEST_TIMEOUT, TimeUnit.SECONDS);
-                if (authResponse != null && authResponse.getBody() instanceof ResponseEntity<?> nestedResponse) {
-                    if (nestedResponse.getBody() instanceof SecurityContextImpl securityContext) {
-                        SecurityContextHolder.setContext(securityContext);
-                        logger.debug("User JWT Token authenticated successfully: {} for URI: {}", requestJwtToken, requestURI);
-                        filterChain.doFilter(request, response);
-                        return;
-                    }
+                if (authResponse != null && authResponse.getBody() instanceof ResponseEntity<?> nestedResponse &&
+                        nestedResponse.getBody() instanceof SecurityContextImpl securityContext) {
+                    SecurityContextHolder.setContext(securityContext);
+                    logWritter.debug("User JWT Token authenticated successfully: {} for URI: {}", requestJwtToken, requestURI);
+                    filterChain.doFilter(request, response);
+                    return;
                 }
-            } catch (Exception exception) {
-                logger.error("Security component timed out or sent error: {}", exception.getMessage().replaceAll(".*\"(.*?)\".*", "$1"));
+            } catch (InterruptedException | ExecutionException | TimeoutException exception) {
+                String exceptionMessage = exception.getMessage().replaceAll(".*\"(.*?)\".*", "$1");
+                logWritter.error("Security component timed out or sent error: {}", exceptionMessage);
                 response.reset();
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");
-                response.getWriter().write(exception.getMessage().replaceAll(".*\"(.*?)\".*", "$1"));
+                response.getWriter().write(exceptionMessage);
                 response.getWriter().flush();
-                return;
+                Thread.currentThread().interrupt();
             }
         }
         filterChain.doFilter(request, response);

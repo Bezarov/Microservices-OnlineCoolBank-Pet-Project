@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     filterChain.doFilter(request, response);
                 }
             } catch (FeignException feignResponseError) {
-                logger.error("Got feign exception during authentication: " + feignResponseError.contentUTF8());
+                logger.error("Got feign exception during authentication: {}", feignResponseError.contentUTF8());
                 response.setStatus(feignResponseError.status());
                 response.getWriter().write(feignResponseError.contentUTF8());
             }

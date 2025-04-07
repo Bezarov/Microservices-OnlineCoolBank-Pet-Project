@@ -24,9 +24,8 @@ public class SecurityContextDeserializer implements Deserializer<SecurityContext
 
     @Override
     public SecurityContextImpl deserialize(String topic, byte[] data) {
-        if (data == null) {
+        if (data == null)
             return null;
-        }
         try {
             return objectMapper.readValue(data, SecurityContextImpl.class);
         } catch (IOException exception) {

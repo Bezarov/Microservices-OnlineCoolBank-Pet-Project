@@ -71,7 +71,8 @@ public class ComponentConfigReader {
         PaymentAppComponentConfigDTO paymentConfig = null;
         try {
             paymentConfig = objectMapper.readValue(new File(
-                    "src/main/resources/payment-component-config.yml"), PaymentAppComponentConfigDTO.class);
+                    "Payment-Component/src/main/resources/payment-component-config.yml"),
+                    PaymentAppComponentConfigDTO.class);
         } catch (IOException e) {
             logger.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();

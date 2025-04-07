@@ -11,6 +11,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.server.ResponseStatusException;
@@ -87,6 +88,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     public CompletableFuture<ResponseEntity<Object>> getUserById(UUID userId) {
         String correlationId = UUID.randomUUID().toString();
         logger.debug("Creating expected future result with correlation id: {} ", correlationId);
+        logger.info(SecurityContextHolder.getContext().toString());
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 

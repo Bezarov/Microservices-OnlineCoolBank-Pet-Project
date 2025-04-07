@@ -27,7 +27,7 @@ import java.util.UUID;
 
 @Service
 public class KafkaPaymentServiceImpl implements KafkaPaymentService {
-    private final static Logger logger = LoggerFactory.getLogger(KafkaPaymentServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaPaymentServiceImpl.class);
     private final AccountComponentClient accountComponentClient;
     private final CardComponentClient cardComponentClient;
     private final PaymentRepository paymentRepository;
@@ -74,7 +74,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     }
 
     @Override
-    @KafkaListener(topics = "create-payment-by-accounts", groupId = "account-component",
+    @KafkaListener(topics = "create-payment-by-accounts", groupId = "payment-component",
             containerFactory = "paymentDTOKafkaListenerFactory")
     public void createPaymentByAccounts(PaymentDTO paymentDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: create-payment-by-accounts with correlation id: {} ", correlationId);
@@ -134,8 +134,8 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     }
 
     @Override
-    @KafkaListener(topics = "create-payment-by-cards", groupId = "account-component",
-            containerFactory = "listOfObjectsKafkaListenerFactory")
+    @KafkaListener(topics = "create-payment-by-cards", groupId = "payment-component",
+            containerFactory = "paymentListKafkaListenerFactory")
     public void createPaymentByCards(String fromCardNumber, String toCardNumber, BigDecimal amount,
                                      @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: create-payment-by-cards with correlation id: {} ", correlationId);
@@ -223,7 +223,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     }
 
     @Override
-    @KafkaListener(topics = "get-payment-by-id", groupId = "account-component",
+    @KafkaListener(topics = "get-payment-by-id", groupId = "payment-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void getPaymentById(UUID paymentId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-payment-by-id with correlation id: {} ", correlationId);
@@ -248,7 +248,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     }
 
     @Override
-    @KafkaListener(topics = "get-all-payments-by-from-account-id", groupId = "account-component",
+    @KafkaListener(topics = "get-all-payments-by-from-account-id", groupId = "payment-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void getAllAccountPaymentsByFromAccount(UUID fromAccountId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-all-payments-by-from-account-id with correlation id: {} ", correlationId);
@@ -275,7 +275,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     }
 
     @Override
-    @KafkaListener(topics = "get-payments-by-status", groupId = "account-component",
+    @KafkaListener(topics = "get-payments-by-status", groupId = "payment-component",
             containerFactory = "mapObjectToObjectKafkaListenerFactory")
     public void getPaymentsByStatus(Map<String, String> mapFromAccountIdToStatus, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-payments-by-status with correlation id: {} ", correlationId);
@@ -307,7 +307,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     }
 
     @Override
-    @KafkaListener(topics = "get-all-payments-by-to-account", groupId = "account-component",
+    @KafkaListener(topics = "get-all-payments-by-to-account", groupId = "payment-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void getAllAccountPaymentsByToAccount(UUID toAccountId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Trying to find To-Account with ID: {}", toAccountId);
@@ -334,7 +334,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     }
 
     @Override
-    @KafkaListener(topics = "get-all-payments-by-payment-type", groupId = "account-component",
+    @KafkaListener(topics = "get-all-payments-by-payment-type", groupId = "payment-component",
             containerFactory = "mapObjectToObjectKafkaListenerFactory")
     public void getAllAccountPaymentsByPaymentType(Map<String, String> mapFromAccountIdToPaymentType, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-all-payments-by-payment-type with correlation id: {} ", correlationId);
@@ -365,8 +365,8 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     }
 
     @Override
-    @KafkaListener(topics = "get-all-from-account-payments-by-date-range", groupId = "account-component",
-            containerFactory = "listOfObjectsKafkaListenerFactory")
+    @KafkaListener(topics = "get-all-from-account-payments-by-date-range", groupId = "payment-component",
+            containerFactory = "paymentListKafkaListenerFactory")
     public void getAllFromAccountPaymentsByPaymentDateRange(List<Object> listOfFromAccountIdFromPaymentDateToPaymentDate,
                                                             @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-all-from-account-payments-by-date-range with correlation id: {} ", correlationId);
@@ -399,8 +399,8 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     }
 
     @Override
-    @KafkaListener(topics = "get-all-to-account-payments-by-date-range", groupId = "account-component",
-            containerFactory = "listOfObjectsKafkaListenerFactory")
+    @KafkaListener(topics = "get-all-to-account-payments-by-date-range", groupId = "payment-component",
+            containerFactory = "paymentListKafkaListenerFactory")
     public void getAllToAccountPaymentsByPaymentDateRange(List<Object> listOfToAccountIdFromPaymentDateToPaymentDate,
                                                           @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-all-to-account-payments-by-date-range with correlation id: {} ",

@@ -24,7 +24,7 @@ public class CloudConfigServerRepoWriter {
     }
 
     private void createOrUpdateComponentFile(AppComponent component) {
-        String filePath = "src/main/resources/OnlineCoolBank-config-repo/" +
+        String filePath = "AppRegistry-Component/src/main/resources/OnlineCoolBank-config-repo/" +
                 component.getComponentName() + ".properties";
         File file = new File(filePath);
 

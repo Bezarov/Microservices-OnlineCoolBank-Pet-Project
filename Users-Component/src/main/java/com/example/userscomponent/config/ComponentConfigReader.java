@@ -71,7 +71,8 @@ public class ComponentConfigReader {
         UsersAppComponentConfigDTO usersConfig = null;
         try {
             usersConfig = objectMapper.readValue(new File(
-                    "src/main/resources/users-component-config.yml"), UsersAppComponentConfigDTO.class);
+                    "Users-Component/src/main/resources/users-component-config.yml"),
+                    UsersAppComponentConfigDTO.class);
         } catch (IOException e) {
             logger.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();

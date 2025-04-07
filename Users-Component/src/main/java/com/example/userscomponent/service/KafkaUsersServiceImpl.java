@@ -68,7 +68,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
         logger.info("Got request from kafka topic: create-user with correlation id: {} ", correlationId);
         logger.info("Trying to find User with email: {}", usersDTO.getEmail());
         usersRepository.findByEmail(usersDTO.getEmail())
-                .ifPresent(UserEntity -> {
+                .ifPresent(userEntity -> {
                     logger.error("User with such email already exists: {},", usersDTO.getEmail());
                     throw new ResponseStatusException(HttpStatus.FOUND, "User with such email: "
                             + usersDTO.getEmail() + " already exist correlationId:" + correlationId);
@@ -92,9 +92,9 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
         logger.info("Got request from kafka topic: get-user-by-id with correlation id: {} ", correlationId);
         logger.info("Trying to find User with ID: {}", userId);
         UsersDTO responseUserDTO = usersRepository.findById(userId)
-                .map(UserEntity -> {
-                    logger.info("User was found and received to Kafka Broker: {}", UserEntity);
-                    return convertUsersModelToDTO(UserEntity);
+                .map(userEntity -> {
+                    logger.info("User was found and received to Kafka Broker: {}", userEntity);
+                    return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", userId);
@@ -117,9 +117,9 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
         logger.info("Got request from kafka topic: get-user-by-email with correlation id: {} ", correlationId);
         logger.info("Trying to find User with email: {}", userEmail);
         UsersDTO responseUserDTO = usersRepository.findByEmail(userEmail)
-                .map(UserEntity -> {
-                    logger.info("User was found and received to the Controller: {}", UserEntity);
-                    return convertUsersModelToDTO(UserEntity);
+                .map(userEntity -> {
+                    logger.info("User was found and received to the Controller: {}", userEntity);
+                    return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
                     logger.error("User with such email was not found: {}", userEmail);
@@ -142,9 +142,9 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
         logger.info("Got request from kafka topic: get-user-by-full-name with correlation id: {} ", correlationId);
         logger.info("Trying to find User with name: {}", userFullName);
         UsersDTO responseUserDTO = usersRepository.findByFullName(userFullName)
-                .map(UserEntity -> {
-                    logger.info("User was found and received to the Controller: {}", UserEntity);
-                    return convertUsersModelToDTO(UserEntity);
+                .map(userEntity -> {
+                    logger.info("User was found and received to the Controller: {}", userEntity);
+                    return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
                     logger.error("User with such name was not found: {}", userFullName);
@@ -167,9 +167,9 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
         logger.info("Got request from kafka topic: get-user-by-phone-number with correlation id: {} ", correlationId);
         logger.info("Trying to find User with phone number: {}", userPhoneNumber);
         UsersDTO responseUserDTO = usersRepository.findByPhoneNumber(userPhoneNumber)
-                .map(UserEntity -> {
-                    logger.info("User was found and received to the Controller: {}", UserEntity);
-                    return convertUsersModelToDTO(UserEntity);
+                .map(userEntity -> {
+                    logger.info("User was found and received to the Controller: {}", userEntity);
+                    return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
                     logger.error("User with such phone number was not found: {}", userPhoneNumber);
@@ -195,16 +195,16 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
 
         logger.info("Trying to find User with ID: {}", userId);
         UsersDTO responseUserDTO = usersRepository.findById(UUID.fromString(userId))
-                .map(UserEntity -> {
+                .map(userEntity -> {
                     logger.info("User was found updating");
-                    UserEntity.setFullName(usersDTO.getFullName());
-                    UserEntity.setEmail(usersDTO.getEmail());
-                    UserEntity.setPhoneNumber(usersDTO.getPhoneNumber());
-                    UserEntity.setPassword(passwordEncoder.encode(usersDTO.getPassword()));
+                    userEntity.setFullName(usersDTO.getFullName());
+                    userEntity.setEmail(usersDTO.getEmail());
+                    userEntity.setPhoneNumber(usersDTO.getPhoneNumber());
+                    userEntity.setPassword(passwordEncoder.encode(usersDTO.getPassword()));
                     logger.info("User updated successfully, trying to save in DB");
-                    usersRepository.save(UserEntity);
-                    logger.info("User updated successfully: {}", UserEntity);
-                    return convertUsersModelToDTO(UserEntity);
+                    usersRepository.save(userEntity);
+                    logger.info("User updated successfully: {}", userEntity);
+                    return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", userId);
@@ -229,13 +229,13 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
 
         logger.info("Trying to find User with ID: {}", userId);
         UsersDTO responseUserDTO = usersRepository.findById(UUID.fromString(userId))
-                .map(UserEntity -> {
+                .map(userEntity -> {
                     logger.info("User was found, updating password");
-                    UserEntity.setPassword(passwordEncoder.encode(newPassword));
+                    userEntity.setPassword(passwordEncoder.encode(newPassword));
                     logger.info("Password updated successfully, trying to save in DB");
-                    usersRepository.save(UserEntity);
-                    logger.info("User password updated successfully: {}", UserEntity);
-                    return convertUsersModelToDTO(UserEntity);
+                    usersRepository.save(userEntity);
+                    logger.info("User password updated successfully: {}", userEntity);
+                    return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", userId);

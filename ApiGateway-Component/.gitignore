@@ -37,4 +37,3 @@ out/
 .vscode/
 
 src/main/java/com/example/apigatewaycomponent/log/*
-src/main/resources/db/*

@@ -70,7 +70,8 @@ public class ComponentConfigReader {
         EurekaServerAppComponentDTO eurekaServerConfig = null;
         try {
             eurekaServerConfig = objectMapper.readValue(new File(
-                    "src/main/resources/eureka-server-component-config.yml"), EurekaServerAppComponentDTO.class);
+                    "Eureka-Server-Component/src/main/resources/eureka-server-component-config.yml"),
+                    EurekaServerAppComponentDTO.class);
         } catch (IOException e) {
             logger.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();

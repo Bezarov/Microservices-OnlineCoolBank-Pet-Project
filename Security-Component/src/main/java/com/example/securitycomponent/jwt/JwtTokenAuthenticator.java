@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -61,7 +62,7 @@ public class JwtTokenAuthenticator {
     private SecurityContext setUserAuthentication(UsersDTO usersDTO) {
         try {
             UsernamePasswordAuthenticationToken userNamePassAuthToken = new UsernamePasswordAuthenticationToken(
-                    usersDTO.getEmail(), usersDTO.getPassword(), new ArrayList<>());
+                    usersDTO.getEmail(), null, new ArrayList<>());
 
             SecurityContextHolder.getContext().setAuthentication(userNamePassAuthToken);
             logger.debug("Security context holder successfully set");

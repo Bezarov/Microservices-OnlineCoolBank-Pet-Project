@@ -71,7 +71,8 @@ public class ComponentConfigReader {
         ApiGatewayAppComponentConfigDTO apiGatewayConfig = null;
         try {
             apiGatewayConfig = objectMapper.readValue(new File(
-                    "src/main/resources/apigateway-component-config.yml"), ApiGatewayAppComponentConfigDTO.class);
+                    "ApiGateway-Component/src/main/resources/apigateway-component-config.yml"),
+                    ApiGatewayAppComponentConfigDTO.class);
         } catch (IOException e) {
             logger.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();

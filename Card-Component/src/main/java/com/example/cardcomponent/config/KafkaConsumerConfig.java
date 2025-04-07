@@ -1,6 +1,5 @@
 package com.example.cardcomponent.config;
 
-import com.example.cardcomponent.dto.CardDTO;
 import com.example.cardcomponent.exception.GlobalKafkaExceptionHandler;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
