@@ -42,7 +42,7 @@ public class SecurityGatewayServiceImpl implements SecurityGatewayService {
                                      @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.error("Received error topic: security-error with correlation id: {} ", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.remove(correlationId);
-        logger.info("Complete CompletableFuture exceptionally with message: {} ", securityErrorDTO.toString());
+        logger.info("Complete CompletableFuture exceptionally with message: {} ", securityErrorDTO);
         futureErrorResponse.completeExceptionally(new ResponseStatusException(HttpStatus.valueOf(
                 securityErrorDTO.getStatus()), securityErrorDTO.getMessage()));
     }
@@ -82,7 +82,7 @@ public class SecurityGatewayServiceImpl implements SecurityGatewayService {
         if (futureResponse != null)
             futureResponse.complete(ResponseEntity.ok(authResponseDTO));
         else {
-            logger.warn("Response topic with correlationId was not found: " + correlationId);
+            logger.warn("Response topic with correlationId was not found: {}", correlationId);
             throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
         }
     }
@@ -122,7 +122,7 @@ public class SecurityGatewayServiceImpl implements SecurityGatewayService {
         if (futureResponse != null)
             futureResponse.complete(ResponseEntity.ok(securityContext));
         else {
-            logger.warn("Response topic with correlationId was not found: " + correlationId);
+            logger.warn("Response topic with correlationId was not found: {}", correlationId);
             throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT, "Request timed out");
         }
     }

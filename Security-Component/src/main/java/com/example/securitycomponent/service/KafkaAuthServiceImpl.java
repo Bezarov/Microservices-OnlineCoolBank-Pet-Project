@@ -44,7 +44,8 @@ public class KafkaAuthServiceImpl implements KafkaAuthService {
     }
 
     @Override
-    @KafkaListener(topics = "user-authentication", containerFactory = "usersAuthRequestDTOKafkaListenerFactory")
+    @KafkaListener(topics = "user-authentication", groupId = "security-component",
+            containerFactory = "usersAuthRequestDTOKafkaListenerFactory")
     public void authenticateUser(AuthRequestDTO authRequestDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: user-authentication with correlation id: {} ", correlationId);
         try {
@@ -69,7 +70,8 @@ public class KafkaAuthServiceImpl implements KafkaAuthService {
     }
 
     @Override
-    @KafkaListener(topics = "user-token-authentication", containerFactory = "mapStringToStringKafkaListenerFactory")
+    @KafkaListener(topics = "user-token-authentication", groupId = "security-component",
+            containerFactory = "mapStringToStringKafkaListenerFactory")
     public void authenticateUserToken(Map<String, String> mapJwtTokenToRequestURI,
                                       @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: user-token-authentication with correlation id: {} ", correlationId);

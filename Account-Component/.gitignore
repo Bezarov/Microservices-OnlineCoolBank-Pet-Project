@@ -40,4 +40,3 @@ out/
 !**/src/test/**/out/
 
 src/main/java/com/example/accountcomponent/log/*
-src/main/resources/db/*

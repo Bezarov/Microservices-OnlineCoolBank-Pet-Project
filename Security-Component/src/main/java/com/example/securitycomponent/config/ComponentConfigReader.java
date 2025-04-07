@@ -73,7 +73,8 @@ public class ComponentConfigReader {
         SecurityAppComponentConfigDTO securityConfig = null;
         try {
             securityConfig = objectMapper.readValue(new File(
-                    "src/main/resources/security-component-config.yml"), SecurityAppComponentConfigDTO.class);
+                    "Security-Component/src/main/resources/security-component-config.yml"),
+                    SecurityAppComponentConfigDTO.class);
         } catch (IOException e) {
             logger.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();

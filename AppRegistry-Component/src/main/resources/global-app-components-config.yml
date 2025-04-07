@@ -67,7 +67,7 @@ components:
   - componentName: "EurekaServer-Component-01"
     instanceEurekaName: "EUREKA-COMPONENTS"
     kafkaBootstrapAddresses: "localhost:9092, localhost:9092"
-    componentAddress: "localhost"
+    componentAddress: "127.0.0.1"
     componentPort: "8701"
     componentId: "0d9ac6d0-c62d-487f-9575-9b2b48837123"
     componentSecret: "EurekaServerPassword"

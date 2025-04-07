@@ -82,7 +82,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "create-card-by-account-id", groupId = "account-component",
+    @KafkaListener(topics = "create-card-by-account-id", groupId = "card-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void createCard(UUID accountId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: create-card-by-account-id with correlation id: {} ", correlationId);
@@ -108,7 +108,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "get-card-by-id", groupId = "account-component",
+    @KafkaListener(topics = "get-card-by-id", groupId = "card-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void getCardById(UUID cardId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-card-by-id with correlation id: {} ", correlationId);
@@ -133,7 +133,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "get-card-by-card-number", groupId = "account-component",
+    @KafkaListener(topics = "get-card-by-card-number", groupId = "card-component",
             containerFactory = "stringKafkaListenerFactory")
     public void getCardByCardNumber(String cardNumber, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-card-by-card-number with correlation id: {} ", correlationId);
@@ -158,7 +158,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "get-all-cards-by-holder-name", groupId = "account-component",
+    @KafkaListener(topics = "get-all-cards-by-holder-name", groupId = "card-component",
             containerFactory = "stringKafkaListenerFactory")
     public void getCardsByCardHolderFullName(String cardHolderFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-all-cards-by-holder-name with correlation id: {} ", correlationId);
@@ -185,7 +185,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "get-all-cards-by-account-id", groupId = "account-component",
+    @KafkaListener(topics = "get-all-cards-by-account-id", groupId = "card-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void getAllAccountCardsByAccountId(UUID accountId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-all-cards-by-account-id with correlation id: {} ", correlationId);
@@ -212,7 +212,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "get-all-cards-by-holder-id", groupId = "account-component",
+    @KafkaListener(topics = "get-all-cards-by-holder-id", groupId = "card-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void getAllUserCardsByCardHolderId(UUID holderId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-all-cards-by-holder-id with correlation id: {} ", correlationId);
@@ -239,7 +239,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "update-card-status-by-id", groupId = "account-component",
+    @KafkaListener(topics = "update-card-status-by-id", groupId = "card-component",
             containerFactory = "mapUUIDToStringKafkaListenerFactory")
     public void getAllUserCardsByStatus(UUID holderId, String status, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: update-card-status-by-id with correlation id: {} ", correlationId);
@@ -267,7 +267,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "get-all-expired-cards-by-holder-id", groupId = "account-component",
+    @KafkaListener(topics = "get-all-expired-cards-by-holder-id", groupId = "card-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void getAllExpiredCards(UUID holderId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-all-expired-cards-by-holder-id with correlation id: {} ", correlationId);
@@ -297,7 +297,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "get-all-active-cards-by-holder-id", groupId = "account-component",
+    @KafkaListener(topics = "get-all-active-cards-by-holder-id", groupId = "card-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void getAllActiveCards(UUID holderId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: get-all-active-cards-by-holder-id with correlation id: {} ", correlationId);
@@ -326,7 +326,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "update-card-status-by-id", groupId = "account-component",
+    @KafkaListener(topics = "update-card-status-by-id", groupId = "card-component",
             containerFactory = "mapUUIDToStringKafkaListenerFactory")
     public void updateCardStatusById(UUID cardId, String status, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: update-card-status-by-id with correlation id: {} ", correlationId);
@@ -353,7 +353,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "update-card-status-by-card-number", groupId = "account-component",
+    @KafkaListener(topics = "update-card-status-by-card-number", groupId = "card-component",
             containerFactory = "mapStringToStringKafkaListenerFactory")
     public void updateCardStatusByCardNumber(String cardNumber, String status, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: update-card-status-by-card-number with correlation id: {} ", correlationId);
@@ -380,7 +380,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "delete-card-by-id", groupId = "account-component",
+    @KafkaListener(topics = "delete-card-by-id", groupId = "card-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void deleteCardById(UUID cardId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: delete-card-by-id with correlation id: {} ", correlationId);
@@ -406,7 +406,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "delete-card-by-account-id", groupId = "account-component",
+    @KafkaListener(topics = "delete-card-by-account-id", groupId = "card-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void deleteAllAccountCardsByAccountId(UUID accountId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: delete-card-by-account-id with correlation id: {} ", correlationId);
@@ -434,7 +434,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
     }
 
     @Override
-    @KafkaListener(topics = "delete-card-by-holder-id", groupId = "account-component",
+    @KafkaListener(topics = "delete-card-by-holder-id", groupId = "card-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void deleteAllUsersCardsByCardHolderUUID(UUID cardHolderUUID, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         logger.info("Got request from kafka topic: delete-card-by-holder-id with correlation id: {} ", correlationId);

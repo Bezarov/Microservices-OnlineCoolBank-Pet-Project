@@ -72,7 +72,8 @@ public class ComponentConfigReader {
         AccountAppComponentConfigDTO accountConfig = null;
         try {
             accountConfig = objectMapper.readValue(new File(
-                    "src/main/resources/account-component-config.yml"), AccountAppComponentConfigDTO.class);
+                    "Account-Component/src/main/resources/account-component-config.yml"),
+                    AccountAppComponentConfigDTO.class);
         } catch (IOException e) {
             logger.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();

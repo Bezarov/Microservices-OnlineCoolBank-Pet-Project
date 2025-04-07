@@ -33,7 +33,8 @@ public class ComponentConfigReader {
         try {
             logger.info("Trying to read and deserialize: global-app-components-config.yml file");
             config = objectMapper.readValue(new File(
-                    "src/main/resources/global-app-components-config.yml"), ComponentConfigReader.class);
+                    "AppRegistry-Component/src/main/resources/global-app-components-config.yml"),
+                    ComponentConfigReader.class);
         } catch (IOException e) {
             logger.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();

@@ -1,6 +1,7 @@
 package com.example.userscomponent.exception;
 
 import com.example.userscomponent.dto.ErrorDTO;
+import io.micrometer.common.lang.NonNullApi;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -16,9 +17,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+@NonNullApi
 @Component
 public class GlobalKafkaExceptionHandler implements CommonErrorHandler {
-    private final static Logger logger = LoggerFactory.getLogger(GlobalKafkaExceptionHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(GlobalKafkaExceptionHandler.class);
     private final KafkaTemplate<String, ErrorDTO> usersErrorKafkaTemplate;
 
     public GlobalKafkaExceptionHandler(KafkaTemplate<String, ErrorDTO> usersErrorKafkaTemplate) {
@@ -26,10 +28,10 @@ public class GlobalKafkaExceptionHandler implements CommonErrorHandler {
     }
 
     @Override
-    public boolean handleOne(Exception thrownException, ConsumerRecord<?, ?> record, Consumer<?, ?> consumer,
+    public boolean handleOne(Exception thrownException, ConsumerRecord<?, ?> consumerRecord, Consumer<?, ?> consumer,
                              MessageListenerContainer container) {
         //Catch Exceptions and call handleRemaining
-        handleRemaining(thrownException, List.of(record), consumer, container);
+        handleRemaining(thrownException, List.of(consumerRecord), consumer, container);
         return true;
     }
 

@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # Database for AppRegistry-Components
+  postgres-appregistry-component:
+    image: postgres:latest
+    container_name: AppRegistry-PostgreSQL
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: appregistry
+      POSTGRES_DB: appregistry
+    volumes:
+      - appregistry-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  # Database for Users-Components
+  postgres-users-component:
+    image: postgres:latest
+    container_name: Users-PostgreSQL
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: users
+      POSTGRES_DB: users
+    volumes:
+      - users-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+  # Database for Account-Components
+  postgres-account-component:
+    image: postgres:latest
+    container_name: Account-PostgreSQL
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: account
+      POSTGRES_DB: account
+    volumes:
+      - account-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+
+  # Database for Card-Components
+  postgres-card-component:
+    image: postgres:latest
+    container_name: Card-PostgreSQL
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: card
+      POSTGRES_DB: card
+    volumes:
+      - card-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5436:5432"
+
+  # Database for Payment-Components
+  postgres-payment-component:
+    image: postgres:latest
+    container_name: Payment-PostgreSQL
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: payment
+      POSTGRES_DB: payment
+    volumes:
+      - payment-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5437:5432"
+
+  # Apache Kafka
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    container_name: Apache-ZooKeeper-cordinator
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: Apache-kafka-broker
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+
+volumes:
+  appregistry-postgres-data:
+  users-postgres-data:
+  account-postgres-data:
+  card-postgres-data:
+  payment-postgres-data:
