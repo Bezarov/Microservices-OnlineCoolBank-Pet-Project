@@ -212,7 +212,7 @@ Docker scripts and configurations are located at:
 
 ```
 # Clone the repository
-git clone https://github.com/YourGithubUsername/OnlineCoolBank-Microservices.git
+git clone https://github.com/Bezarov/OnlineCoolBank-Microservices.git
 
 # Navigate into the project
 cd OnlineCoolBank-Microservices
