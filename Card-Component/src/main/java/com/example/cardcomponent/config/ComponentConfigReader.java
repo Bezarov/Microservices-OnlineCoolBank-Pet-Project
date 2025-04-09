@@ -45,6 +45,7 @@ public class ComponentConfigReader {
             logger.info("Authentication successfully set up JWT Token: {}", CardAppComponentConfigDTO.getJwtToken());
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
+            cleanUp(cardConfig.getComponentId());
             System.exit(1);
         }
         logger.info("{} registered and authenticated successfully", cardConfig.getComponentName());
@@ -54,19 +55,17 @@ public class ComponentConfigReader {
         }));
     }
 
-    public void cleanUp(UUID componentId) {
+    private void cleanUp(UUID componentId) {
         logger.info("Trying to deregister myself in: AppRegistry-Component");
         try {
             ResponseEntity<String> responseEntity = appRegistryComponentClient.deregisterComponent(componentId);
             logger.info(responseEntity.getBody());
-            System.exit(1);
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
-            System.exit(1);
         }
     }
 
-    public static CardAppComponentConfigDTO readConfig() {
+    private static CardAppComponentConfigDTO readConfig() {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         CardAppComponentConfigDTO cardConfig = null;
         try {

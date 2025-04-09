@@ -44,6 +44,7 @@ public class ComponentConfigReader {
             logger.info("Authentication successfully set up JWT Token: {}", EurekaServerAppComponentDTO.getJwtToken());
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
+            cleanUp(eurekaServerConfig.getComponentId());
             System.exit(1);
         }
         logger.info("{} registered and authenticated successfully", eurekaServerConfig.getComponentName());
@@ -53,19 +54,17 @@ public class ComponentConfigReader {
         }));
     }
 
-    public void cleanUp(UUID componentId) {
+    private void cleanUp(UUID componentId) {
         logger.info("Trying to deregister myself in: AppRegistry-Component");
         try {
             ResponseEntity<String> responseEntity = appRegistryComponentClient.deregisterComponent(componentId);
             logger.info(responseEntity.getBody());
-            System.exit(1);
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
-            System.exit(1);
         }
     }
 
-    public static EurekaServerAppComponentDTO readConfig() {
+    private static EurekaServerAppComponentDTO readConfig() {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         EurekaServerAppComponentDTO eurekaServerConfig = null;
         try {

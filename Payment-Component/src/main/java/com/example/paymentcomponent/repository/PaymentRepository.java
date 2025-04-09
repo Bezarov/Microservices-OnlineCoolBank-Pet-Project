@@ -20,7 +20,7 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
                                                               LocalDateTime fromPaymentDate,
                                                               LocalDateTime toPaymentDate);
 
-    List<Payment> findAllByToAccountIdAndPaymentDateBetween(UUID ToAccountId,
+    List<Payment> findAllByToAccountIdAndPaymentDateBetween(UUID toAccountId,
                                                             LocalDateTime fromPaymentDate,
                                                             LocalDateTime toPaymentDate);
 

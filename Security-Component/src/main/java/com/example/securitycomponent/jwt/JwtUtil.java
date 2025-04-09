@@ -19,21 +19,22 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
-    private SecretKey userSecretKey;
-    private SecretKey componentSecretKey;
-    private final String TOKEN_TYPE_CLAIM = "tokenType";
-    private final String USER_TOKEN_TYPE = "user";
-    private final String COMPONENT_TOKEN_TYPE = "component";
-    private String USER_SECRET_KEY_BASE64 = "WakandaBank";
-    private String COMPONENT_SECRET_KEY_BASE64 = "BankWakanda";
-    private final String SALT = "WAKANDAWAKANDAWAKANDAAAABANK!";
+    private static SecretKey userSecretKey;
+    private static SecretKey componentSecretKey;
+    private static final String TOKEN_TYPE_CLAIM = "tokenType";
+    private static final String USER_TOKEN_TYPE = "user";
+    private static final String COMPONENT_TOKEN_TYPE = "component";
+    private static String userSecretKeyBase64 = "WakandaBank";
+    private static String componentSecretKeyBase64 = "BankWakanda";
+    private static final String SALT = "WAKANDAWAKANDAWAKANDAAAABANK!";
 
     @PostConstruct
-    public void init() {
-        USER_SECRET_KEY_BASE64 = USER_SECRET_KEY_BASE64 + SALT;
-        COMPONENT_SECRET_KEY_BASE64 = COMPONENT_SECRET_KEY_BASE64 + SALT;
-        userSecretKey = Keys.hmacShaKeyFor(Base64.getEncoder().encode(USER_SECRET_KEY_BASE64.getBytes()));
-        componentSecretKey = Keys.hmacShaKeyFor(Base64.getEncoder().encode(COMPONENT_SECRET_KEY_BASE64.getBytes()));
+    public static void init() {
+        userSecretKeyBase64 = userSecretKeyBase64 + SALT;
+        componentSecretKeyBase64 = componentSecretKeyBase64 + SALT;
+
+        userSecretKey = Keys.hmacShaKeyFor(Base64.getEncoder().encode(userSecretKeyBase64.getBytes()));
+        componentSecretKey = Keys.hmacShaKeyFor(Base64.getEncoder().encode(componentSecretKeyBase64.getBytes()));
         logger.debug("Initial keys for user and component was successfully encrypted and assigned");
     }
 
@@ -83,22 +84,22 @@ public class JwtUtil {
     }
 
     private SecretKey determineKeyForToken(String token) {
-        Claims claims = null;
-        SecretKey key = null;
+        Claims claims;
+//        SecretKey key = null;
         try {
             claims = Jwts.parserBuilder()
                     .setSigningKey(userSecretKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            key = userSecretKey;
+//            key = userSecretKey;
         } catch (SignatureException exception) {
             claims = Jwts.parserBuilder()
                     .setSigningKey(componentSecretKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            key = componentSecretKey;
+//            key = componentSecretKey;
         }
 
         String tokenType = claims.get(TOKEN_TYPE_CLAIM, String.class);

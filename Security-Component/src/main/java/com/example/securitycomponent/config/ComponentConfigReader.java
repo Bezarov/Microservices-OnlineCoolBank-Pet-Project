@@ -39,7 +39,8 @@ public class ComponentConfigReader {
         logger.info("Deserialization successfully: {}", securityAppComponentConfigDTO);
         try {
             logger.info("Trying to authenticate myself");
-            SecurityAppComponentConfigDTO.setJwtToken(jwtUtil.componentTokenGenerator(securityAppComponentConfigDTO.getComponentId().toString()));
+            SecurityAppComponentConfigDTO.setJwtToken(jwtUtil.componentTokenGenerator(
+                    securityAppComponentConfigDTO.getComponentId().toString()));
             logger.info("Authentication successfully set up JWT Token: {}", SecurityAppComponentConfigDTO.getJwtToken());
 
             logger.info("Trying to register myself in: AppRegistry-Component");
@@ -48,6 +49,7 @@ public class ComponentConfigReader {
             logger.info("{} authenticated and registered successfully", securityAppComponentConfigDTO.getComponentName());
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
+            cleanUp(securityAppComponentConfigDTO.getComponentId());
             System.exit(1);
         }
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -56,19 +58,17 @@ public class ComponentConfigReader {
         }));
     }
 
-    public void cleanUp(UUID componentId) {
+    private void cleanUp(UUID componentId) {
         logger.info("Trying to deregister myself in: AppRegistry-Component");
         try {
             ResponseEntity<String> responseEntity = appRegistryComponentClient.deregisterComponent(componentId);
             logger.info(responseEntity.getBody());
-            System.exit(1);
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
-            System.exit(1);
         }
     }
 
-    public static SecurityAppComponentConfigDTO readConfig() {
+    private static SecurityAppComponentConfigDTO readConfig() {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         SecurityAppComponentConfigDTO securityConfig = null;
         try {

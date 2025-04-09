@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
     private final AuthService authService;
 
     public AuthController(AuthService authService) {
@@ -21,15 +21,15 @@ public class AuthController {
 
     @PostMapping("/component")
     public ResponseEntity<String> authenticateComponent(@RequestBody AuthRequestDTO authRequestDTO) {
-        logger.info("Received POST request to Authenticate Component with Credentials: {}", authRequestDTO);
+        LOGGER.debug("Received POST request to Authenticate Component with Credentials: {}", authRequestDTO);
         String responseToken = authService.authenticateComponent(authRequestDTO);
-        logger.debug("Request was successfully processed and response was sent: Token={}", responseToken);
+        LOGGER.debug("Request was successfully processed and response was sent: Token={}", responseToken);
         return ResponseEntity.ok(new AuthResponseDTO(responseToken).toString());
     }
 
     @PostMapping("/component/token")
     public ResponseEntity<Boolean> authenticateComponentToken(@RequestBody TokenAuthRequestDTO tokenAuthRequestDTO) {
-        logger.info("Received POST request to Authenticate Component token: {}", tokenAuthRequestDTO);
+        LOGGER.debug("Received POST request to Authenticate Component token: {}", tokenAuthRequestDTO);
         return ResponseEntity.ok(authService.authenticateComponentToken(tokenAuthRequestDTO));
     }
 }

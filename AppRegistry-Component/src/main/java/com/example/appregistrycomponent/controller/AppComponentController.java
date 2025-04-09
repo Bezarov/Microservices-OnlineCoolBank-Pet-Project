@@ -12,7 +12,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/components")
 public class AppComponentController {
-    private final Logger logger = LoggerFactory.getLogger(AppComponentController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppComponentController.class);
+    private static final String RESPONSE_LOG = "Request was successfully processed and response was sent: {}";
+
     private final AppComponentService appComponentService;
 
     public AppComponentController(AppComponentService appComponentService) {
@@ -21,33 +23,33 @@ public class AppComponentController {
 
     @PostMapping
     public ResponseEntity<AppComponent> registerComponent(@RequestBody AppComponent appComponent) {
-        logger.info("Received POST request to register Component: {}", appComponent);
+        LOGGER.debug("Received POST request to register Component: {}", appComponent);
         AppComponent responseAppComponent = appComponentService.registerComponent(appComponent);
-        logger.debug("Request was successfully processed and response was sent: {}", responseAppComponent);
+        LOGGER.debug(RESPONSE_LOG, responseAppComponent);
         return ResponseEntity.ok(responseAppComponent);
     }
 
     @GetMapping("/by-id/{componentId}")
     public ResponseEntity<AppComponent> getComponentById(@PathVariable UUID componentId) {
-        logger.info("Received GET request to get Component by ID: {}", componentId);
+        LOGGER.debug("Received GET request to get Component by ID: {}", componentId);
         AppComponent responseAppComponent = appComponentService.getComponentById(componentId);
-        logger.debug("Request was successfully processed and response was sent: {}", responseAppComponent);
+        LOGGER.debug(RESPONSE_LOG, responseAppComponent);
         return ResponseEntity.ok(responseAppComponent);
     }
 
     @GetMapping("/by-name/{componentName}")
     public ResponseEntity<AppComponent> getComponentByName(@PathVariable String componentName) {
-        logger.info("Received GET request to get Component by Name: {}", componentName);
+        LOGGER.debug("Received GET request to get Component by Name: {}", componentName);
         AppComponent responseAppComponent = appComponentService.getComponentByName(componentName);
-        logger.debug("Request was successfully processed and response was sent: {}", responseAppComponent);
+        LOGGER.debug(RESPONSE_LOG, responseAppComponent);
         return ResponseEntity.ok(responseAppComponent);
     }
 
     @DeleteMapping("/by-id/{componentId}")
     public ResponseEntity<String> deleteById(@PathVariable UUID componentId){
-        logger.info("Received DELETE request to remove Component by id: {}", componentId);
+        LOGGER.debug("Received DELETE request to remove Component by id: {}", componentId);
         ResponseEntity<String> responseMessage = appComponentService.deleteById(componentId);
-        logger.debug("Request was successfully processed and response message was sent: {}", responseMessage);
+        LOGGER.debug(RESPONSE_LOG, responseMessage);
         return responseMessage;
     }
 }

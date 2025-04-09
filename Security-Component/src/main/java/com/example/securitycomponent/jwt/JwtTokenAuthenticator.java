@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -19,7 +18,7 @@ import java.util.ArrayList;
 
 @Component
 public class JwtTokenAuthenticator {
-    private static final Logger logger = LoggerFactory.getLogger(JwtTokenAuthenticator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenAuthenticator.class);
     private final AuthDetailsService authDetailsService;
     private final JwtUtil jwtUtil;
 
@@ -29,32 +28,29 @@ public class JwtTokenAuthenticator {
     }
 
     public SecurityContext doTokenAuthentication(String jwtToken) {
-        String principal = null;
         try {
-            logger.info("Extracting identity from Token: \"{}\"", jwtToken);
-            principal = jwtUtil.getIdentityFromToken(jwtToken);
-            logger.debug("JWT Token issued to: \"{}\"", principal);
+            LOGGER.info("Extracting identity from Token: \"{}\"", jwtToken);
+            String principal = jwtUtil.getIdentityFromToken(jwtToken);
+            LOGGER.debug("JWT Token issued to: \"{}\"", principal);
             if (principal != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (jwtUtil.isUserToken(jwtToken) && jwtUtil.validateUserToken(jwtToken)) {
-                    logger.debug("Authenticating extracted user email: \"{}\" from Token", principal);
+                    LOGGER.debug("Authenticating extracted user email: \"{}\" from Token", principal);
                     UsersDTO usersDTO = authDetailsService.authenticateUserToken(principal);
-                    logger.debug("Setting security context holder");
+                    LOGGER.debug("Setting security context holder");
                     return setUserAuthentication(usersDTO);
                 } else if (jwtUtil.isComponentToken(jwtToken) && jwtUtil.validateComponentToken(jwtToken)) {
-                    logger.debug("Authenticating extracted component id: \"{}\" from Token", principal);
+                    LOGGER.debug("Authenticating extracted component id: \"{}\" from Token", principal);
                     AppComponentDTO appComponentDTO = authDetailsService.authenticateComponentToken(principal);
-                    logger.debug("Setting security context holder");
+                    LOGGER.debug("Setting security context holder");
                     return setComponentAuthentication(appComponentDTO);
                 }
             }
         } catch (ExpiredJwtException exception) {
-            logger.warn("Expired JWT token: \"{}\"", jwtToken);
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-                    "JWT token is expired, refresh it");
+            LOGGER.warn("Expired JWT token: \"{}\"", jwtToken);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT token is expired, refresh it");
         } catch (JwtException exception) {
-            logger.warn("Unable to extract from JWT Token identity: \"{}\"", jwtToken);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Unable to process JWT Token, please get an acceptable JWT Token");
+            LOGGER.warn("Unable to extract from JWT Token identity: \"{}\"", jwtToken);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unable to process JWT Token, please get an acceptable JWT Token");
         }
         return SecurityContextHolder.getContext();
     }
@@ -65,10 +61,10 @@ public class JwtTokenAuthenticator {
                     usersDTO.getEmail(), null, new ArrayList<>());
 
             SecurityContextHolder.getContext().setAuthentication(userNamePassAuthToken);
-            logger.debug("Security context holder successfully set");
+            LOGGER.debug("Security context holder successfully set");
             return SecurityContextHolder.getContext();
         } catch (Exception exception) {
-            logger.error("Error while setting user authentication context", exception);
+            LOGGER.error("Error while setting user authentication context", exception);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Error while setting authentication context");
         }
@@ -80,10 +76,10 @@ public class JwtTokenAuthenticator {
                     appComponentDTO.getComponentId(), appComponentDTO.getComponentSecret(), new ArrayList<>());
 
             SecurityContextHolder.getContext().setAuthentication(userNamePassAuthToken);
-            logger.debug("Security context holder successfully set");
+            LOGGER.debug("Security context holder successfully set");
             return SecurityContextHolder.getContext();
         } catch (Exception exception) {
-            logger.error("Error while setting component authentication context", exception);
+            LOGGER.error("Error while setting component authentication context", exception);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Error while setting authentication context");
         }

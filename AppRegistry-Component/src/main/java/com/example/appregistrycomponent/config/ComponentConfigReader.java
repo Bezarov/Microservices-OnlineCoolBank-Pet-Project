@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class ComponentConfigReader {
-    private static final Logger logger = LoggerFactory.getLogger(ComponentConfigReader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ComponentConfigReader.class);
     @JsonProperty("components")
     List<AppComponent> components;
 
@@ -31,15 +31,15 @@ public class ComponentConfigReader {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         ComponentConfigReader config = null;
         try {
-            logger.info("Trying to read and deserialize: global-app-components-config.yml file");
+            LOGGER.debug("Trying to read and deserialize: global-app-components-config.yml file");
             config = objectMapper.readValue(new File(
                     "AppRegistry-Component/src/main/resources/global-app-components-config.yml"),
                     ComponentConfigReader.class);
         } catch (IOException e) {
-            logger.error("Error: File cannot be found or its contents cannot be deserialized");
+            LOGGER.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();
         }
-        config.getComponents().forEach(component -> logger.info("Deserialization successfully: {}.", component));
+        config.getComponents().forEach(component -> LOGGER.info("Deserialization successfully: {}.", component));
         return config;
     }
 }

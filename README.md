@@ -9,14 +9,14 @@
 
 In this project, each microservice represents a separate component:
 
-- 🧩**ApiGateway-Component**
-- 🧩**AppRegistry-Component**
-- 🧩**Security-Component**
-- 🧩**Users-Component**
-- 🧩**Account-Component**
-- 🧩**Card-Component**
-- 🧩**Payment-Component**
-- 🧩**Eureka-Server-Component**
+🧩**ApiGateway-Component**  
+🧩**AppRegistry-Component**  
+🧩**Security-Component**  
+🧩**Users-Component**  
+🧩**Account-Component**  
+🧩**Card-Component**  
+🧩**Payment-Component**  
+🧩**Eureka-Server-Component**  
 
 The architecture follows the **Per-Service Database** pattern:  
 Each microservice manages its own database **PostgreSQL**.
@@ -179,7 +179,7 @@ Microservice ↓ (secured communication using JWT)
 **🧩 /Card-Component**  
 **🧩 /Payment-Component**  
 **🧩 /Eureka-Server-Component**  
-**🐳 docker**  
+**🐳 /docker**  
 **📓 README**  
 
 ---
@@ -228,7 +228,7 @@ Option 2: Use Gradle/Maven:
       mvn spring-boot:run -Dspring-boot.run.profiles=dev
 Option 3: Build and run JAR manually: 
       ./gradlew build
-      java -jar build/libs/your-service-name.jar --spring.profiles.active=dev
+      java -jar build/libs/service-name.jar --spring.profiles.active=dev
 ```
 
 ---

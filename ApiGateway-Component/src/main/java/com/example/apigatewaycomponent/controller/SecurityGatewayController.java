@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 @RequestMapping("/api/auth")
 public class SecurityGatewayController {
-    private static final Logger logger = LoggerFactory.getLogger(SecurityGatewayController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityGatewayController.class);
     private final SecurityGatewayService securityGatewayService;
 
     public SecurityGatewayController(SecurityGatewayService securityGatewayService) {
@@ -24,10 +24,10 @@ public class SecurityGatewayController {
 
     @PostMapping
     public CompletableFuture<ResponseEntity<Object>> authenticateUser(@RequestBody AuthRequestDTO authRequestDTO) {
-        logger.info("Received POST request to Authenticate User with Credentials: {}", authRequestDTO);
+        LOGGER.debug("Received POST request to Authenticate User with Credentials: {}", authRequestDTO);
         return securityGatewayService.authenticateUser(authRequestDTO)
                 .thenApply(response -> {
-                    logger.debug("Request was successfully processed and response was sent: Token={}", response);
+                    LOGGER.debug("Request was successfully processed and response was sent: Token={}", response);
                     return ResponseEntity.ok("Authentication successfully!" +
                             "\nPlease use this JWT Token for further Access \n" + response.getBody());
                 });

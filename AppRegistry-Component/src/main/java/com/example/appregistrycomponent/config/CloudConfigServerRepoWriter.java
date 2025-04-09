@@ -30,13 +30,13 @@ public class CloudConfigServerRepoWriter {
 
         String defaultProperties = getDefaultProperties(component);
         if (defaultProperties == null) {
-            logger.error("Error reading default properties for component: " + component.getComponentName());
+            logger.error("Error reading default properties for component: {}", component.getComponentName());
             return;
         }
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             writer.write(defaultProperties);
         } catch (IOException e) {
-            logger.error("Error writing to file: " + filePath);
+            logger.error("Error writing to file: {}", filePath);
         }
         logger.info("Repository config file: {} created/updated successfully.", component.getComponentName());
     }
@@ -64,7 +64,7 @@ public class CloudConfigServerRepoWriter {
                 content.append(line).append(System.lineSeparator());
             }
         } catch (IOException e) {
-            logger.error("Error reading default properties file or it doesn't exists: " + defaultFileName);
+            logger.error("Error reading default properties file or it doesn't exists: {}", defaultFileName);
             return null;
         }
         return content.toString();

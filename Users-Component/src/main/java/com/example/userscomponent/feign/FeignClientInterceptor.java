@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class FeignClientInterceptor implements RequestInterceptor {
-    private static final Logger logger = LoggerFactory.getLogger(FeignClientInterceptor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FeignClientInterceptor.class);
     private final SecurityComponentClient securityComponentClient;
     private final UsersAppComponentConfigDTO appComponentConfigDTO;
 
@@ -25,26 +25,25 @@ public class FeignClientInterceptor implements RequestInterceptor {
     @Override
     public void apply(RequestTemplate requestTemplate) {
         try {
-            logger.info("Adding to feign request header Jwt my Token");
+            LOGGER.debug("Inject to feign request my JWT Token");
             requestTemplate.header("Authorization", "Bearer " + UsersAppComponentConfigDTO.getJwtToken());
         } catch (FeignException.Unauthorized receivedFeignException) {
             if (receivedFeignException.status() == 401 &&
                     receivedFeignException.getMessage().contains("JWT token is expired, refresh it")) {
-                logger.warn("{} token expired, trying to refresh it", UsersAppComponentConfigDTO.getJwtToken());
+                LOGGER.warn("{} token expired, trying to refresh it", UsersAppComponentConfigDTO.getJwtToken());
                 refreshToken();
-                logger.info("new Jwt Token set up successfully");
+                LOGGER.debug("new Jwt Token set up successfully");
             }
         }
     }
 
     private void refreshToken() {
         try {
-            String newToken = securityComponentClient.authenticateComponent(new AuthRequestDTO(
-                    appComponentConfigDTO.getComponentId(), appComponentConfigDTO.getComponentSecret()));
-            UsersAppComponentConfigDTO.setJwtToken(newToken);
-            logger.info("Token refreshed successfully: {}", newToken);
+            UsersAppComponentConfigDTO.setJwtToken(securityComponentClient.authenticateComponent(new AuthRequestDTO(
+                    appComponentConfigDTO.getComponentId(), appComponentConfigDTO.getComponentSecret())));
+            LOGGER.debug("Token refreshed successfully: {}", UsersAppComponentConfigDTO.getJwtToken());
         } catch (FeignException feignResponseError) {
-            logger.error("Failed to refresh token: {}", feignResponseError.contentUTF8());
+            LOGGER.error("Failed to refresh token: {}", feignResponseError.contentUTF8());
             System.exit(1);
         }
     }
