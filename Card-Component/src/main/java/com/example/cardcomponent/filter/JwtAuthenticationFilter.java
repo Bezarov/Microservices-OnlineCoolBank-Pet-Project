@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -20,7 +21,9 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private static final String BEARER = "Bearer ";
+    private static final String HEADER = "Authorization";
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final SecurityComponentClient securityComponentClient;
 
@@ -29,29 +32,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-        String requestJwtToken = request.getHeader("Authorization");
+
+        String requestJwtToken = authorizationHeaderExtractor(request);
         String requestURI = request.getRequestURI();
-        if (requestJwtToken != null && requestJwtToken.startsWith("Bearer ") && requestURI.startsWith("/users/")) {
+
+        if (requestJwtToken != null && requestURI.startsWith("/card/")) {
+            TokenAuthRequestDTO authRequestDTO = new TokenAuthRequestDTO(requestJwtToken, requestURI);
             try {
-                logger.info("Trying to authenticate component token: {} in: Security-Components", request.getHeader("Authorization"));
-                Boolean isAuthenticated = securityComponentClient.authenticateComponentToken(
-                        new TokenAuthRequestDTO(requestJwtToken.substring(7), requestURI));
-                if (isAuthenticated) {
-                    logger.info("JWT Token authenticated successfully");
-                    UsernamePasswordAuthenticationToken authenticationToken =
-                            new UsernamePasswordAuthenticationToken(null, null, null);
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                LOGGER.info("Trying to authenticate component token: {} in: Security-Components", requestJwtToken);
+                if (Boolean.TRUE.equals(securityComponentClient.authenticateComponentToken(authRequestDTO))) {
+                    LOGGER.info("JWT Token authenticated successfully");
+                    setAuthentication(request);
                     filterChain.doFilter(request, response);
+                    return;
                 }
             } catch (FeignException feignResponseError) {
-                logger.error("Got feign exception during authentication: " + feignResponseError.contentUTF8());
+                LOGGER.error("Got feign exception during authentication: {}", feignResponseError.contentUTF8());
                 response.setStatus(feignResponseError.status());
                 response.getWriter().write(feignResponseError.contentUTF8());
             }
-        } else {
-            filterChain.doFilter(request, response);
         }
+        filterChain.doFilter(request, response);
+    }
+
+    private String authorizationHeaderExtractor(final HttpServletRequest request) {
+        String authorizationHeader = request.getHeader(HEADER);
+
+        if (authorizationHeader != null && authorizationHeader.startsWith(BEARER)) {
+            return authorizationHeader.substring(BEARER.length());
+        }
+        return authorizationHeader;
+    }
+
+    private void setAuthentication(final HttpServletRequest request) {
+        UsernamePasswordAuthenticationToken usernamePasswordAuthToken = new UsernamePasswordAuthenticationToken(
+                null, null, null);
+        usernamePasswordAuthToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthToken);
     }
 }

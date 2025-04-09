@@ -20,7 +20,7 @@ import java.util.UUID;
 
 @Component
 public class ComponentConfigReader {
-    private static final Logger logger = LoggerFactory.getLogger(ComponentConfigReader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ComponentConfigReader.class);
     private final AppRegistryComponentClient appRegistryComponentClient;
     private final SecurityComponentClient securityComponentClient;
 
@@ -32,52 +32,51 @@ public class ComponentConfigReader {
 
     @PostConstruct
     void init() {
-        logger.info("Trying to read and deserialize: account-component-config.yml file");
+        LOGGER.debug("Trying to read and deserialize: account-component-config.yml file");
         AccountAppComponentConfigDTO accountConfig = readConfig();
-        logger.info("Deserialization successfully: {}", accountConfig);
         try {
-            logger.info("Trying to register myself in: AppRegistry-Component");
+            LOGGER.debug("Trying to register myself in: AppRegistry-Component");
             appRegistryComponentClient.registerComponent(accountConfig);
-            logger.info("Component registered successfully: {}", accountConfig);
-            logger.info("Trying to authenticate myself in: Security-Component");
+            LOGGER.debug("Component registered successfully: {}, " +
+                    "\n authenticate myself in: Security-Component", accountConfig);
 
-            AccountAppComponentConfigDTO.setJwtToken(securityComponentClient.authenticateComponent(new AuthRequestDTO(
-                    accountConfig.getComponentId(), accountConfig.getComponentSecret())));
-            logger.info("Authentication successfully set up JWT Token: {}", AccountAppComponentConfigDTO.getJwtToken());
+            AccountAppComponentConfigDTO.setJwtToken(securityComponentClient.authenticateComponent(
+                    new AuthRequestDTO(accountConfig.getComponentId(), accountConfig.getComponentSecret())));
+            LOGGER.debug("Authentication successfully, set up JWT Token: {}", AccountAppComponentConfigDTO.getJwtToken());
         } catch (FeignException feignResponseError) {
-            logger.error(feignResponseError.contentUTF8());
+            LOGGER.error(feignResponseError.contentUTF8());
+            cleanUp(accountConfig.getComponentId());
             System.exit(1);
         }
-        logger.info("{} registered and authenticated successfully", accountConfig.getComponentName());
+        LOGGER.debug("{} registered and authenticated successfully", accountConfig.getComponentName());
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("{} terminates, the shutdown hook is executed", accountConfig.getComponentName());
+            LOGGER.debug("{} terminates, the shutdown hook is executed", accountConfig.getComponentName());
             cleanUp(accountConfig.getComponentId());
         }));
     }
 
-    public void cleanUp(UUID componentId) {
-        logger.info("Trying to deregister myself in: AppRegistry-Component");
+    private void cleanUp(UUID componentId) {
+        LOGGER.debug("Trying to deregister myself in: AppRegistry-Component");
         try {
             ResponseEntity<String> responseEntity = appRegistryComponentClient.deregisterComponent(componentId);
-            logger.info(responseEntity.getBody());
-            System.exit(1);
+            LOGGER.debug(responseEntity.getBody());
         } catch (FeignException feignResponseError) {
-            logger.error(feignResponseError.contentUTF8());
-            System.exit(1);
+            LOGGER.error(feignResponseError.contentUTF8());
         }
     }
 
-    public static AccountAppComponentConfigDTO readConfig() {
+    private static AccountAppComponentConfigDTO readConfig() {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         AccountAppComponentConfigDTO accountConfig = null;
         try {
             accountConfig = objectMapper.readValue(new File(
                     "Account-Component/src/main/resources/account-component-config.yml"),
                     AccountAppComponentConfigDTO.class);
-        } catch (IOException e) {
-            logger.error("Error: File cannot be found or its contents cannot be deserialized");
-            e.printStackTrace();
+        } catch (IOException exception) {
+            LOGGER.error("Error: File cannot be found or its contents cannot be deserialized");
+            exception.printStackTrace();
         }
+        LOGGER.debug("Deserialization successfully: {}", accountConfig);
         return accountConfig;
     }
 }

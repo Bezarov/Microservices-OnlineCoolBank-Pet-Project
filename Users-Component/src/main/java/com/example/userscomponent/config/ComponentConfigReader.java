@@ -45,6 +45,7 @@ public class ComponentConfigReader {
             logger.info("Authentication successfully set up JWT Token: {}", UsersAppComponentConfigDTO.getJwtToken());
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
+            cleanUp(usersConfig.getComponentId());
             System.exit(1);
         }
         logger.info("{} registered and authenticated successfully", usersConfig.getComponentName());
@@ -54,24 +55,22 @@ public class ComponentConfigReader {
         }));
     }
 
-    public void cleanUp(UUID componentId) {
+    private void cleanUp(UUID componentId) {
         logger.info("Trying to deregister myself in: AppRegistry-Component");
         try {
             ResponseEntity<String> responseEntity = appRegistryComponentClient.deregisterComponent(componentId);
             logger.info(responseEntity.getBody());
-            System.exit(1);
         } catch (FeignException feignResponseError) {
             logger.error(feignResponseError.contentUTF8());
-            System.exit(1);
         }
     }
 
-    public static UsersAppComponentConfigDTO readConfig() {
+    private static UsersAppComponentConfigDTO readConfig() {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         UsersAppComponentConfigDTO usersConfig = null;
         try {
-            usersConfig = objectMapper.readValue(new File(
-                    "Users-Component/src/main/resources/users-component-config.yml"),
+            usersConfig = objectMapper.readValue(
+                    new File("Users-Component/src/main/resources/users-component-config.yml"),
                     UsersAppComponentConfigDTO.class);
         } catch (IOException e) {
             logger.error("Error: File cannot be found or its contents cannot be deserialized");

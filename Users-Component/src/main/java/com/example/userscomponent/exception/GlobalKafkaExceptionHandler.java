@@ -12,15 +12,17 @@ import org.springframework.kafka.listener.CommonErrorHandler;
 import org.springframework.kafka.listener.ListenerExecutionFailedException;
 import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 
 @NonNullApi
 @Component
 public class GlobalKafkaExceptionHandler implements CommonErrorHandler {
-    private static final Logger logger = LoggerFactory.getLogger(GlobalKafkaExceptionHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalKafkaExceptionHandler.class);
     private final KafkaTemplate<String, ErrorDTO> usersErrorKafkaTemplate;
 
     public GlobalKafkaExceptionHandler(KafkaTemplate<String, ErrorDTO> usersErrorKafkaTemplate) {
@@ -28,39 +30,42 @@ public class GlobalKafkaExceptionHandler implements CommonErrorHandler {
     }
 
     @Override
-    public boolean handleOne(Exception thrownException, ConsumerRecord<?, ?> consumerRecord, Consumer<?, ?> consumer,
-                             MessageListenerContainer container) {
-        //Catch Exceptions and call handleRemaining
-        handleRemaining(thrownException, List.of(consumerRecord), consumer, container);
+    public boolean handleOne(@NonNull Exception thrownException, @NonNull ConsumerRecord<?, ?> rec,
+                             @NonNull Consumer<?, ?> consumer, @NonNull MessageListenerContainer container) {
+        handleRemaining(thrownException, List.of(rec), consumer, container);
         return true;
     }
 
     @Override
-    public void handleRemaining(Exception thrownException, List<ConsumerRecord<?, ?>> records,
-                                Consumer<?, ?> consumer, MessageListenerContainer container) {
-        //Check if exception is type ListenerExecutionFailedException than get cause, if not save it as is
+    public void handleRemaining(@NonNull Exception thrownException, @NonNull List<ConsumerRecord<?, ?>> records,
+                                @NonNull Consumer<?, ?> consumer, @NonNull MessageListenerContainer container) {
         Throwable cause = (thrownException instanceof ListenerExecutionFailedException)
                 ? thrownException.getCause() : thrownException;
 
-        //Cast Throwable-cause to ResponseStatusException and call KafkaErrorProducer
-        ResponseStatusException responseStatusException = (ResponseStatusException) cause;
-        KafkaErrorProducer(responseStatusException);
+        if (cause instanceof ResponseStatusException responseStatusException) {
+            kafkaErrorProducer(responseStatusException);
+        } else {
+            LOGGER.error("Unexpected exception type in Kafka error handler", cause);
+        }
     }
 
-    public void KafkaErrorProducer(ResponseStatusException exception) {
-        //Extract from exception - correlation id and exception reason
-        String correlationId = exception.getMessage().replaceAll("^.*correlationId:|[\"\\s]", "").trim();
-        String exceptionReason = exception.getReason().replaceAll("correlationId:(.*)$", "").trim();
+    public void kafkaErrorProducer(ResponseStatusException exception) {
+        String correlationId = exception.getMessage()
+                .replaceAll("^.*correlationId:\\s*", "")
+                .replaceAll("[\"\\s]", "")
+                .trim();
+        String exceptionReason = Objects.requireNonNull(exception.getReason())
+                .replaceAll("correlationId:(.*)$", "")
+                .trim();
 
-        //Create and fill in ErrorDTO
         ErrorDTO errorDTO = new ErrorDTO();
         errorDTO.setStatus(exception.getStatusCode().value());
         errorDTO.setMessage(exceptionReason);
 
-        logger.info("Trying to create topic: users-error with correlation id: {} ", correlationId);
+        LOGGER.info("Create topic: users-error with correlation id: {} ", correlationId);
         ProducerRecord<String, ErrorDTO> errorTopic = new ProducerRecord<>("users-error", null, errorDTO);
         errorTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         usersErrorKafkaTemplate.send(errorTopic);
-        logger.info("Error topic was created and allocated in kafka broker successfully: {}", errorTopic.value());
+        LOGGER.info("Error topic was created and allocated in kafka broker successfully: {}", errorTopic.value());
     }
 }

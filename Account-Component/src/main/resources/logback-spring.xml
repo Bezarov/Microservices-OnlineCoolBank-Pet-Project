@@ -8,7 +8,7 @@
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>
-            ${LOG_PATH}log/current-app.log
+            ${LOG_PATH}current-app.log
         </file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>

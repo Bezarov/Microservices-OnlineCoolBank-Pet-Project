@@ -9,11 +9,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 @ControllerAdvice
 public class GlobalRestExceptionHandler {
-    private final static Logger logger = LoggerFactory.getLogger(GlobalRestExceptionHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalRestExceptionHandler.class);
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException exception) {
-        logger.info("Response Exception was intercepted and received, Status code: {}, Reason: {} ",
+        LOGGER.info("Response Exception was intercepted and received, Status code: {}, Reason: {} ",
                 exception.getStatusCode(), exception.getReason());
         return new ResponseEntity<>(exception.getReason(), exception.getStatusCode());
     }

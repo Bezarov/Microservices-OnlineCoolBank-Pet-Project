@@ -12,7 +12,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/payments")
 public class PaymentController {
-    private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PaymentController.class);
     private final RestPaymentService restPaymentService;
 
     public PaymentController(RestPaymentService restPaymentService) {
@@ -21,9 +21,9 @@ public class PaymentController {
 
     @GetMapping("/by-payment-id/{paymentId}")
     public ResponseEntity<PaymentDTO> getPaymentById(@PathVariable UUID paymentId) {
-        logger.info("Received GET request to get Payment by ID: {}", paymentId);
+        LOGGER.debug("Received GET request to get Payment by ID: {}", paymentId);
         PaymentDTO responsePaymentDTO = restPaymentService.getPaymentById(paymentId);
-        logger.debug("Request was successfully processed and response was sent: {}", responsePaymentDTO);
+        LOGGER.debug("Request was successfully processed and response was sent: {}", responsePaymentDTO);
         return ResponseEntity.ok(responsePaymentDTO);
     }
 }

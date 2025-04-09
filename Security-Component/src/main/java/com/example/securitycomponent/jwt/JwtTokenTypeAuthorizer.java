@@ -9,7 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Component
 public class JwtTokenTypeAuthorizer {
-    private final Logger logger = LoggerFactory.getLogger(JwtTokenTypeAuthorizer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenTypeAuthorizer.class);
     private final JwtUtil jwtUtil;
 
     public JwtTokenTypeAuthorizer(JwtUtil jwtUtil) {
@@ -17,15 +17,15 @@ public class JwtTokenTypeAuthorizer {
     }
 
     public void doTokenAuthorization(TokenAuthRequestDTO tokenAuthRequestDTO) {
-        logger.debug("Extracting token type");
+        LOGGER.debug("Extracting token type");
         String jwtTokenType = jwtUtil.extractClaim(tokenAuthRequestDTO.jwtToken(), claims -> claims.get("tokenType", String.class));
-        logger.debug("Extracted token type is: \"{}\"", jwtTokenType);
+        LOGGER.debug("Extracted token type is: \"{}\"", jwtTokenType);
         if (tokenAuthRequestDTO.requestURI().startsWith("/component") && !"component".equals(jwtTokenType)) {
-            logger.error("Extracted token type: \"{}\", access to resource: \"{}\"  denied",
+            LOGGER.error("Extracted token type: \"{}\", access to resource: \"{}\"  denied",
                     jwtTokenType, tokenAuthRequestDTO.requestURI());
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization failed");
         }
-        logger.info("Authorization successfully for token: \"{}\", with type: \"{}\", to resource: \"{}\"",
+        LOGGER.info("Authorization successfully for token: \"{}\", with type: \"{}\", to resource: \"{}\"",
                 tokenAuthRequestDTO.jwtToken(), jwtTokenType, tokenAuthRequestDTO.requestURI());
     }
 }

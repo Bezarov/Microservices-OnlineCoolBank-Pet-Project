@@ -22,7 +22,9 @@ import java.util.concurrent.TimeoutException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final Logger logWritter = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private static final String BEARER = "Bearer ";
+    private static final String HEADER = "Authorization";
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final SecurityGatewayService securityGatewayService;
     private static final long REQUEST_TIMEOUT = 6;
 
@@ -34,11 +36,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-        String requestJwtToken = request.getHeader("Authorization");
+        String requestJwtToken = authorizationHeaderExtractor(request);
         String requestURI = request.getRequestURI();
 
-        if (requestJwtToken != null && requestJwtToken.startsWith("Bearer ") && requestURI.startsWith("/api/")) {
-            logWritter.debug("JwtAuthenticationFilter intercepted request to URI: {}", requestURI);
+        if (requestJwtToken != null && requestURI.startsWith("/api/")) {
+            LOGGER.debug("JwtAuthenticationFilter intercepted request to URI: {}", requestURI);
             CompletableFuture<ResponseEntity<Object>> tokenAuthResponse = securityGatewayService.authenticateUserToken(
                     requestJwtToken.substring(7), requestURI);
             try {
@@ -46,22 +48,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (authResponse != null && authResponse.getBody() instanceof ResponseEntity<?> nestedResponse &&
                         nestedResponse.getBody() instanceof SecurityContextImpl securityContext) {
                     SecurityContextHolder.setContext(securityContext);
-                    logWritter.debug("User JWT Token authenticated successfully: {} for URI: {}", requestJwtToken, requestURI);
+                    LOGGER.debug("User JWT Token authenticated successfully: {} for URI: {}", requestJwtToken, requestURI);
                     filterChain.doFilter(request, response);
                     return;
                 }
             } catch (InterruptedException | ExecutionException | TimeoutException exception) {
                 String exceptionMessage = exception.getMessage().replaceAll(".*\"(.*?)\".*", "$1");
-                logWritter.error("Security component timed out or sent error: {}", exceptionMessage);
+                LOGGER.error("Security component timed out or sent error: {}", exceptionMessage);
                 response.reset();
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");
                 response.getWriter().write(exceptionMessage);
-                response.getWriter().flush();
                 Thread.currentThread().interrupt();
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    private String authorizationHeaderExtractor(final HttpServletRequest request) {
+        String authorizationHeader = request.getHeader(HEADER);
+
+        if (authorizationHeader != null && authorizationHeader.startsWith(BEARER)) {
+            return authorizationHeader.substring(BEARER.length());
+        }
+        return authorizationHeader;
     }
 }
