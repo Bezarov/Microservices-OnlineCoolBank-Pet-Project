@@ -41,8 +41,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (requestJwtToken != null && requestURI.startsWith("/api/")) {
             LOGGER.debug("JwtAuthenticationFilter intercepted request to URI: {}", requestURI);
-            CompletableFuture<ResponseEntity<Object>> tokenAuthResponse = securityGatewayService.authenticateUserToken(
-                    requestJwtToken.substring(7), requestURI);
+            CompletableFuture<ResponseEntity<Object>> tokenAuthResponse =
+                    securityGatewayService.authenticateUserToken(requestJwtToken, requestURI);
             try {
                 ResponseEntity<Object> authResponse = tokenAuthResponse.get(REQUEST_TIMEOUT, TimeUnit.SECONDS);
                 if (authResponse != null && authResponse.getBody() instanceof ResponseEntity<?> nestedResponse &&
@@ -54,13 +54,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             } catch (InterruptedException | ExecutionException | TimeoutException exception) {
                 String exceptionMessage = exception.getMessage().replaceAll(".*\"(.*?)\".*", "$1");
-                LOGGER.error("Security component timed out or sent error: {}", exceptionMessage);
-                response.reset();
+                LOGGER.warn("Security component error: {}", exceptionMessage);
+                response.setHeader("Content-Type", "application/json");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().write(exceptionMessage);
+                response.getWriter().write(String.format("""
+                        {
+                        "security-error": "%s"
+                        }
+                        """, exceptionMessage));
+                response.getWriter().close();
                 Thread.currentThread().interrupt();
+                return;
             }
         }
         filterChain.doFilter(request, response);

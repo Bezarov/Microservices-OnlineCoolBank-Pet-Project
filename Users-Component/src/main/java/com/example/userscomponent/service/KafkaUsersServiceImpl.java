@@ -1,6 +1,7 @@
 package com.example.userscomponent.service;
 
 import com.example.userscomponent.dto.UsersDTO;
+import com.example.userscomponent.exception.CustomKafkaException;
 import com.example.userscomponent.model.Users;
 import com.example.userscomponent.repository.UsersRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +17,6 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -70,7 +70,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
         usersRepository.findByEmail(usersDTO.getEmail())
                 .ifPresent(userEntity -> {
                     logger.error("User with such email already exists: {},", usersDTO.getEmail());
-                    throw new ResponseStatusException(HttpStatus.FOUND, "User with such email: "
+                    throw new CustomKafkaException(HttpStatus.FOUND, "User with such email: "
                             + usersDTO.getEmail() + " already exist correlationId:" + correlationId);
                 });
         logger.info("User email is unique, trying to create User in DB");
@@ -98,7 +98,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 })
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", userId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found correlationId:" + correlationId);
                 });
 
@@ -123,7 +123,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 })
                 .orElseThrow(() -> {
                     logger.error("User with such email was not found: {}", userEmail);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such email: " + userEmail + " was not found correlationId:" + correlationId);
                 });
 
@@ -148,7 +148,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 })
                 .orElseThrow(() -> {
                     logger.error("User with such name was not found: {}", userFullName);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such full name: " + userFullName + " was not found correlationId:" + correlationId);
                 });
 
@@ -173,7 +173,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 })
                 .orElseThrow(() -> {
                     logger.error("User with such phone number was not found: {}", userPhoneNumber);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such phone number: " + userPhoneNumber + " was not found correlationId:" + correlationId);
                 });
 
@@ -208,7 +208,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 })
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", userId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found correlationId:" + correlationId);
                 });
 
@@ -239,7 +239,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
                 })
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", userId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found correlationId:" + correlationId);
                 });
 
@@ -260,7 +260,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
         Users user = usersRepository.findById(userId)
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", userId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found correlationId:" + correlationId);
                 });
         usersRepository.deleteById(userId);
@@ -283,7 +283,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
         Users user = usersRepository.findByEmail(userEmail)
                 .orElseThrow(() -> {
                     logger.error("User with such email was not found: {}", userEmail);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such email: " + userEmail + " was not found correlationId:" + correlationId);
                 });
         usersRepository.deleteByEmail(userEmail);
@@ -306,7 +306,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
         Users user = usersRepository.findByFullName(userFullName.replaceAll("\"", ""))
                 .orElseThrow(() -> {
                     logger.error("User with such name was not found: {}", userFullName);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such full name: " + userFullName + " was not found correlationId:" + correlationId);
                 });
         usersRepository.deleteByFullName(userFullName);

@@ -21,6 +21,10 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
         response.setHeader("Content-Type", "application/json");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write("{\"message\": \"Request has to be authenticated via JWT for access to this resource\"}");
+        response.getWriter().write("""
+                {
+                  "authorization-error": "Request has to be authenticated via JWT for access to this resource"
+                }
+                """);
     }
 }
