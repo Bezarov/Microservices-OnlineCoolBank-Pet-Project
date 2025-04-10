@@ -3,6 +3,7 @@ package com.example.securitycomponent.service;
 import com.example.securitycomponent.dto.AuthRequestDTO;
 import com.example.securitycomponent.dto.AuthResponseDTO;
 import com.example.securitycomponent.dto.TokenAuthRequestDTO;
+import com.example.securitycomponent.exception.CustomKafkaException;
 import com.example.securitycomponent.jwt.JwtTokenAuthenticator;
 import com.example.securitycomponent.jwt.JwtTokenTypeAuthorizer;
 import com.example.securitycomponent.jwt.JwtUtil;
@@ -64,7 +65,7 @@ public class KafkaAuthServiceImpl implements KafkaAuthService {
         } catch (AuthenticationException error) {
             logger.error("Authentication failed for User with Email: {} Password: {}",
                     authRequestDTO.principal(), authRequestDTO.credentials());
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+            throw new CustomKafkaException(HttpStatus.UNAUTHORIZED,
                     "Authentication failed \nInvalid Email or Password correlationId:" + correlationId);
         }
     }
@@ -92,7 +93,7 @@ public class KafkaAuthServiceImpl implements KafkaAuthService {
             responseSecurityContextKafkaTemplate.send(responseTopic);
             logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
         } catch (ResponseStatusException exception){
-            throw new ResponseStatusException(exception.getStatusCode(), exception.getReason() + " correlationId:" + correlationId);
+            throw new CustomKafkaException(exception.getStatusCode(), exception.getReason() + " correlationId:" + correlationId);
         }
 
     }

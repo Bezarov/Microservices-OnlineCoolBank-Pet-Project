@@ -3,6 +3,7 @@ package com.example.accountcomponent.service;
 import com.example.accountcomponent.dto.AccountDTO;
 import com.example.accountcomponent.dto.CardDTO;
 import com.example.accountcomponent.dto.UsersDTO;
+import com.example.accountcomponent.exception.CustomKafkaException;
 import com.example.accountcomponent.feign.CardComponentClient;
 import com.example.accountcomponent.feign.UsersComponentClient;
 import com.example.accountcomponent.model.Account;
@@ -18,7 +19,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -91,7 +91,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
         UsersDTO userDTO = usersComponentClient.findById(UUID.fromString(userId))
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", userId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found correlationId:" + correlationId);
                 });
         logger.info("User was found successfully: {}", userId);
@@ -99,7 +99,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
         accountRepository.findByAccountName(accountDTO.getAccountName())
                 .ifPresent(AccountEntity -> {
                     logger.error("Account with such name already exists: {}", AccountEntity);
-                    throw new ResponseStatusException(HttpStatus.FOUND, "Account with such name: " +
+                    throw new CustomKafkaException(HttpStatus.FOUND, "Account with such name: " +
                             accountDTO.getAccountName() + " already exists correlationId:" + correlationId);
                 });
         Account account = accountRepository.save(convertAccountDTOToModel(userDTO, accountDTO));
@@ -126,7 +126,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Account with such name was not found: {} ", accountName);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such name: " + accountName + " was not found correlationId:" + correlationId);
                 });
         logger.info("Trying to find account cards by accountId: {}", accountDTO.getId());
@@ -157,7 +157,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Account with such ID was not found: {}", accountId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + accountId + " was not found correlationId:" + correlationId);
                 });
         logger.info("Trying to find account cards by accountId: {}", accountDTO.getId());
@@ -183,7 +183,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
         UsersDTO usersDTO = usersComponentClient.findById(userId)
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", userId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found correlationId:" + correlationId);
                 });
         logger.info("User was found successfully: {} \nTrying to find All Accounts linked to user with ID: {}",
@@ -216,7 +216,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
         UsersDTO usersDTO = usersComponentClient.findByFullName(accountHolderFullName)
                 .orElseThrow(() -> {
                     logger.error("User with such full-name: {} was not found", accountHolderFullName);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such full-name: " + accountHolderFullName + " was not found correlationId:" + correlationId);
                 });
         logger.info("User was found successfully: {} \nTrying to find All Accounts linked to user with ID: {}",
@@ -253,7 +253,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Account with such ID: {} was not found", accountId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + accountId + " was not found correlationId:" + correlationId);
                 });
 
@@ -275,7 +275,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
         logger.info("Trying to find User with ID: {}", userId);
         UsersDTO usersDTO = usersComponentClient.findById(UUID.fromString(userId)).orElseThrow(() -> {
             logger.error("User with such ID was not found: {}", userId);
-            return new ResponseStatusException(HttpStatus.NOT_FOUND,
+            return new CustomKafkaException(HttpStatus.NOT_FOUND,
                     "User with such ID: " + userId + " was not found correlationId:" + correlationId);
         });
         logger.info("User was found successfully: {}", usersDTO);
@@ -313,7 +313,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Account with such ID: {} was not found", accountId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + accountId + " was not found correlationId:" + correlationId);
                 });
 
@@ -346,7 +346,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Account with such ID: {} was not found", accountId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + accountId + " was not found correlationId:" + correlationId);
                 });
 
@@ -376,7 +376,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Account with such ID: {} was not found", accountId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + accountId + " was not found correlationId:" + correlationId);
                 });
 
@@ -406,7 +406,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Account with such ID: {} was not found", accountId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + accountId + " was not found correlationId:" + correlationId);
                 });
 
@@ -436,7 +436,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Account with such Name: {} was not found", accountName);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such Name: " + accountName + " was not found correlationId:" + correlationId);
                 });
 
@@ -462,7 +462,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Account with such ID: {} was not found", accountId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + accountId + " was not found correlationId:" + correlationId);
                 });
         logger.info("Account was found, Trying to find All Account Cards with Account ID: {}", accountId);
@@ -492,7 +492,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Account with such Name: {} was not found", accountName);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such Account Name: " + accountName + " was not found correlationId:" + correlationId);
                 });
 
@@ -517,7 +517,7 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
         UsersDTO userDTO = usersComponentClient.findById(userId)
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", userId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found correlationId:" + correlationId);
                 });
 

@@ -2,6 +2,7 @@ package com.example.paymentcomponent.service;
 
 import com.example.paymentcomponent.dto.AccountDTO;
 import com.example.paymentcomponent.dto.PaymentDTO;
+import com.example.paymentcomponent.exception.CustomKafkaException;
 import com.example.paymentcomponent.feign.AccountComponentClient;
 import com.example.paymentcomponent.feign.CardComponentClient;
 import com.example.paymentcomponent.model.Payment;
@@ -16,7 +17,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -82,14 +82,14 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
         AccountDTO accountDTOFromAccount = accountComponentClient.findById(paymentDTO.getFromAccount())
                 .orElseThrow(() -> {
                     logger.error("From-Account ID was not found: {}", paymentDTO.getFromAccount());
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "From-Account ID: " + paymentDTO.getFromAccount() + " was not found");
                 });
         logger.info("Checking availability of sufficient funds From-Account ID: {}",
                 paymentDTO.getFromAccount());
         if (accountDTOFromAccount.getBalance().compareTo(paymentDTO.getAmount()) < 0) {
             logger.error("Insufficient FUNDS for From-Account ID: {}", paymentDTO.getFromAccount());
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "INSUFFICIENT FUNDS");
+            throw new CustomKafkaException(HttpStatus.NOT_FOUND, "INSUFFICIENT FUNDS");
         }
         logger.info("Funds enough, Trying to debit");
         accountDTOFromAccount.setBalance(accountDTOFromAccount.getBalance().subtract(paymentDTO.getAmount()));
@@ -105,7 +105,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
         AccountDTO accountDTOToAccount = accountComponentClient.findById(paymentDTO.getToAccount())
                 .orElseThrow(() -> {
                     logger.error("To-Account ID was not found: {}", paymentDTO.getFromAccount());
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "To-Account ID: " + paymentDTO.getToAccount() + " was not found");
                 });
         logger.info("Trying to credit Account-To");
@@ -147,7 +147,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
                     AccountDTO fromAccountDTO = accountComponentClient.findById(cardDTO.getAccountId())
                             .orElseThrow(() -> {
                                 logger.error("Linked Account to this Card Number was not found: {}", fromCardNumber);
-                                return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                return new CustomKafkaException(HttpStatus.NOT_FOUND,
                                         "Linked Account to this Card Number: " + fromCardNumber + " was not found");
                             });
                     logger.info("Account was found successfully: {}", fromAccountDTO);
@@ -155,13 +155,13 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Card FROM with card-number: {} was not found", fromCardNumber);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Card with such ID: " + fromCardNumber + " was not found");
                 });
         logger.info("Checking availability of sufficient funds From-Account ID: {}", accountDTOFromAccount.getId());
         if (accountDTOFromAccount.getBalance().compareTo(amount) < 0) {
             logger.error("Insufficient FUNDS for From-Account ID: {}", accountDTOFromAccount.getId());
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "INSUFFICIENT FUNDS");
+            throw new CustomKafkaException(HttpStatus.BAD_REQUEST, "INSUFFICIENT FUNDS");
         }
         logger.info("Funds enough, Trying to debit");
         accountDTOFromAccount.setBalance(accountDTOFromAccount.getBalance().subtract(amount));
@@ -182,7 +182,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
                     AccountDTO toAccountDTO = accountComponentClient.findById(cardDTO.getAccountId())
                             .orElseThrow(() -> {
                                 logger.error("Linked Account to this Card Number was not found: {}", toCardNumber);
-                                return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                return new CustomKafkaException(HttpStatus.NOT_FOUND,
                                         "Linked Account to this Card Number: " + toCardNumber + " was not found");
                             });
                     logger.info("Account was found successfully: {}", toAccountDTO);
@@ -190,7 +190,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Card TO with card-number: {} was not found", toCardNumber);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Card with such ID: " + toCardNumber + " was not found");
                 });
         logger.info("Trying to credit Account-To");
@@ -235,7 +235,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Payment with such ID: {} was not found", paymentId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Payment with such ID was NOT Found: " + paymentId);
                 });
 
@@ -256,7 +256,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
         accountComponentClient.findById(fromAccountId)
                 .orElseThrow(() -> {
                     logger.error("Account with such ID was not found: {}", fromAccountId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + fromAccountId + " was not found");
                 });
 
@@ -284,7 +284,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
         logger.info("Trying to find From-Account ID: {}", fromAccountId);
         accountComponentClient.findById(UUID.fromString(fromAccountId)).orElseThrow(() -> {
             logger.error("Account with such ID was not found : {}", fromAccountId);
-            return new ResponseStatusException(HttpStatus.NOT_FOUND,
+            return new CustomKafkaException(HttpStatus.NOT_FOUND,
                     "Account with such ID: " + fromAccountId + " was not found");
         });
 
@@ -313,7 +313,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
         logger.info("Trying to find To-Account with ID: {}", toAccountId);
         accountComponentClient.findById(toAccountId).orElseThrow(() -> {
             logger.error("Account with such ID was not found: {}", toAccountId);
-            return new ResponseStatusException(HttpStatus.NOT_FOUND,
+            return new CustomKafkaException(HttpStatus.NOT_FOUND,
                     "Account with such ID: " + toAccountId + " was not found");
         });
 
@@ -344,7 +344,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
         accountComponentClient.findById(UUID.fromString(fromAccountId))
                 .orElseThrow(() -> {
                     logger.error("Account with such ID was not found: {}", fromAccountId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such ID was not found: " + fromAccountId);
                 });
 
@@ -376,7 +376,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
         logger.info("Trying to find From-Account ID: {}", fromAccountId);
         accountComponentClient.findById(fromAccountId).orElseThrow(() -> {
             logger.error("Account with such ID was not found: {}", fromAccountId);
-            return new ResponseStatusException(HttpStatus.NOT_FOUND,
+            return new CustomKafkaException(HttpStatus.NOT_FOUND,
                     "Account with such ID: " + fromAccountId + " was not found");
         });
 
@@ -412,7 +412,7 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
         logger.info("Trying to find To-Account with ID: {}", toAccountId);
         accountComponentClient.findById(toAccountId).orElseThrow(() -> {
             logger.error("Account with such ID was not found: {}", toAccountId);
-            return new ResponseStatusException(HttpStatus.NOT_FOUND,
+            return new CustomKafkaException(HttpStatus.NOT_FOUND,
                     "Account with such ID: " + toAccountId + " was NOT Found");
         });
 

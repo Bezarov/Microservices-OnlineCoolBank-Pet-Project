@@ -5,9 +5,15 @@ import com.example.apigatewaycomponent.service.UsersGatewayService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -36,13 +42,10 @@ public class UsersGatewayController {
 
     @GetMapping("/by-id/{userId}")
     public CompletableFuture<ResponseEntity<Object>> getUserById(@PathVariable UUID userId) {
-        SecurityContext context = SecurityContextHolder.getContext();
         LOGGER.debug("Received GET request to get User by ID: {}", userId);
         return usersGatewayService.getUserById(userId)
                 .thenApply(response -> {
                     LOGGER.debug(RESPONSE_LOG, response);
-                    SecurityContextHolder.setContext(context);
-                    LOGGER.debug(SecurityContextHolder.getContext().toString());
                     return response;
                 });
     }

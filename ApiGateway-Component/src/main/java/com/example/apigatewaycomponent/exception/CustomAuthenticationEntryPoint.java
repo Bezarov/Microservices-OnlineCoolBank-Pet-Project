@@ -17,10 +17,14 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        LOGGER.error(authException.getMessage(), authException);
+        LOGGER.warn(authException.getMessage());
 
         response.setHeader("Content-Type", "application/json");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write("{\"message\": \"Request has to be authenticated via JWT for access to this resource\"}");
+        response.getWriter().write("""
+                {
+                  "authorization-error": "Request has to be authenticated via JWT for access to this resource"
+                }
+                """);
     }
 }

@@ -1,4 +1,4 @@
-package com.example.paymentcomponent.exception;
+package com.example.cardcomponent.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

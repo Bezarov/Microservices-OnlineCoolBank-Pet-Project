@@ -2,6 +2,7 @@ package com.example.cardcomponent.service;
 
 import com.example.cardcomponent.dto.AccountDTO;
 import com.example.cardcomponent.dto.CardDTO;
+import com.example.cardcomponent.exception.CustomKafkaException;
 import com.example.cardcomponent.feign.AccountComponentClient;
 import com.example.cardcomponent.feign.UsersComponentClient;
 import com.example.cardcomponent.model.Card;
@@ -90,7 +91,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
         AccountDTO accountDTO = accountComponentClient.findById(accountId)
                 .orElseThrow(() -> {
                     logger.error("Account with such ID: {} was not found:", accountId);
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    throw new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + accountId + " was not found");
                 });
 
@@ -120,7 +121,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Card with such ID was not found: {}", cardId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Card with such ID: " + cardId + " was not found");
                 });
 
@@ -145,7 +146,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Card with such Card Number was not found: {}", cardNumber);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Card with such Card Number: " + cardNumber + " was not found");
                 });
 
@@ -166,7 +167,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
         usersComponentClient.findByFullName(cardHolderFullName)
                 .orElseThrow(() -> {
                     logger.error("User with such Name was not found: {}", cardHolderFullName);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such Full Name: " + cardHolderFullName + " was not found");
                 });
 
@@ -193,7 +194,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
         accountComponentClient.findById(accountId)
                 .orElseThrow(() -> {
                     logger.error("Account with such ID was not found: {}", accountId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + accountId + " was not found");
                 });
 
@@ -220,7 +221,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
         usersComponentClient.findById(holderId)
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", holderId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + holderId + " was not found");
                 });
 
@@ -247,7 +248,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
         usersComponentClient.findById(holderId)
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", holderId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + holderId + " was not found");
                 });
 
@@ -275,7 +276,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
         usersComponentClient.findById(holderId)
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", holderId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + holderId + " was not found");
                 });
 
@@ -305,7 +306,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
         usersComponentClient.findById(holderId)
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", holderId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + holderId + " was not found");
                 });
         logger.info("Trying to find all active Cards linked to User with ID: {}", holderId);
@@ -340,7 +341,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Card with such ID was not found: {}", cardId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Card with such ID: " + cardId + " was not found");
                 });
 
@@ -367,7 +368,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Card with such Card Number was not found: {}", cardNumber);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Card with such Card Number: " + cardNumber + " was not found");
                 });
 
@@ -393,7 +394,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
                 })
                 .orElseThrow(() -> {
                     logger.error("Card with such ID was not found: {}", cardId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Card with such ID: " + cardId + " was not found");
                 });
 
@@ -414,7 +415,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
         accountComponentClient.findById(accountId)
                 .orElseThrow(() -> {
                     logger.error("Account with such ID was not found: {}", accountId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + accountId + " was not found");
                 });
 
@@ -442,7 +443,7 @@ public class KafkaCardServiceImpl implements KafkaCardService {
         usersComponentClient.findById(cardHolderUUID)
                 .orElseThrow(() -> {
                     logger.error("User with such ID was not found: {}", cardHolderUUID);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + cardHolderUUID + " was not found");
                 });
 
