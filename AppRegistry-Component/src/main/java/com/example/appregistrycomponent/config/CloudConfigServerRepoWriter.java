@@ -13,7 +13,7 @@ import java.util.List;
 @Component
 public class CloudConfigServerRepoWriter {
     private final ComponentConfigReader configReader = ComponentConfigReader.readConfig();
-    private static final Logger logger = LoggerFactory.getLogger(CloudConfigServerRepoWriter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CloudConfigServerRepoWriter.class);
 
     private static final String DEFAULT_PROPERTIES_CONFIG_PATH = "default-component-config/";
 
@@ -30,15 +30,15 @@ public class CloudConfigServerRepoWriter {
 
         String defaultProperties = getDefaultProperties(component);
         if (defaultProperties == null) {
-            logger.error("Error reading default properties for component: {}", component.getComponentName());
+            LOGGER.error("Error reading default properties for component: {}", component.getComponentName());
             return;
         }
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             writer.write(defaultProperties);
         } catch (IOException e) {
-            logger.error("Error writing to file: {}", filePath);
+            LOGGER.error("Error writing to file: {}", filePath);
         }
-        logger.info("Repository config file: {} created/updated successfully.", component.getComponentName());
+        LOGGER.info("Repository config file: {} created/updated successfully.", component.getComponentName());
     }
 
     private String getDefaultProperties(AppComponent component) {
@@ -64,7 +64,7 @@ public class CloudConfigServerRepoWriter {
                 content.append(line).append(System.lineSeparator());
             }
         } catch (IOException e) {
-            logger.error("Error reading default properties file or it doesn't exists: {}", defaultFileName);
+            LOGGER.error("Error reading default properties file or it doesn't exists: {}", defaultFileName);
             return null;
         }
         return content.toString();

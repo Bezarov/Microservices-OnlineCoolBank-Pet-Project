@@ -20,12 +20,12 @@ import java.util.Map;
 @Configuration
 public class KafkaProducerConfig {
     @Value("${spring.kafka.bootstrap-servers}")
-    private String KAFKA_BOOTSTRAP_SERVERS;
+    private String kafkaBootstrapServers;
 
     @Bean
     ProducerFactory<String, ErrorDTO> paymentErrorDTOProducerFactory() {
         Map<String, Object> paymentErrorDTOProducerProp = new HashMap<>();
-        paymentErrorDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        paymentErrorDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         paymentErrorDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         paymentErrorDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(paymentErrorDTOProducerProp);
@@ -39,7 +39,7 @@ public class KafkaProducerConfig {
     @Bean
     ProducerFactory<String, PaymentDTO> paymentDTOProducerFactory() {
         Map<String, Object> paymentDTOProducerProp = new HashMap<>();
-        paymentDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        paymentDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         paymentDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         paymentDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(paymentDTOProducerProp);
@@ -53,7 +53,7 @@ public class KafkaProducerConfig {
     @Bean
     ProducerFactory<String, AccountDTO> accountDTOProducerFactory() {
         Map<String, Object> accountDTOProducerProp = new HashMap<>();
-        accountDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        accountDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         accountDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         accountDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(accountDTOProducerProp);
@@ -67,7 +67,7 @@ public class KafkaProducerConfig {
     @Bean
     ProducerFactory<String, List<PaymentDTO>> paymentDTOSProducerFactory() {
         Map<String, Object> listOfPaymentDTOSProducerProp = new HashMap<>();
-        listOfPaymentDTOSProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        listOfPaymentDTOSProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         listOfPaymentDTOSProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         listOfPaymentDTOSProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(listOfPaymentDTOSProducerProp);

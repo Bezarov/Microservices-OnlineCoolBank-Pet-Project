@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.stereotype.Component;
@@ -22,11 +23,11 @@ import java.util.concurrent.TimeoutException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final String BEARER = "Bearer ";
-    private static final String HEADER = "Authorization";
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final SecurityGatewayService securityGatewayService;
     private static final long REQUEST_TIMEOUT = 6;
+    private static final String BEARER = "Bearer ";
+    private static final String HEADER = "Authorization";
 
     public JwtAuthenticationFilter(SecurityGatewayService securityGatewayService) {
         this.securityGatewayService = securityGatewayService;
@@ -47,7 +48,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 ResponseEntity<Object> authResponse = tokenAuthResponse.get(REQUEST_TIMEOUT, TimeUnit.SECONDS);
                 if (authResponse != null && authResponse.getBody() instanceof ResponseEntity<?> nestedResponse &&
                         nestedResponse.getBody() instanceof SecurityContextImpl securityContext) {
-                    SecurityContextHolder.setContext(securityContext);
+                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
+                            securityContext.getAuthentication().getPrincipal(), securityContext.getAuthentication().getCredentials(),
+                            securityContext.getAuthentication().getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
                     LOGGER.debug("User JWT Token authenticated successfully: {} for URI: {}", requestJwtToken, requestURI);
                     filterChain.doFilter(request, response);
                     return;

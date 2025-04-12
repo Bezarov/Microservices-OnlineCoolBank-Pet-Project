@@ -12,7 +12,7 @@ components:
     instanceEurekaName: "APIGATEWAY-COMPONENTS"
     kafkaBootstrapAddresses: "localhost:9092, localhost:9092"
     componentAddress: "localhost"
-    componentPort: "8088"
+    componentPort: "8080"
     componentId: "5bd9e5cc-96d2-4743-b0f9-c71966c4158f"
     componentSecret: "ApiGatewayPassword"
   #Users microservice

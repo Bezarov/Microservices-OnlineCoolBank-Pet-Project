@@ -24,11 +24,11 @@ import java.util.UUID;
 @Configuration
 public class KafkaProducerConfig {
     @Value("${spring.kafka.bootstrap-servers}")
-    private String KAFKA_BOOTSTRAP_SERVERS;
+    private String kafkaBootstrapServers;
 
     public ProducerFactory<String, UsersDTO> usersDTOProducerFactory() {
         Map<String, Object> usersDTOProducerProp = new HashMap<>();
-        usersDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        usersDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         usersDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         usersDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(usersDTOProducerProp);
@@ -41,7 +41,7 @@ public class KafkaProducerConfig {
 
     public ProducerFactory<String, PaymentDTO> paymentDTOProducerFactory() {
         Map<String, Object> paymentDTOProducerProp = new HashMap<>();
-        paymentDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        paymentDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         paymentDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         paymentDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(paymentDTOProducerProp);
@@ -54,7 +54,7 @@ public class KafkaProducerConfig {
 
     public ProducerFactory<String, AuthRequestDTO> authRequestDTOProducerFactory() {
         Map<String, Object> authRequestDTOProducerProp = new HashMap<>();
-        authRequestDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        authRequestDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         authRequestDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         authRequestDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(authRequestDTOProducerProp);
@@ -68,7 +68,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, UUID> uuidProducerFactory() {
         Map<String, Object> uuidProducerProp = new HashMap<>();
-        uuidProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        uuidProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         uuidProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         uuidProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, UUIDSerializer.class);
         return new DefaultKafkaProducerFactory<>(uuidProducerProp);
@@ -82,7 +82,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, String> stringProducerFactory() {
         Map<String, Object> stringProducerProp = new HashMap<>();
-        stringProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        stringProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         stringProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         stringProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         return new DefaultKafkaProducerFactory<>(stringProducerProp);
@@ -96,7 +96,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, Map<UUID, UsersDTO>> mapUUIDToUsersDTOProducerFactory() {
         Map<String, Object> mapUUIDToDTOProducerProp = new HashMap<>();
-        mapUUIDToDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        mapUUIDToDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         mapUUIDToDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         mapUUIDToDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(mapUUIDToDTOProducerProp);
@@ -110,7 +110,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, Map<UUID, AccountDTO>> mapUUIDToAccountDTOProducerFactory() {
         Map<String, Object> mapUUIDToDTOProducerProp = new HashMap<>();
-        mapUUIDToDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        mapUUIDToDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         mapUUIDToDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         mapUUIDToDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(mapUUIDToDTOProducerProp);
@@ -124,7 +124,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, Map<UUID, String>> mapUUIDToStringProducerFactory() {
         Map<String, Object> mapUUIDToStringProducerProp = new HashMap<>();
-        mapUUIDToStringProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        mapUUIDToStringProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         mapUUIDToStringProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         mapUUIDToStringProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(mapUUIDToStringProducerProp);
@@ -138,7 +138,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, Map<UUID, BigDecimal>> mapUUIDToBigDecimalProducerFactory() {
         Map<String, Object> mapUUIDToStringProducerProp = new HashMap<>();
-        mapUUIDToStringProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        mapUUIDToStringProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         mapUUIDToStringProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         mapUUIDToStringProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(mapUUIDToStringProducerProp);
@@ -152,7 +152,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, Map<String, BigDecimal>> mapStringToBigDecimalProducerFactory() {
         Map<String, Object> mapUUIDToStringProducerProp = new HashMap<>();
-        mapUUIDToStringProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        mapUUIDToStringProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         mapUUIDToStringProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         mapUUIDToStringProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(mapUUIDToStringProducerProp);
@@ -166,7 +166,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, Map<String, String>> mapStringToStringProducerFactory() {
         Map<String, Object> mapUUIDToStringProducerProp = new HashMap<>();
-        mapUUIDToStringProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        mapUUIDToStringProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         mapUUIDToStringProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         mapUUIDToStringProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(mapUUIDToStringProducerProp);
@@ -180,7 +180,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, List<Object>> listObjectProducerFactory() {
         Map<String, Object> listObjectProducerProp = new HashMap<>();
-        listObjectProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        listObjectProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         listObjectProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         listObjectProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(listObjectProducerProp);

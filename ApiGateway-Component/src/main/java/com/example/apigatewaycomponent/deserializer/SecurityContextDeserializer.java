@@ -11,7 +11,7 @@ import org.springframework.security.core.context.SecurityContextImpl;
 import java.io.IOException;
 
 public class SecurityContextDeserializer implements Deserializer<SecurityContextImpl> {
-    private static final Logger logger = LoggerFactory.getLogger(SecurityContextDeserializer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityContextDeserializer.class);
     private final ObjectMapper objectMapper;
 
     public SecurityContextDeserializer() {
@@ -29,7 +29,7 @@ public class SecurityContextDeserializer implements Deserializer<SecurityContext
         try {
             return objectMapper.readValue(data, SecurityContextImpl.class);
         } catch (IOException exception) {
-            logger.error("Error during deserialization SecurityContextImpl");
+            LOGGER.error("Error during deserialization SecurityContextImpl");
             throw new RuntimeException("Error during deserialization SecurityContextImpl", exception);
         }
     }

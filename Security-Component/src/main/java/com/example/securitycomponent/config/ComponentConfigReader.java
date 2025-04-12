@@ -19,7 +19,7 @@ import java.util.UUID;
 
 @Component
 public class ComponentConfigReader {
-    private static final Logger logger = LoggerFactory.getLogger(ComponentConfigReader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ComponentConfigReader.class);
     private final AppRegistryComponentClient appRegistryComponentClient;
     private SecurityAppComponentConfigDTO securityAppComponentConfigDTO;
     private final JwtUtil jwtUtil;
@@ -34,37 +34,37 @@ public class ComponentConfigReader {
 
     @PostConstruct
     void init() {
-        logger.info("Trying to read and deserialize: security-component-config.yml file");
+        LOGGER.info("Trying to read and deserialize: security-component-config.yml file");
         securityAppComponentConfigDTO = readConfig();
-        logger.info("Deserialization successfully: {}", securityAppComponentConfigDTO);
+        LOGGER.info("Deserialization successfully: {}", securityAppComponentConfigDTO);
         try {
-            logger.info("Trying to authenticate myself");
+            LOGGER.info("Trying to authenticate myself");
             SecurityAppComponentConfigDTO.setJwtToken(jwtUtil.componentTokenGenerator(
                     securityAppComponentConfigDTO.getComponentId().toString()));
-            logger.info("Authentication successfully set up JWT Token: {}", SecurityAppComponentConfigDTO.getJwtToken());
+            LOGGER.info("Authentication successfully set up JWT Token: {}", SecurityAppComponentConfigDTO.getJwtToken());
 
-            logger.info("Trying to register myself in: AppRegistry-Component");
+            LOGGER.info("Trying to register myself in: AppRegistry-Component");
             appRegistryComponentClient.registerComponent(securityAppComponentConfigDTO);
-            logger.info("Component registered successfully: {}", securityAppComponentConfigDTO);
-            logger.info("{} authenticated and registered successfully", securityAppComponentConfigDTO.getComponentName());
+            LOGGER.info("Component registered successfully: {}", securityAppComponentConfigDTO);
+            LOGGER.info("{} authenticated and registered successfully", securityAppComponentConfigDTO.getComponentName());
         } catch (FeignException feignResponseError) {
-            logger.error(feignResponseError.contentUTF8());
+            LOGGER.error(feignResponseError.contentUTF8());
             cleanUp(securityAppComponentConfigDTO.getComponentId());
             System.exit(1);
         }
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("{} terminates, the shutdown hook is executed", securityAppComponentConfigDTO.getComponentName());
+            LOGGER.info("{} terminates, the shutdown hook is executed", securityAppComponentConfigDTO.getComponentName());
             cleanUp(securityAppComponentConfigDTO.getComponentId());
         }));
     }
 
     private void cleanUp(UUID componentId) {
-        logger.info("Trying to deregister myself in: AppRegistry-Component");
+        LOGGER.info("Trying to deregister myself in: AppRegistry-Component");
         try {
             ResponseEntity<String> responseEntity = appRegistryComponentClient.deregisterComponent(componentId);
-            logger.info(responseEntity.getBody());
+            LOGGER.info(responseEntity.getBody());
         } catch (FeignException feignResponseError) {
-            logger.error(feignResponseError.contentUTF8());
+            LOGGER.error(feignResponseError.contentUTF8());
         }
     }
 
@@ -76,7 +76,7 @@ public class ComponentConfigReader {
                     "Security-Component/src/main/resources/security-component-config.yml"),
                     SecurityAppComponentConfigDTO.class);
         } catch (IOException e) {
-            logger.error("Error: File cannot be found or its contents cannot be deserialized");
+            LOGGER.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();
         }
         return securityConfig;

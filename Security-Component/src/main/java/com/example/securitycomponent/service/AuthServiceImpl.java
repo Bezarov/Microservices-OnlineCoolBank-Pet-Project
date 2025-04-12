@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthServiceImpl implements AuthService {
-    private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthServiceImpl.class);
     private final AuthDetailsService authDetailsService;
     private final JwtUtil jwtUtil;
     private final JwtTokenAuthenticator jwtTokenAuthenticator;
@@ -30,29 +30,29 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String authenticateComponent(AuthRequestDTO authRequestDTO) {
-        logger.info("Authenticating component with ID: \"{}\"", authRequestDTO.principal());
+        LOGGER.info("Authenticating component with ID: \"{}\"", authRequestDTO.principal());
         authDetailsService.authenticateComponent(authRequestDTO);
-        logger.info("Authentication successfully for Component with ID: \"{}\"", authRequestDTO.principal());
+        LOGGER.info("Authentication successfully for Component with ID: \"{}\"", authRequestDTO.principal());
 
-        logger.info("Trying to generate component token for credentials: \"{}\"", authRequestDTO);
+        LOGGER.info("Trying to generate component token for credentials: \"{}\"", authRequestDTO);
         String jwtToken = jwtUtil.componentTokenGenerator(authRequestDTO.principal().toString());
-        logger.info("Generated JWT Token: \"{}\"", jwtToken);
+        LOGGER.info("Generated JWT Token: \"{}\"", jwtToken);
         return jwtToken;
     }
 
     @Override
     public Boolean authenticateComponentToken(TokenAuthRequestDTO tokenAuthRequestDTO) {
-        logger.info("Authenticating component Token: \"{}\"", tokenAuthRequestDTO.jwtToken());
+        LOGGER.info("Authenticating component Token: \"{}\"", tokenAuthRequestDTO.jwtToken());
         if(tokenAuthRequestDTO.jwtToken().equals(SecurityAppComponentConfigDTO.getJwtToken())){
-            logger.info("Received JWT Token is mine, Authentication successfully");
+            LOGGER.info("Received JWT Token is mine, Authentication successfully");
             return true;
         }
         SecurityContext responseSecurityContext = jwtTokenAuthenticator.doTokenAuthentication(tokenAuthRequestDTO.jwtToken());
-        logger.debug("Authentication successfully");
+        LOGGER.debug("Authentication successfully");
 
-        logger.debug("Authorizing token type and requested URI: \"{}\"", tokenAuthRequestDTO.requestURI());
+        LOGGER.debug("Authorizing token type and requested URI: \"{}\"", tokenAuthRequestDTO.requestURI());
         jwtTokenTypeAuthorizer.doTokenAuthorization(tokenAuthRequestDTO);
-        logger.info("Authentication and authorization successfully");
+        LOGGER.info("Authentication and authorization successfully");
         return responseSecurityContext.getAuthentication().isAuthenticated();
     }
 }

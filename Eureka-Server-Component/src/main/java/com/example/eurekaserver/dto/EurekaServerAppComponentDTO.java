@@ -1,14 +1,11 @@
 package com.example.eurekaserver.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
 @Component
-@Scope("singleton")
 public class EurekaServerAppComponentDTO {
     @JsonProperty("componentName")
     private String componentName;

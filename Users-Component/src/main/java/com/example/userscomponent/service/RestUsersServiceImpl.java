@@ -13,7 +13,11 @@ import java.util.UUID;
 
 @Service
 public class RestUsersServiceImpl implements RestUsersService {
-    private static final Logger logger = LoggerFactory.getLogger(RestUsersServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestUsersServiceImpl.class);
+    private static final String USER_SEARCHING_LOG = "Trying to find User by: {}";
+    private static final String USER_NOT_FOUND_LOG = "User was not found by: {}";
+    private static final String USER_FOUND_LOG = "User was found and received to the Controller: {}";
+
     private final UsersRepository usersRepository;
 
     public RestUsersServiceImpl(UsersRepository usersRepository) {
@@ -32,14 +36,14 @@ public class RestUsersServiceImpl implements RestUsersService {
 
     @Override
     public UsersDTO getUserById(UUID userId) {
-        logger.info("Trying to find User with ID: {}", userId);
+        LOGGER.info(USER_SEARCHING_LOG, userId);
         return usersRepository.findById(userId)
-                .map(UserEntity -> {
-                    logger.info("User was found and received to the Controller: {}", UserEntity);
-                    return convertUsersModelToDTO(UserEntity);
+                .map(userEntity -> {
+                    LOGGER.info(USER_FOUND_LOG, userEntity);
+                    return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
-                    logger.error("User with such ID was not found: {}", userId);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userId);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found");
                 });
@@ -47,14 +51,14 @@ public class RestUsersServiceImpl implements RestUsersService {
 
     @Override
     public UsersDTO getUserByEmail(String userEmail) {
-        logger.info("Trying to find User with email: {}", userEmail);
+        LOGGER.info(USER_SEARCHING_LOG, userEmail);
         return usersRepository.findByEmail(userEmail)
-                .map(UserEntity -> {
-                    logger.info("User was found and received to the Controller: {}", UserEntity);
-                    return convertUsersModelToDTO(UserEntity);
+                .map(userEntity -> {
+                    LOGGER.info(USER_FOUND_LOG, userEntity);
+                    return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
-                    logger.error("User with such email was not found: {}", userEmail);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userEmail);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such email: " + userEmail + " was not found");
                 });
@@ -62,14 +66,14 @@ public class RestUsersServiceImpl implements RestUsersService {
 
     @Override
     public UsersDTO getUserByFullName(String userFullName) {
-        logger.info("Trying to find User with name: {}", userFullName);
+        LOGGER.info(USER_SEARCHING_LOG, userFullName);
         return usersRepository.findByFullName(userFullName)
-                .map(UserEntity -> {
-                    logger.info("User was found and received to the Controller: {}", UserEntity);
-                    return convertUsersModelToDTO(UserEntity);
+                .map(userEntity -> {
+                    LOGGER.info(USER_FOUND_LOG, userEntity);
+                    return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
-                    logger.error("User with such name was not found: {}", userFullName);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userFullName);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such full name: " + userFullName + " was not found");
                 });
@@ -77,14 +81,14 @@ public class RestUsersServiceImpl implements RestUsersService {
 
     @Override
     public UsersDTO getUserByPhoneNumber(String userPhoneNumber) {
-        logger.info("Trying to find User with phone number: {}", userPhoneNumber);
+        LOGGER.info(USER_SEARCHING_LOG, userPhoneNumber);
         return usersRepository.findByPhoneNumber(userPhoneNumber)
-                .map(UserEntity -> {
-                    logger.info("User was found and received to the Controller: {}", UserEntity);
-                    return convertUsersModelToDTO(UserEntity);
+                .map(userEntity -> {
+                    LOGGER.info(USER_FOUND_LOG, userEntity);
+                    return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
-                    logger.error("User with such phone number was not found: {}", userPhoneNumber);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userPhoneNumber);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such phone number: " + userPhoneNumber + " was not found");
                 });

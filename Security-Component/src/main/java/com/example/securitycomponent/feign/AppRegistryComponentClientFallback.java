@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Component
 public class AppRegistryComponentClientFallback implements AppRegistryComponentClient {
-    private final static Logger logger = LoggerFactory.getLogger(AppRegistryComponentClientFallback.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppRegistryComponentClientFallback.class);
 
 
     @Override
@@ -34,7 +34,7 @@ public class AppRegistryComponentClientFallback implements AppRegistryComponentC
 
     @Override
     public void appRegistryComponentFallback(UUID componentId) {
-        logger.error("AppRegistry Component is unreachable authentication failed for component with id: {}" +
+        LOGGER.error("AppRegistry Component is unreachable authentication failed for component with id: {}" +
                 " generate exception", componentId);
         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                 "Service is unreachable please try again later.");

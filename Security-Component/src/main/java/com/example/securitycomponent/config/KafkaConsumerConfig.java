@@ -21,9 +21,9 @@ import java.util.Map;
 @EnableKafka
 public class KafkaConsumerConfig {
     @Value("${spring.application.name}")
-    private String UNIQUE_SECURITY_COMPONENT_GROUP_ID;
+    private String uniqueSecurityComponentGroupId;
     @Value("${spring.kafka.bootstrap-servers}")
-    private String KAFKA_BOOTSTRAP_SERVERS;
+    private String kafkaBootstrapServers;
 
     private final GlobalKafkaExceptionHandler globalKafkaExceptionHandler;
 
@@ -34,8 +34,8 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, AuthRequestDTO> usersAuthRequestDTOConsumerFactory() {
         Map<String, Object> usersAuthRequestDTOConsumerProp = new HashMap<>();
-        usersAuthRequestDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        usersAuthRequestDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_SECURITY_COMPONENT_GROUP_ID);
+        usersAuthRequestDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        usersAuthRequestDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueSecurityComponentGroupId);
         usersAuthRequestDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         usersAuthRequestDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         usersAuthRequestDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
@@ -57,8 +57,8 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, Map<String, String>> mapStringToStringConsumerFactory() {
         Map<String, Object> mapStringToStringConsumerProp = new HashMap<>();
-        mapStringToStringConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        mapStringToStringConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_SECURITY_COMPONENT_GROUP_ID);
+        mapStringToStringConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        mapStringToStringConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueSecurityComponentGroupId);
         mapStringToStringConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         mapStringToStringConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         mapStringToStringConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());

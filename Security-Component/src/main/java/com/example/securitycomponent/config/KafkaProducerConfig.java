@@ -19,12 +19,12 @@ import java.util.Map;
 @Configuration
 public class KafkaProducerConfig {
     @Value("${spring.kafka.bootstrap-servers}")
-    private String KAFKA_BOOTSTRAP_SERVERS;
+    private String kafkaBootstrapServers;
 
     @Bean
     public ProducerFactory<String, ErrorDTO> usersErrorDTOProducerFactory() {
         Map<String, Object> usersErrorDTOProducerProp = new HashMap<>();
-        usersErrorDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        usersErrorDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         usersErrorDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         usersErrorDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(usersErrorDTOProducerProp);
@@ -38,7 +38,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, AuthResponseDTO> usersAuthResponseDTOProducerFactory() {
         Map<String, Object> authResponseDTOProducerProp = new HashMap<>();
-        authResponseDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        authResponseDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         authResponseDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         authResponseDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(authResponseDTOProducerProp);
@@ -52,7 +52,7 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, SecurityContext> securityContextProducerFactory() {
         Map<String, Object> securityContextProducerProp = new HashMap<>();
-        securityContextProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        securityContextProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         securityContextProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         securityContextProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(securityContextProducerProp);
