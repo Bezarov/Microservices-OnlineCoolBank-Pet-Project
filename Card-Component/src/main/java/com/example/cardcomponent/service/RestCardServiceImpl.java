@@ -19,10 +19,16 @@ import java.util.stream.Collectors;
 
 @Service
 public class RestCardServiceImpl implements RestCardService {
-    private static final Logger logger = LoggerFactory.getLogger(RestCardServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestCardServiceImpl.class);
+    private static final String ACCOUNT_SEARCHING_LOG = "Trying to find Account by: {}";
+    private static final String ACCOUNT_NOT_FOUND_LOG = "Account was not found by: {}";
+    private static final String USER_SEARCHING_LOG = "Trying to find User by: {}";
+    private static final String USER_NOT_FOUND_LOG = "User was not found by: {}";
+    private static final String CARD_SEARCHING_LOG = "Trying to find Card by: {}";
+    private static final String CARD_FOUND_LOG = "Card was found and received to the Controller: {}";
+
     private final CardRepository cardRepository;
     private final UsersComponentClient usersComponentClient;
-
     private final AccountComponentClient accountComponentClient;
 
     public RestCardServiceImpl(CardRepository cardRepository,
@@ -49,14 +55,14 @@ public class RestCardServiceImpl implements RestCardService {
 
     @Override
     public CardDTO getCardById(UUID cardId) {
-        logger.info("Trying to find Card with ID: {}", cardId);
+        LOGGER.info(CARD_SEARCHING_LOG, cardId);
         return cardRepository.findById(cardId)
-                .map(CardEntity -> {
-                    logger.info("Card was found and received to the Controller: {}", CardEntity);
-                    return convertCardModelToDTO(CardEntity);
+                .map(cardEntity -> {
+                    LOGGER.info(CARD_FOUND_LOG, cardEntity);
+                    return convertCardModelToDTO(cardEntity);
                 })
                 .orElseThrow(() -> {
-                    logger.error("Card with such ID was not found: {}", cardId);
+                    LOGGER.error(CARD_FOUND_LOG, cardId);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Card with such ID: " + cardId + " was not found");
                 });
@@ -64,14 +70,14 @@ public class RestCardServiceImpl implements RestCardService {
 
     @Override
     public CardDTO getCardByCardNumber(String cardNumber) {
-        logger.info("Trying to find Card with Card Number: {}", cardNumber);
+        LOGGER.info(CARD_SEARCHING_LOG, cardNumber);
         return cardRepository.findByCardNumber(cardNumber)
-                .map(CardEntity -> {
-                    logger.info("Card was found and received to the Controller: {}", CardEntity);
-                    return convertCardModelToDTO(CardEntity);
+                .map(cardEntity -> {
+                    LOGGER.info(CARD_FOUND_LOG, cardEntity);
+                    return convertCardModelToDTO(cardEntity);
                 })
                 .orElseThrow(() -> {
-                    logger.error("Card with such Card Number was not found: {}", cardNumber);
+                    LOGGER.error(CARD_FOUND_LOG, cardNumber);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Card with such Card Number: " + cardNumber + " was not found");
                 });
@@ -79,16 +85,16 @@ public class RestCardServiceImpl implements RestCardService {
 
     @Override
     public List<CardDTO> getCardsByCardHolderFullName(String cardHolderFullName) {
-        logger.info("Trying to find User with Name: {}", cardHolderFullName);
+        LOGGER.info(USER_SEARCHING_LOG, cardHolderFullName);
         usersComponentClient.findByFullName(cardHolderFullName).orElseThrow(() -> {
-            logger.error("User with such Name was not found: {}", cardHolderFullName);
+            LOGGER.error(USER_NOT_FOUND_LOG, cardHolderFullName);
             return new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "User with such Full Name: " + cardHolderFullName + " was not found");
         });
 
-        logger.info("Trying to find all Cards linked to User Name: {}", cardHolderFullName);
+        LOGGER.info("Trying to find all Cards linked to User Name: {}", cardHolderFullName);
         List<Card> cards = cardRepository.findAllByCardHolderFullName(cardHolderFullName);
-        logger.info("Cards was found and received to the Controller: {}", cards);
+        LOGGER.info(CARD_FOUND_LOG, cards);
         return cards.stream()
                 .map(this::convertCardModelToDTO)
                 .collect(Collectors.toList());
@@ -96,16 +102,16 @@ public class RestCardServiceImpl implements RestCardService {
 
     @Override
     public List<CardDTO> getAllAccountCardsByAccountId(UUID accountId) {
-        logger.info("Trying to find Account with ID: {}", accountId);
+        LOGGER.info(ACCOUNT_SEARCHING_LOG, accountId);
         accountComponentClient.findById(accountId).orElseThrow(() -> {
-            logger.error("Account with such ID was not found: {}", accountId);
+            LOGGER.error(ACCOUNT_NOT_FOUND_LOG, accountId);
             return new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Account with such ID: " + accountId + " was not found");
         });
 
-        logger.info("Trying to find all Cards linked to Account with ID: {}", accountId);
+        LOGGER.info("Trying to find all Cards linked to Account with ID: {}", accountId);
         List<Card> cards = cardRepository.findAllByAccountId(accountId);
-        logger.info("Cards was found and received to the Controller: {}", cards);
+        LOGGER.info(CARD_FOUND_LOG, cards);
         return cards.stream()
                 .map(this::convertCardModelToDTO)
                 .collect(Collectors.toList());
@@ -113,16 +119,16 @@ public class RestCardServiceImpl implements RestCardService {
 
     @Override
     public List<CardDTO> getAllUserCardsByCardHolderId(UUID holderId) {
-        logger.info("Trying to find User with ID: {}", holderId);
+        LOGGER.info(USER_SEARCHING_LOG, holderId);
         usersComponentClient.findById(holderId).orElseThrow(() -> {
-            logger.error("User with such ID was not found: {}", holderId);
+            LOGGER.error(USER_NOT_FOUND_LOG, holderId);
             return new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "User with such ID: " + holderId + " was not found");
         });
 
-        logger.info("Trying to find all Cards linked to User with ID: {}", holderId);
+        LOGGER.info("Trying to find all Cards linked to User with ID: {}", holderId);
         List<Card> cards = cardRepository.findAllByCardHolderUUID(holderId);
-        logger.info("Cards was found and received to the Controller: {}", cards);
+        LOGGER.info(CARD_FOUND_LOG, cards);
         return cards.stream()
                 .map(this::convertCardModelToDTO)
                 .collect(Collectors.toList());
@@ -130,17 +136,17 @@ public class RestCardServiceImpl implements RestCardService {
 
     @Override
     public List<CardDTO> getAllUserCardsByStatus(UUID holderId, String status) {
-        logger.info("Trying to find User with ID: {}", holderId);
+        LOGGER.info(USER_SEARCHING_LOG, holderId);
         usersComponentClient.findById(holderId).orElseThrow(() -> {
-            logger.error("User with such ID was not found: {}", holderId);
+            LOGGER.error(USER_NOT_FOUND_LOG, holderId);
             return new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "User with such ID: " + holderId + " was not found");
         });
 
-        logger.info("Trying to find all Cards linked to User by" +
+        LOGGER.info("Trying to find all Cards linked to User by" +
                 " Card Status: {}", status);
         List<Card> cards = cardRepository.findAllByCardHolderUUIDAndStatus(holderId, status);
-        logger.info("Cards was found and received to the Controller: {}", cards);
+        LOGGER.info(CARD_FOUND_LOG, cards);
         return cards.stream()
                 .map(this::convertCardModelToDTO)
                 .collect(Collectors.toList());
@@ -148,39 +154,39 @@ public class RestCardServiceImpl implements RestCardService {
 
     @Override
     public List<CardDTO> getAllExpiredCards(UUID holderId) {
-        logger.info("Trying to find User with ID: {}", holderId);
+        LOGGER.info(USER_SEARCHING_LOG, holderId);
         usersComponentClient.findById(holderId).orElseThrow(() -> {
-            logger.error("User with such ID was not found: {}", holderId);
+            LOGGER.error(USER_NOT_FOUND_LOG, holderId);
             return new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "User with such ID: " + holderId + " was not found");
         });
 
-        logger.info("Trying to find all expired Cards linked to User with ID: {}", holderId);
+        LOGGER.info("Trying to find all expired Cards linked to User with ID: {}", holderId);
         List<Card> cards = cardRepository.findAllByCardHolderUUID(holderId);
         return cards.stream()
                 .filter(card -> card.getExpirationDate().isBefore(LocalDate.now()))
-                .map(FilteredEntity -> {
-                    logger.info("Cards was found and received to the Controller: {}", FilteredEntity);
-                    return convertCardModelToDTO(FilteredEntity);
+                .map(filteredEntity -> {
+                    LOGGER.info(CARD_FOUND_LOG, filteredEntity);
+                    return convertCardModelToDTO(filteredEntity);
                 })
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<CardDTO> getAllActiveCards(UUID holderId) {
-        logger.info("Trying to find User with ID: {}", holderId);
+        LOGGER.info(USER_SEARCHING_LOG, holderId);
         usersComponentClient.findById(holderId).orElseThrow(() -> {
-            logger.error("User with such ID was not found: {}", holderId);
+            LOGGER.error(USER_NOT_FOUND_LOG, holderId);
             return new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "User with such ID: " + holderId + " was not found");
         });
-        logger.info("Trying to find all active Cards linked to User with ID: {}", holderId);
+        LOGGER.info("Trying to find all active Cards linked to User with ID: {}", holderId);
         List<Card> cards = cardRepository.findAllByCardHolderUUID(holderId);
         return cards.stream()
                 .filter(card -> card.getExpirationDate().isAfter(LocalDate.now()))
-                .map(FilteredEntity -> {
-                    logger.info("Cards was found and received to the Controller: {}", FilteredEntity);
-                    return convertCardModelToDTO(FilteredEntity);
+                .map(filteredEntity -> {
+                    LOGGER.info(CARD_FOUND_LOG, filteredEntity);
+                    return convertCardModelToDTO(filteredEntity);
                 })
                 .collect(Collectors.toList());
     }

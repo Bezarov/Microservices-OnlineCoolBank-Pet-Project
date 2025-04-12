@@ -23,9 +23,9 @@ import java.util.UUID;
 @EnableKafka
 public class KafkaConsumerConfig {
     @Value("${spring.application.name}")
-    private String UNIQUE_USERS_COMPONENT_GROUP_ID;
+    private String uniqueUsersComponentGroupId;
     @Value("${spring.kafka.bootstrap-servers}")
-    private String KAFKA_BOOTSTRAP_SERVERS;
+    private String kafkaBootstrapServers;
 
     private final GlobalKafkaExceptionHandler globalKafkaExceptionHandler;
 
@@ -36,8 +36,8 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, UsersDTO> usersDTOConsumerFactory() {
         Map<String, Object> usersDTOConsumerProp = new HashMap<>();
-        usersDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        usersDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_USERS_COMPONENT_GROUP_ID);
+        usersDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        usersDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueUsersComponentGroupId);
         usersDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         usersDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         usersDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
@@ -59,8 +59,8 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, UUID> uuidConsumerFactory() {
         Map<String, Object> uuidConsumerProp = new HashMap<>();
-        uuidConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        uuidConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_USERS_COMPONENT_GROUP_ID);
+        uuidConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        uuidConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueUsersComponentGroupId);
         uuidConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         uuidConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         uuidConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, UUIDDeserializer.class.getName());
@@ -80,8 +80,8 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, String> stringConsumerFactory() {
         Map<String, Object> stringConsumerProp = new HashMap<>();
-        stringConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        stringConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_USERS_COMPONENT_GROUP_ID);
+        stringConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        stringConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueUsersComponentGroupId);
         stringConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         stringConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         stringConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, StringDeserializer.class.getName());
@@ -101,8 +101,8 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, Map<UUID, UsersDTO>> mapUUIDToDTOConsumerFactory() {
         Map<String, Object> mapUUIDToDTOConsumerProp = new HashMap<>();
-        mapUUIDToDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        mapUUIDToDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_USERS_COMPONENT_GROUP_ID);
+        mapUUIDToDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        mapUUIDToDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueUsersComponentGroupId);
         mapUUIDToDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         mapUUIDToDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         mapUUIDToDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
@@ -123,8 +123,8 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, Map<UUID, String>> mapUUIDToStringConsumerFactory() {
         Map<String, Object> mapUUIDToStringConsumerProp = new HashMap<>();
-        mapUUIDToStringConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        mapUUIDToStringConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_USERS_COMPONENT_GROUP_ID);
+        mapUUIDToStringConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        mapUUIDToStringConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueUsersComponentGroupId);
         mapUUIDToStringConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         mapUUIDToStringConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         mapUUIDToStringConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());

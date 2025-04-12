@@ -17,7 +17,9 @@ import java.util.UUID;
 
 @Service
 public class AppComponentServiceImpl implements AppComponentService {
-    private static final Logger logger = LoggerFactory.getLogger(AppComponentServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppComponentServiceImpl.class);
+    private static final String COMPONENT_SEARCHING_LOG = "Trying to find Component by: {}";
+    private static final String COMPONENT_NOT_FOUND_LOG = "Component was not found by: {}";
     private final AppComponentRepository appComponentRepository;
     private final SecurityConfig security;
 
@@ -28,47 +30,47 @@ public class AppComponentServiceImpl implements AppComponentService {
 
     @Override
     public AppComponent registerComponent(AppComponent appComponent) {
-        logger.info("Trying to find Component with ID: {}", appComponent.getComponentId());
+        LOGGER.info(COMPONENT_SEARCHING_LOG, appComponent.getComponentId());
         appComponentRepository.findById(appComponent.getComponentId())
-                .ifPresent(AppComponentEntity -> {
-                    logger.error("Component with such ID already registered: {}", appComponent.getComponentId());
+                .ifPresent(appComponentEntity -> {
+                    LOGGER.error("Component with such ID already registered: {}", appComponent.getComponentId());
                     throw new ResponseStatusException(HttpStatus.FOUND,
                             "Component with such ID: " + appComponent.getComponentId() + " already registered");
                 });
-        logger.info("Component ID is unique");
+        LOGGER.info("Component ID is unique");
 
         List<AppComponent> components = ComponentConfigReader.readConfig().getComponents();
 
-        logger.info("Comparing received data from request with configured data in component-config.yaml");
+        LOGGER.info("Comparing received data from request with configured data in component-config.yaml");
         AppComponent matchedIncomingComponentInComponentConfig = components.stream()
                 .filter(component -> component.getComponentName().equals(appComponent.getComponentName()) &&
                         component.getComponentId().toString().equals(appComponent.getComponentId().toString()) &&
                         component.getComponentSecret().equals(appComponent.getComponentSecret()))
                 .findFirst()
                 .orElseThrow(() -> {
-                    logger.error("Received data was not found in global-app-components-config.yml: {}", appComponent);
+                    LOGGER.error("Received data was not found in global-app-components-config.yml: {}", appComponent);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Invalid Component Credentials: " + appComponent);
                 });
 
-        logger.info("Encrypting received component secret before save it in DB");
+        LOGGER.info("Encrypting received component secret before save it in DB");
         matchedIncomingComponentInComponentConfig.setComponentSecret(security.passwordEncoder()
                 .encode(matchedIncomingComponentInComponentConfig.getComponentSecret()));
 
-        logger.info("Component registered successfully: {}", matchedIncomingComponentInComponentConfig);
+        LOGGER.info("Component registered successfully: {}", matchedIncomingComponentInComponentConfig);
         return appComponentRepository.save(matchedIncomingComponentInComponentConfig);
     }
 
     @Override
     public AppComponent getComponentById(UUID componentId) {
-        logger.info("Trying to find Component with ID: {}", componentId);
+        LOGGER.info(COMPONENT_SEARCHING_LOG, componentId);
         return appComponentRepository.findById(componentId)
-                .map(AppComponentEntity -> {
-                    logger.info("Component was found and received to the Controller: {}", AppComponentEntity);
-                    return AppComponentEntity;
+                .map(appComponentEntity -> {
+                    LOGGER.info("Component was found and received to the Controller: {}", appComponentEntity);
+                    return appComponentEntity;
                 })
                 .orElseThrow(() -> {
-                    logger.error("Component with such ID was not found: {}", componentId);
+                    LOGGER.error(COMPONENT_NOT_FOUND_LOG, componentId);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Component with such ID:" + componentId + " was not found");
                 });
@@ -76,14 +78,14 @@ public class AppComponentServiceImpl implements AppComponentService {
 
     @Override
     public AppComponent getComponentByName(String componentName) {
-        logger.info("Trying to find Component with name: {}", componentName);
+        LOGGER.info(COMPONENT_SEARCHING_LOG, componentName);
         return appComponentRepository.findServiceByComponentName(componentName)
-                .map(AppComponentEntity -> {
-                    logger.info("Component was found and received to the Controller: {}", AppComponentEntity);
-                    return AppComponentEntity;
+                .map(appComponentEntity -> {
+                    LOGGER.info("Component was found and received to the Controller: {}", appComponentEntity);
+                    return appComponentEntity;
                 })
                 .orElseThrow(() -> {
-                    logger.error("Component with such name was not found: {}", componentName);
+                    LOGGER.error(COMPONENT_NOT_FOUND_LOG, componentName);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Component with such name: " + componentName + " was not found");
                 });
@@ -91,15 +93,15 @@ public class AppComponentServiceImpl implements AppComponentService {
 
     @Override
     public ResponseEntity<String> deleteById(UUID componentId) {
-        logger.info("Trying to find Component with id: {}", componentId);
+        LOGGER.info(COMPONENT_SEARCHING_LOG, componentId);
         AppComponent appComponent = appComponentRepository.findById(componentId)
                 .orElseThrow(() -> {
-                    logger.error("Component with such ID was not found: {}", componentId);
+                    LOGGER.error(COMPONENT_NOT_FOUND_LOG, componentId);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Component with such ID:" + componentId + " was not found");
                 });
         appComponentRepository.deleteById(componentId);
-        logger.info("Component was found and deleted successfully: {}", appComponent);
+        LOGGER.info("Component was found and deleted successfully: {}", appComponent);
         return new ResponseEntity<>("Component: " + appComponent.getComponentName() + " deregistered successfully", HttpStatus.ACCEPTED);
     }
 }

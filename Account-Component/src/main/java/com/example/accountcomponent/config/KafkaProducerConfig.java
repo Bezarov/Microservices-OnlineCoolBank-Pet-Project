@@ -20,12 +20,12 @@ import java.util.Map;
 @Configuration
 public class KafkaProducerConfig {
     @Value("${spring.kafka.bootstrap-servers}")
-    private String KAFKA_BOOTSTRAP_SERVERS;
+    private String kafkaBootstrapServers;
 
     @Bean
     ProducerFactory<String, ErrorDTO> accountErrorDTOProducerFactory() {
         Map<String, Object> accountErrorDTOProducerProp = new HashMap<>();
-        accountErrorDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        accountErrorDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         accountErrorDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         accountErrorDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(accountErrorDTOProducerProp);
@@ -39,7 +39,7 @@ public class KafkaProducerConfig {
     @Bean
     ProducerFactory<String, AccountDTO> accountDTOProducerFactory() {
         Map<String, Object> accountDTOProducerProp = new HashMap<>();
-        accountDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        accountDTOProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         accountDTOProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         accountDTOProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(accountDTOProducerProp);
@@ -53,7 +53,7 @@ public class KafkaProducerConfig {
     @Bean
     ProducerFactory<String, BigDecimal> bigDecimalProducerFactory() {
         Map<String, Object> bigDecimalProducerProp = new HashMap<>();
-        bigDecimalProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        bigDecimalProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         bigDecimalProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         bigDecimalProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(bigDecimalProducerProp);
@@ -66,11 +66,11 @@ public class KafkaProducerConfig {
 
     @Bean
     ProducerFactory<String, List<AccountDTO>> accountDTOSProducerFactory() {
-        Map<String, Object> ListOfAccountDTOSProducerProp = new HashMap<>();
-        ListOfAccountDTOSProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        ListOfAccountDTOSProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        ListOfAccountDTOSProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(ListOfAccountDTOSProducerProp);
+        Map<String, Object> listOfAccountDTOSProducerProp = new HashMap<>();
+        listOfAccountDTOSProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        listOfAccountDTOSProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        listOfAccountDTOSProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        return new DefaultKafkaProducerFactory<>(listOfAccountDTOSProducerProp);
     }
 
     @Bean
@@ -81,7 +81,7 @@ public class KafkaProducerConfig {
     @Bean
     ProducerFactory<String, String> stringProducerFactory() {
         Map<String, Object> stringProducerProp = new HashMap<>();
-        stringProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
+        stringProducerProp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
         stringProducerProp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         stringProducerProp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         return new DefaultKafkaProducerFactory<>(stringProducerProp);

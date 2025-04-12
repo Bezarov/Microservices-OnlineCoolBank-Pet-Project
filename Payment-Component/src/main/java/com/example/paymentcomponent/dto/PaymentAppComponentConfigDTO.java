@@ -1,14 +1,11 @@
 package com.example.paymentcomponent.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
 @Component
-@Scope("singleton")
 public class PaymentAppComponentConfigDTO {
     @JsonProperty("componentName")
     private String componentName;

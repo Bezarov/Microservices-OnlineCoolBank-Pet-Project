@@ -25,11 +25,18 @@ import java.util.UUID;
 
 @Service
 public class KafkaUsersServiceImpl implements KafkaUsersService {
-    private static final Logger logger = LoggerFactory.getLogger(KafkaUsersServiceImpl.class);
-    private final PasswordEncoder passwordEncoder;
-    private final UsersRepository usersRepository;
+    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaUsersServiceImpl.class);
+    private static final String ALLOCATED_TOPIC_LOG = "Topic was created and allocated in kafka broker successfully: {}";
+    private static final String USER_SEARCHING_LOG = "Trying to find User by: {}";
+    private static final String USER_NOT_FOUND_LOG = "User was not found by: {}";
+    private static final String FOUND_USER_LOG = "User was found in DB: {}";
+    private static final String DELETED_USER_LOG = "User was found and deleted successfully: {}";
+
     private final KafkaTemplate<String, UsersDTO> responseDTOKafkaTemplate;
     private final KafkaTemplate<String, String> responseMessageKafkaTemplate;
+
+    private final PasswordEncoder passwordEncoder;
+    private final UsersRepository usersRepository;
 
     @Autowired
     public KafkaUsersServiceImpl(PasswordEncoder passwordEncoder, UsersRepository usersRepository,
@@ -65,258 +72,257 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     @Override
     @KafkaListener(topics = "create-user", containerFactory = "usersDTOKafkaListenerFactory")
     public void createUser(UsersDTO usersDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        logger.info("Got request from kafka topic: create-user with correlation id: {} ", correlationId);
-        logger.info("Trying to find User with email: {}", usersDTO.getEmail());
+        LOGGER.info("Got request from kafka topic: create-user with correlation id: {} ", correlationId);
+        LOGGER.info(USER_SEARCHING_LOG, usersDTO.getEmail());
         usersRepository.findByEmail(usersDTO.getEmail())
                 .ifPresent(userEntity -> {
-                    logger.error("User with such email already exists: {},", usersDTO.getEmail());
+                    LOGGER.error("User with such email already exists: {},", usersDTO.getEmail());
                     throw new CustomKafkaException(HttpStatus.FOUND, "User with such email: "
                             + usersDTO.getEmail() + " already exist correlationId:" + correlationId);
                 });
-        logger.info("User email is unique, trying to create User in DB");
-        Users userEntity = usersRepository.save(convertUsersDTOToModel(usersDTO));
-        logger.info("User created successfully: {}", userEntity);
 
-        logger.info("Trying to create topic: create-user-response with correlation id: {} ", correlationId);
+        LOGGER.info("User email is unique, trying to create User in DB");
+        Users userEntity = usersRepository.save(convertUsersDTOToModel(usersDTO));
+        LOGGER.info("User created successfully: {}", userEntity);
+
+        LOGGER.info("Trying to create topic: create-user-response with correlation id: {} ", correlationId);
         ProducerRecord<String, UsersDTO> responseTopic = new ProducerRecord<>(
                 "create-user-response", null, convertUsersModelToDTO(userEntity));
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
+        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
     }
 
     @Override
     @KafkaListener(topics = "get-user-by-id", groupId = "users-components",
             containerFactory = "uuidKafkaListenerFactory")
     public void getUserById(UUID userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        logger.info("Got request from kafka topic: get-user-by-id with correlation id: {} ", correlationId);
-        logger.info("Trying to find User with ID: {}", userId);
+        LOGGER.info("Got request from kafka topic: get-user-by-id with correlation id: {} ", correlationId);
+        LOGGER.info(USER_SEARCHING_LOG, userId);
         UsersDTO responseUserDTO = usersRepository.findById(userId)
                 .map(userEntity -> {
-                    logger.info("User was found and received to Kafka Broker: {}", userEntity);
+                    LOGGER.info(FOUND_USER_LOG, userEntity);
                     return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
-                    logger.error("User with such ID was not found: {}", userId);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userId);
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found correlationId:" + correlationId);
                 });
 
-        logger.info("Trying to create topic: get-user-by-id-response with correlation id: {} ", correlationId);
+        LOGGER.info("Trying to create topic: get-user-by-id-response with correlation id: {} ", correlationId);
         ProducerRecord<String, UsersDTO> responseTopic = new ProducerRecord<>(
                 "get-user-by-id-response", null, responseUserDTO);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
+        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
     }
 
     @Override
     @KafkaListener(topics = "get-user-by-email", groupId = "users-components",
             containerFactory = "stringKafkaListenerFactory")
     public void getUserByEmail(String userEmail, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        logger.info("Got request from kafka topic: get-user-by-email with correlation id: {} ", correlationId);
-        logger.info("Trying to find User with email: {}", userEmail);
+        LOGGER.info("Got request from kafka topic: get-user-by-email with correlation id: {} ", correlationId);
+        LOGGER.info(USER_SEARCHING_LOG, userEmail);
         UsersDTO responseUserDTO = usersRepository.findByEmail(userEmail)
                 .map(userEntity -> {
-                    logger.info("User was found and received to the Controller: {}", userEntity);
+                    LOGGER.info(FOUND_USER_LOG, userEntity);
                     return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
-                    logger.error("User with such email was not found: {}", userEmail);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userEmail);
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such email: " + userEmail + " was not found correlationId:" + correlationId);
                 });
 
-        logger.info("Trying to create topic: get-user-by-email-response with correlation id: {} ", correlationId);
+        LOGGER.info("Trying to create topic: get-user-by-email-response with correlation id: {} ", correlationId);
         ProducerRecord<String, UsersDTO> responseTopic = new ProducerRecord<>(
                 "get-user-by-email-response", null, responseUserDTO);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
+        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
     }
 
     @Override
     @KafkaListener(topics = "get-user-by-full-name", groupId = "users-components",
             containerFactory = "stringKafkaListenerFactory")
     public void getUserByFullName(String userFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        logger.info("Got request from kafka topic: get-user-by-full-name with correlation id: {} ", correlationId);
-        logger.info("Trying to find User with name: {}", userFullName);
+        LOGGER.info("Got request from kafka topic: get-user-by-full-name with correlation id: {} ", correlationId);
+        LOGGER.info(USER_SEARCHING_LOG, userFullName);
         UsersDTO responseUserDTO = usersRepository.findByFullName(userFullName)
                 .map(userEntity -> {
-                    logger.info("User was found and received to the Controller: {}", userEntity);
+                    LOGGER.info(FOUND_USER_LOG, userEntity);
                     return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
-                    logger.error("User with such name was not found: {}", userFullName);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userFullName);
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such full name: " + userFullName + " was not found correlationId:" + correlationId);
                 });
 
-        logger.info("Trying to create topic: get-user-by-full-name-response with correlation id: {} ", correlationId);
+        LOGGER.info("Trying to create topic: get-user-by-full-name-response with correlation id: {} ", correlationId);
         ProducerRecord<String, UsersDTO> responseTopic = new ProducerRecord<>(
                 "get-user-by-full-name-response", null, responseUserDTO);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
+        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
     }
 
     @Override
     @KafkaListener(topics = "get-user-by-phone-number", groupId = "users-components",
             containerFactory = "stringKafkaListenerFactory")
     public void getUserByPhoneNumber(String userPhoneNumber, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        logger.info("Got request from kafka topic: get-user-by-phone-number with correlation id: {} ", correlationId);
-        logger.info("Trying to find User with phone number: {}", userPhoneNumber);
+        LOGGER.info("Got request from kafka topic: get-user-by-phone-number with correlation id: {} ", correlationId);
+        LOGGER.info(USER_SEARCHING_LOG, userPhoneNumber);
         UsersDTO responseUserDTO = usersRepository.findByPhoneNumber(userPhoneNumber)
                 .map(userEntity -> {
-                    logger.info("User was found and received to the Controller: {}", userEntity);
+                    LOGGER.info(FOUND_USER_LOG, userEntity);
                     return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
-                    logger.error("User with such phone number was not found: {}", userPhoneNumber);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userPhoneNumber);
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such phone number: " + userPhoneNumber + " was not found correlationId:" + correlationId);
                 });
 
-        logger.info("Trying to create topic: get-user-by-phone-number-response with correlation id: {} ", correlationId);
+        LOGGER.info("Trying to create topic: get-user-by-phone-number-response with correlation id: {} ", correlationId);
         ProducerRecord<String, UsersDTO> responseTopic = new ProducerRecord<>(
                 "get-user-by-phone-number-response", null, responseUserDTO);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
+        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
     }
 
     @Override
     @KafkaListener(topics = "update-user-by-id", containerFactory = "mapUUIDToDTOKafkaListenerFactory")
     public void updateUser(Map<String, UsersDTO> mapUUIDToDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        logger.info("Got request from kafka topic: update-user-by-id with correlation id: {} ", correlationId);
+        LOGGER.info("Got request from kafka topic: update-user-by-id with correlation id: {} ", correlationId);
         ObjectMapper objectMapper = new ObjectMapper();
         String userId = mapUUIDToDTO.keySet().iterator().next().replaceAll("\"", "");
         UsersDTO usersDTO = objectMapper.convertValue(mapUUIDToDTO.get(userId), UsersDTO.class);
 
-        logger.info("Trying to find User with ID: {}", userId);
+        LOGGER.info(USER_SEARCHING_LOG, userId);
         UsersDTO responseUserDTO = usersRepository.findById(UUID.fromString(userId))
                 .map(userEntity -> {
-                    logger.info("User was found updating");
+                    LOGGER.info(FOUND_USER_LOG, userEntity);
                     userEntity.setFullName(usersDTO.getFullName());
                     userEntity.setEmail(usersDTO.getEmail());
                     userEntity.setPhoneNumber(usersDTO.getPhoneNumber());
                     userEntity.setPassword(passwordEncoder.encode(usersDTO.getPassword()));
-                    logger.info("User updated successfully, trying to save in DB");
                     usersRepository.save(userEntity);
-                    logger.info("User updated successfully: {}", userEntity);
+                    LOGGER.info("User updated successfully: {}", userEntity);
                     return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
-                    logger.error("User with such ID was not found: {}", userId);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userId);
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found correlationId:" + correlationId);
                 });
 
-        logger.info("Trying to create topic: update-user-by-id-response with correlation id: {} ", correlationId);
+        LOGGER.info("Trying to create topic: update-user-by-id-response with correlation id: {} ", correlationId);
         ProducerRecord<String, UsersDTO> responseTopic = new ProducerRecord<>(
                 "update-user-by-id-response", null, responseUserDTO);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
+        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
     }
 
     @Override
     @KafkaListener(topics = "update-user-password-by-id", containerFactory = "mapUUIDToStringKafkaListenerFactory")
     public void updatePasswordById(Map<String, String> mapUUIDToString, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        logger.info("Got request from kafka topic: update-user-password-by-id with correlation id: {} ", correlationId);
+        LOGGER.info("Got request from kafka topic: update-user-password-by-id with correlation id: {} ", correlationId);
         String userId = mapUUIDToString.keySet().iterator().next().replaceAll("\"", "");
         String newPassword = mapUUIDToString.get(userId);
 
-        logger.info("Trying to find User with ID: {}", userId);
+        LOGGER.info(USER_SEARCHING_LOG, userId);
         UsersDTO responseUserDTO = usersRepository.findById(UUID.fromString(userId))
                 .map(userEntity -> {
-                    logger.info("User was found, updating password");
+                    LOGGER.info("User was found: {}", userEntity);
                     userEntity.setPassword(passwordEncoder.encode(newPassword));
-                    logger.info("Password updated successfully, trying to save in DB");
                     usersRepository.save(userEntity);
-                    logger.info("User password updated successfully: {}", userEntity);
+                    LOGGER.info("User password updated successfully: {}", userEntity);
                     return convertUsersModelToDTO(userEntity);
                 })
                 .orElseThrow(() -> {
-                    logger.error("User with such ID was not found: {}", userId);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userId);
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found correlationId:" + correlationId);
                 });
 
-        logger.info("Trying to create topic: update-user-password-by-id-response with correlation id: {} ", correlationId);
+        LOGGER.info("Trying to create topic: update-user-password-by-id-response with correlation id: {} ", correlationId);
         ProducerRecord<String, UsersDTO> responseTopic = new ProducerRecord<>(
                 "update-user-password-by-id-response", null, responseUserDTO);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
+        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
     }
 
     @Transactional
     @Override
     @KafkaListener(topics = "delete-user-by-id", containerFactory = "uuidKafkaListenerFactory")
     public void deleteUserById(UUID userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        logger.info("Got request from kafka topic: delete-user-by-id with correlation id: {} ", correlationId);
-        logger.info("Trying to find User with ID: {}", userId);
+        LOGGER.info("Got request from kafka topic: delete-user-by-id with correlation id: {} ", correlationId);
+        LOGGER.info(USER_SEARCHING_LOG, userId);
         Users user = usersRepository.findById(userId)
                 .orElseThrow(() -> {
-                    logger.error("User with such ID was not found: {}", userId);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userId);
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found correlationId:" + correlationId);
                 });
         usersRepository.deleteById(userId);
-        logger.info("User was found and deleted successfully: {}", user);
+        LOGGER.info(DELETED_USER_LOG, user);
 
-        logger.info("Trying to create topic: delete-user-by-id-response with correlation id: {} ", correlationId);
+        LOGGER.info("Trying to create topic: delete-user-by-id-response with correlation id: {} ", correlationId);
         ProducerRecord<String, String> responseTopic = new ProducerRecord<>(
                 "delete-user-by-id-response", null, "User deleted successfully");
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseMessageKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
+        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
     }
 
     @Transactional
     @Override
     @KafkaListener(topics = "delete-user-by-email", containerFactory = "stringKafkaListenerFactory")
     public void deleteUserByEmail(String userEmail, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        logger.info("Got request from kafka topic: delete-user-by-email with correlation id: {} ", correlationId);
-        logger.info("Trying to find User with email: {}", userEmail.replaceAll("\"", ""));
+        LOGGER.info("Got request from kafka topic: delete-user-by-email with correlation id: {} ", correlationId);
+        LOGGER.info("Trying to find User with email: {}", userEmail.replaceAll("\"", ""));
         Users user = usersRepository.findByEmail(userEmail)
                 .orElseThrow(() -> {
-                    logger.error("User with such email was not found: {}", userEmail);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userEmail);
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such email: " + userEmail + " was not found correlationId:" + correlationId);
                 });
         usersRepository.deleteByEmail(userEmail);
-        logger.info("User was found and deleted successfully: {}", user);
+        LOGGER.info(DELETED_USER_LOG, user);
 
-        logger.info("Trying to create topic: delete-user-by-id-response with correlation id: {} ", correlationId);
+        LOGGER.info("Trying to create topic: delete-user-by-id-response with correlation id: {} ", correlationId);
         ProducerRecord<String, String> responseTopic = new ProducerRecord<>(
                 "delete-user-by-id-response", null, "User deleted successfully");
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseMessageKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
+        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
     }
 
     @Transactional
     @Override
     @KafkaListener(topics = "delete-user-by-full-name", containerFactory = "stringKafkaListenerFactory")
     public void deleteUserByFullName(String userFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        logger.info("Got request from kafka topic: delete-user-by-full-name with correlation id: {} ", correlationId);
-        logger.info("Trying to find User with name: {}", userFullName);
+        LOGGER.info("Got request from kafka topic: delete-user-by-full-name with correlation id: {} ", correlationId);
+        LOGGER.info(USER_SEARCHING_LOG, userFullName);
         Users user = usersRepository.findByFullName(userFullName.replaceAll("\"", ""))
                 .orElseThrow(() -> {
-                    logger.error("User with such name was not found: {}", userFullName);
+                    LOGGER.error("User with such name was not found: {}", userFullName);
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,
                             "User with such full name: " + userFullName + " was not found correlationId:" + correlationId);
                 });
         usersRepository.deleteByFullName(userFullName);
-        logger.info("User was found and deleted successfully: {}", user);
+        LOGGER.info(DELETED_USER_LOG, user);
 
-        logger.info("Trying to create topic: delete-user-by-full-name-response with correlation id: {} ", correlationId);
+        LOGGER.info("Trying to create topic: delete-user-by-full-name-response with correlation id: {} ", correlationId);
         ProducerRecord<String, String> responseTopic = new ProducerRecord<>(
                 "delete-user-by-full-name-response", null, "User deleted successfully");
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseMessageKafkaTemplate.send(responseTopic);
-        logger.info("Topic was created and allocated in kafka broker successfully: {}", responseTopic.value());
+        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
     }
 }

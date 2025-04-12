@@ -20,7 +20,7 @@ import java.util.UUID;
 
 @Component
 public class ComponentConfigReader {
-    private static final Logger logger = LoggerFactory.getLogger(ComponentConfigReader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ComponentConfigReader.class);
     private final AppRegistryComponentClient appRegistryComponentClient;
     private final SecurityComponentClient securityComponentClient;
 
@@ -32,36 +32,36 @@ public class ComponentConfigReader {
 
     @PostConstruct
     void init() {
-        logger.info("Trying to read and deserialize: apigateway-component-config.yml file");
+        LOGGER.info("Trying to read and deserialize: apigateway-component-config.yml file");
         ApiGatewayAppComponentConfigDTO apiGatewayConfig = readConfig();
-        logger.info("Deserialization successfully: {}", apiGatewayConfig);
+        LOGGER.info("Deserialization successfully: {}", apiGatewayConfig);
         try {
-            logger.info("Trying to register myself in: AppRegistry-Component");
+            LOGGER.info("Trying to register myself in: AppRegistry-Component");
             appRegistryComponentClient.registerComponent(apiGatewayConfig);
-            logger.info("Component registered successfully: {}", apiGatewayConfig);
-            logger.info("Trying to authenticate myself in: Security-Component");
+            LOGGER.info("Component registered successfully: {}", apiGatewayConfig);
+            LOGGER.info("Trying to authenticate myself in: Security-Component");
             ApiGatewayAppComponentConfigDTO.setJwtToken(securityComponentClient.authenticateComponent(new AuthRequestDTO(
                     apiGatewayConfig.getComponentId(), apiGatewayConfig.getComponentSecret())));
-            logger.info("Authentication successfully set up JWT Token: {}", ApiGatewayAppComponentConfigDTO.getJwtToken());
+            LOGGER.info("Authentication successfully set up JWT Token: {}", ApiGatewayAppComponentConfigDTO.getJwtToken());
         } catch (FeignException feignResponseError) {
-            logger.error(feignResponseError.contentUTF8());
+            LOGGER.error(feignResponseError.contentUTF8());
             cleanUp(apiGatewayConfig.getComponentId());
             System.exit(1);
         }
-        logger.info("{} registered and authenticated successfully", apiGatewayConfig.getComponentName());
+        LOGGER.info("{} registered and authenticated successfully", apiGatewayConfig.getComponentName());
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("{} terminates, the shutdown hook is executed", apiGatewayConfig.getComponentName());
+            LOGGER.info("{} terminates, the shutdown hook is executed", apiGatewayConfig.getComponentName());
             cleanUp(apiGatewayConfig.getComponentId());
         }));
     }
 
     private void cleanUp(UUID componentId) {
-        logger.info("Trying to deregister myself in: AppRegistry-Component");
+        LOGGER.info("Trying to deregister myself in: AppRegistry-Component");
         try {
             ResponseEntity<String> responseEntity = appRegistryComponentClient.deregisterComponent(componentId);
-            logger.info(responseEntity.getBody());
+            LOGGER.info(responseEntity.getBody());
         } catch (FeignException feignResponseError) {
-            logger.error(feignResponseError.contentUTF8());
+            LOGGER.error(feignResponseError.contentUTF8());
         }
     }
 
@@ -73,7 +73,7 @@ public class ComponentConfigReader {
                     "ApiGateway-Component/src/main/resources/apigateway-component-config.yml"),
                     ApiGatewayAppComponentConfigDTO.class);
         } catch (IOException e) {
-            logger.error("Error: File cannot be found or its contents cannot be deserialized");
+            LOGGER.error("Error: File cannot be found or its contents cannot be deserialized");
             e.printStackTrace();
         }
         return apiGatewayConfig;

@@ -25,12 +25,10 @@ import java.util.UUID;
 @EnableKafka
 public class KafkaConsumerConfig {
     @Value("${spring.application.name}")
-    private String UNIQUE_PAYMENT_COMPONENT_GROUP_ID;
+    private String uniquePaymentComponentGroupId;
 
     @Value("${spring.kafka.bootstrap-servers}")
-    private String KAFKA_BOOTSTRAP_SERVERS;
-
-    private static final String LIST_VALUE_CLASS = "spring.kafka.value.list.class";
+    private String kafkaBootstrapServers;
 
     private final GlobalKafkaExceptionHandler globalKafkaExceptionHandler;
 
@@ -41,8 +39,8 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, PaymentDTO> paymentDTOConsumerFactory() {
         Map<String, Object> paymentDTOConsumerProp = new HashMap<>();
-        paymentDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        paymentDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_PAYMENT_COMPONENT_GROUP_ID);
+        paymentDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        paymentDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniquePaymentComponentGroupId);
         paymentDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         paymentDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         paymentDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
@@ -64,8 +62,8 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, List<PaymentDTO>> listOfPaymentDTOConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_PAYMENT_COMPONENT_GROUP_ID);
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, uniquePaymentComponentGroupId);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, ListDeserializer.class.getName());
@@ -85,8 +83,8 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, UUID> uuidConsumerFactory() {
         Map<String, Object> uuidConsumerProp = new HashMap<>();
-        uuidConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        uuidConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_PAYMENT_COMPONENT_GROUP_ID);
+        uuidConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        uuidConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniquePaymentComponentGroupId);
         uuidConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         uuidConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         uuidConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, UUIDDeserializer.class.getName());
@@ -105,8 +103,8 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, Map<Object, Object>> mapObjectToObjectConsumerFactory() {
         Map<String, Object> mapObjectToObjectConsumerProp = new HashMap<>();
-        mapObjectToObjectConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA_BOOTSTRAP_SERVERS);
-        mapObjectToObjectConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, UNIQUE_PAYMENT_COMPONENT_GROUP_ID);
+        mapObjectToObjectConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
+        mapObjectToObjectConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniquePaymentComponentGroupId);
         mapObjectToObjectConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         mapObjectToObjectConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         mapObjectToObjectConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());

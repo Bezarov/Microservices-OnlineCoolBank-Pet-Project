@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Component
 public class UsersComponentClientFallback implements UsersComponentClient {
-    private final static Logger logger = LoggerFactory.getLogger(UsersComponentClientFallback.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UsersComponentClientFallback.class);
 
     @Override
     public Optional<UsersDTO> findByEmail(String userEmail) {
@@ -22,7 +22,7 @@ public class UsersComponentClientFallback implements UsersComponentClient {
 
     @Override
     public void usersComponentFallback(String userEmail) {
-        logger.error("Users Component is unreachable authentication failed for user with email: {}" +
+        LOGGER.error("Users Component is unreachable authentication failed for user with email: {}" +
                 " generate exception", userEmail);
         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                 "Service is unreachable please try again later.");

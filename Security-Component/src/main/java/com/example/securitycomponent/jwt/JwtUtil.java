@@ -85,21 +85,18 @@ public class JwtUtil {
 
     private SecretKey determineKeyForToken(String token) {
         Claims claims;
-//        SecretKey key = null;
         try {
             claims = Jwts.parserBuilder()
                     .setSigningKey(userSecretKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-//            key = userSecretKey;
         } catch (SignatureException exception) {
             claims = Jwts.parserBuilder()
                     .setSigningKey(componentSecretKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-//            key = componentSecretKey;
         }
 
         String tokenType = claims.get(TOKEN_TYPE_CLAIM, String.class);

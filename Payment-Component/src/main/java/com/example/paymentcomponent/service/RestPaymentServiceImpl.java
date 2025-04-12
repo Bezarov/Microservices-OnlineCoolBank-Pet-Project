@@ -38,9 +38,9 @@ public class RestPaymentServiceImpl implements RestPaymentService {
     public PaymentDTO getPaymentById(UUID paymentId) {
         logger.info("Trying to find Payment with ID: {}", paymentId);
         return paymentRepository.findById(paymentId)
-                .map(PaymentEntity -> {
-                    logger.info("Payment was found and received to the Controller: {}", PaymentEntity);
-                    return convertPaymentModelToDTO(PaymentEntity);
+                .map(paymentEntity -> {
+                    logger.info("Payment was found and received to the Controller: {}", paymentEntity);
+                    return convertPaymentModelToDTO(paymentEntity);
                 })
                 .orElseThrow(() -> {
                     logger.error("Payment with such ID: {} was not found", paymentId);
