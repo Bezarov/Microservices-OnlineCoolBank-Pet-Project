@@ -309,7 +309,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     public void deleteUserByFullName(String userFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: delete-user-by-full-name with correlation id: {} ", correlationId);
         LOGGER.info(USER_SEARCHING_LOG, userFullName);
-        Users user = usersRepository.findByFullName(userFullName.replaceAll("\"", ""))
+        Users user = usersRepository.findByFullName(userFullName)
                 .orElseThrow(() -> {
                     LOGGER.error("User with such name was not found: {}", userFullName);
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,
