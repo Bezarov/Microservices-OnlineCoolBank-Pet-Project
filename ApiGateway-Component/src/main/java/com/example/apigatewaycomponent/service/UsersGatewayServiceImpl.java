@@ -336,7 +336,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     private CompletableFuture<ResponseEntity<Object>> awaitResponseOrTimeout(CompletableFuture<ResponseEntity<Object>> futureResponse) {
         return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
                 .thenApply(response -> {
-                    if (response != null && !futureResponse.isDone()) {
+                    if (response != null && futureResponse.isDone()) {
                         LOGGER.info("Request successfully collapsed and received to the Controller");
                         return ResponseEntity.ok(response.getBody());
                     } else {
