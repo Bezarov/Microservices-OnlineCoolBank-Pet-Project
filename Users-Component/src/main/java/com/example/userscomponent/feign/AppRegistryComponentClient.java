@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.UUID;
 
 @Qualifier("AppRegistry-Components")
-@FeignClient(name = "APPREGISTRY-COMPONENTS", url = "http://localhost:8601/components", fallback = AppRegistryComponentClientFallback.class)
+@FeignClient(name = "APPREGISTRY-COMPONENTS", fallback = AppRegistryComponentClientFallback.class)
 public interface AppRegistryComponentClient {
-    @PostMapping
+    @PostMapping("component")
     void registerComponent(@RequestBody UsersAppComponentConfigDTO usersAppComponentConfigDTO);
 
-    @DeleteMapping("/by-id/{componentId}")
+    @DeleteMapping("component/by-id/{componentId}")
     ResponseEntity<String> deregisterComponent(@PathVariable UUID componentId);
 }

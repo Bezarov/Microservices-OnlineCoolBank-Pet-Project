@@ -46,22 +46,21 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         this.mapUUIDToStringKafkaTemplate = mapUUIDToStringKafkaTemplate;
     }
 
-
     @Override
     @KafkaListener(topics = "users-error", groupId = "api-gateway",
             containerFactory = "errorDTOKafkaListenerFactory")
     public void handleUsersErrors(ErrorDTO usersErrorDTO,
                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.error("Received error topic: users-error with correlation id: {} ", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.remove(correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.get(correlationId);
         LOGGER.info("Complete CompletableFuture exceptionally with message: {} ", usersErrorDTO);
         futureErrorResponse.completeExceptionally(new ResponseStatusException(HttpStatus.valueOf(
-                usersErrorDTO.getStatus()), usersErrorDTO.getMessage()));
+                usersErrorDTO.status()), usersErrorDTO.message()));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> createUser(@RequestBody UsersDTO usersDTO) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -71,7 +70,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         usersDTOKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -80,15 +79,14 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     public void handleUserCreationResponse(UsersDTO usersDTO,
                                            @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: create-user with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, usersDTO);
         futureResponse.complete(ResponseEntity.ok(usersDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> getUserById(UUID userId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -98,7 +96,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -107,15 +105,14 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     public void handleGetUserByIdResponse(UsersDTO usersDTO,
                                           @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-user-by-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, usersDTO);
         futureResponse.complete(ResponseEntity.ok(usersDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> getUserByEmail(String userEmail) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -125,7 +122,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -134,15 +131,14 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     public void handleGetUserByEmailResponse(UsersDTO usersDTO,
                                              @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-user-by-email with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, usersDTO);
         futureResponse.complete(ResponseEntity.ok(usersDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> getUserByFullName(String userFullName) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -152,7 +148,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -161,15 +157,14 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     public void handleGetUserByFullNameResponse(UsersDTO usersDTO,
                                                 @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-user-by-full-name with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, usersDTO);
         futureResponse.complete(ResponseEntity.ok(usersDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> getUserByPhoneNumber(String userPhoneNumber) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -179,7 +174,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -188,15 +183,14 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     public void handleGetUserByPhoneNumberResponse(UsersDTO usersDTO,
                                                    @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-user-by-phone-number with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, usersDTO);
         futureResponse.complete(ResponseEntity.ok(usersDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> updateUser(UUID userId, UsersDTO usersDTO) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -207,7 +201,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToDTOKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -216,15 +210,14 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     public void handleUpdateUserByIdResponse(UsersDTO usersDTO,
                                              @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: update-user-by-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, usersDTO);
         futureResponse.complete(ResponseEntity.ok(usersDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> updatePasswordById(UUID userId, String newPassword) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -236,7 +229,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToStringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -245,15 +238,14 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     public void handleUpdateUserPasswordByIdResponse(UsersDTO usersDTO,
                                                      @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: update-user-password-by-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, usersDTO);
         futureResponse.complete(ResponseEntity.ok(usersDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> deleteUserById(UUID userId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -263,7 +255,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -272,8 +264,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     public void handleDeleteUserByIdResponse(String responseMessage,
                                              @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: delete-user-by-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, responseMessage);
         futureResponse.complete(ResponseEntity.ok(responseMessage));
     }
@@ -281,7 +272,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> deleteUserByEmail(String userEmail) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -291,7 +282,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -300,15 +291,14 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     public void handleDeleteUserByEmailResponse(String responseMessage,
                                                 @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: delete-user-by-email with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, responseMessage);
         futureResponse.complete(ResponseEntity.ok(responseMessage));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> deleteUserByFullName(String userFullName) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -318,7 +308,7 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -327,14 +317,18 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
     public void handleDeleteUserByFullNameResponse(String responseMessage,
                                                    @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: delete-user-by-full-name with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, responseMessage);
         futureResponse.complete(ResponseEntity.ok(responseMessage));
     }
 
-    private CompletableFuture<ResponseEntity<Object>> awaitResponseOrTimeout(CompletableFuture<ResponseEntity<Object>> futureResponse) {
+    private CompletableFuture<ResponseEntity<Object>> awaitResponseOrTimeout(
+            CompletableFuture<ResponseEntity<Object>> futureResponse, String correlationId) {
         return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
+                .whenComplete((response, throwable) -> {
+                    LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+                    responseFutures.remove(correlationId);
+                })
                 .thenApply(response -> {
                     if (response != null && futureResponse.isDone()) {
                         LOGGER.info("Request successfully collapsed and received to the Controller");
@@ -344,5 +338,9 @@ public class UsersGatewayServiceImpl implements UsersGatewayService {
                                 "Request timed out, service unreachable, please try again later");
                     }
                 });
+    }
+
+    private static String getCorrelationId() {
+        return UUID.randomUUID().toString();
     }
 }

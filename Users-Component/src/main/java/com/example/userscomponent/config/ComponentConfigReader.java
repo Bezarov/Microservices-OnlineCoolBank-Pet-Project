@@ -7,10 +7,11 @@ import com.example.userscomponent.feign.SecurityComponentClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import feign.FeignException;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 @Component
-public class ComponentConfigReader {
+public class ComponentConfigReader implements ApplicationRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ComponentConfigReader.class);
     private final AppRegistryComponentClient appRegistryComponentClient;
     private final SecurityComponentClient securityComponentClient;
@@ -30,8 +31,8 @@ public class ComponentConfigReader {
         this.securityComponentClient = securityComponentClient;
     }
 
-    @PostConstruct
-    void init() {
+    @Override
+    public void run(ApplicationArguments args) {
         LOGGER.info("Trying to read and deserialize: users-component-config.yml file");
         UsersAppComponentConfigDTO usersConfig = readConfig();
         LOGGER.info("Deserialization successfully: {}", usersConfig);

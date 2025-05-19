@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/payments")
+@RequestMapping("/payment")
 public class PaymentController {
     private static final Logger LOGGER = LoggerFactory.getLogger(PaymentController.class);
     private final RestPaymentService restPaymentService;

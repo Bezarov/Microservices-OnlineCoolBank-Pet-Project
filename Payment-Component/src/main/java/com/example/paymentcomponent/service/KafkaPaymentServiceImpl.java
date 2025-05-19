@@ -1,12 +1,14 @@
 package com.example.paymentcomponent.service;
 
 import com.example.paymentcomponent.dto.AccountDTO;
+import com.example.paymentcomponent.dto.DateRangeRequestDTO;
 import com.example.paymentcomponent.dto.PaymentDTO;
 import com.example.paymentcomponent.exception.CustomKafkaException;
 import com.example.paymentcomponent.feign.AccountComponentClient;
 import com.example.paymentcomponent.feign.CardComponentClient;
 import com.example.paymentcomponent.model.Payment;
 import com.example.paymentcomponent.repository.PaymentRepository;
+import jakarta.transaction.Transactional;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,65 +87,34 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
         return payment;
     }
 
+    private PaymentDTO buildCardToCardPaymentDTO(UUID fromAccountId, UUID toAccountId, BigDecimal amount,
+                                                 String fromCardNumber, String toCardNumber) {
+        PaymentDTO paymentDTO = new PaymentDTO();
+        paymentDTO.setFromAccount(fromAccountId);
+        paymentDTO.setToAccount(toAccountId);
+        paymentDTO.setAmount(amount);
+        paymentDTO.setPaymentType("Card to Card Transfer");
+        paymentDTO.setDescription("Transfer from Card: " + fromCardNumber + " to Card: " + toCardNumber);
+        return paymentDTO;
+    }
+
     @Override
     @KafkaListener(topics = "create-payment-by-accounts", groupId = "payment-component",
             containerFactory = "paymentDTOKafkaListenerFactory")
     public void createPaymentByAccounts(PaymentDTO paymentDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: create-payment-by-accounts with correlation id: {} ", correlationId);
-        LOGGER.info(ACCOUNT_FROM_SEARCHING_LOG, paymentDTO.getFromAccount());
-        AccountDTO accountDTOFromAccount = accountComponentClient.findById(paymentDTO.getFromAccount())
-                .orElseThrow(() -> {
-                    LOGGER.error(ACCOUNT_FROM_NOT_FOUND_LOG, paymentDTO.getFromAccount());
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "From-Account ID: " + paymentDTO.getFromAccount() + " was not found");
-                });
-        LOGGER.info(ACCOUNT_TO_SEARCHING_LOG, paymentDTO.getToAccount());
-        AccountDTO accountDTOToAccount = accountComponentClient.findById(paymentDTO.getToAccount())
-                .orElseThrow(() -> {
-                    LOGGER.error(ACCOUNT_TO_NOT_FOUND_LOG, paymentDTO.getFromAccount());
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "To-Account ID: " + paymentDTO.getToAccount() + " was not found");
-                });
 
-        LOGGER.info("Checking availability of sufficient funds From-Account ID: {}",
-                paymentDTO.getFromAccount());
-        if (accountDTOFromAccount.getBalance().compareTo(paymentDTO.getAmount()) < 0) {
-            LOGGER.error("Insufficient FUNDS for From-Account ID: {}", paymentDTO.getFromAccount());
-            throw new CustomKafkaException(HttpStatus.NOT_FOUND, "INSUFFICIENT FUNDS");
-        }
+        AccountDTO fromAccount = findAccountOrThrow(paymentDTO.getFromAccount(), true);
+        AccountDTO toAccount = findAccountOrThrow(paymentDTO.getToAccount(), false);
 
-        LOGGER.info("Funds enough, Trying to debit");
-        accountDTOFromAccount.setBalance(accountDTOFromAccount.getBalance().subtract(paymentDTO.getAmount()));
-        LOGGER.info("Trying to create topic: debit-funds with correlation id: {} ", correlationId);
-        ProducerRecord<String, AccountDTO> debitRequestTopic = new ProducerRecord<>(
-                "debit-funds", null, accountDTOFromAccount);
-        debitRequestTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        requestDTOKafkaTemplate.send(debitRequestTopic);
-        LOGGER.info(ALLOCATED_TOPIC_LOG, debitRequestTopic.value());
-        LOGGER.info("Funds was Debited From-Account with ID: {}", accountDTOFromAccount.getId());
+        checkSufficientFunds(fromAccount, paymentDTO.getAmount());
 
-        LOGGER.info("Trying to credit Account-To");
-        accountDTOToAccount.setBalance(accountDTOToAccount.getBalance().add(paymentDTO.getAmount()));
-        LOGGER.info("Trying to create topic: credit-funds with correlation id: {} ", correlationId);
-        ProducerRecord<String, AccountDTO> creditRequestTopic = new ProducerRecord<>(
-                "credit-funds", null, accountDTOFromAccount);
-        creditRequestTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        requestDTOKafkaTemplate.send(creditRequestTopic);
-        LOGGER.info(ALLOCATED_TOPIC_LOG, creditRequestTopic.value());
-        LOGGER.info("Funds was Credited to To-Account ID: {}", accountDTOToAccount.getId());
+        debitFunds(fromAccount, paymentDTO.getAmount(), correlationId);
+        creditFunds(toAccount, paymentDTO.getAmount(), correlationId);
 
-        paymentDTO.setPaymentType("Account to Account Transfer");
-        LOGGER.info("Payment created successfully, saving in DB");
-        Payment payment = paymentRepository.save(convertPaymentDTOToModel(
-                accountDTOFromAccount.getId(), accountDTOToAccount.getId(), paymentDTO));
-        LOGGER.info("Account to Account transaction ended successfully: {}", payment);
+        Payment savedPayment = savePayment(paymentDTO, fromAccount.getId(), toAccount.getId());
 
-        LOGGER.info("Trying to create topic: create-payment-by-accounts-response with correlation id: {} ", correlationId);
-        ProducerRecord<String, PaymentDTO> responseTopic = new ProducerRecord<>(
-                "create-payment-by-accounts-response", null, convertPaymentModelToDTO(payment));
-        responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        responseDTOKafkaTemplate.send(responseTopic);
-        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
+        sendPaymentResponse(savedPayment, correlationId);
     }
 
     @Override
@@ -151,90 +122,20 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
             containerFactory = "paymentListKafkaListenerFactory")
     public void createPaymentByCards(String fromCardNumber, String toCardNumber, BigDecimal amount,
                                      @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        LOGGER.info("Got request from kafka topic: create-payment-by-cards with correlation id: {} ", correlationId);
-        LOGGER.info(ACCOUNT_FROM_SEARCHING_LOG, fromCardNumber);
-        AccountDTO accountDTOFromAccount = cardComponentClient.findByCardNumber(fromCardNumber)
-                .map(cardDTO -> {
-                    LOGGER.info("From-Account Card was found successfully with card number: {}", cardDTO);
-                    LOGGER.info("Trying to find Linked Account to this Card");
-                    AccountDTO fromAccountDTO = accountComponentClient.findById(cardDTO.getAccountId())
-                            .orElseThrow(() -> {
-                                LOGGER.error("Linked Account to this Card number was not found: {}", fromCardNumber);
-                                return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                                        "Linked Account to this Card Number: " + fromCardNumber + " was not found");
-                            });
-                    LOGGER.info("Account was found successfully: {}", fromAccountDTO);
-                    return fromAccountDTO;
-                })
-                .orElseThrow(() -> {
-                    LOGGER.error(CARD_FROM_NOT_FOUND_LOG, fromCardNumber);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Card with such ID: " + fromCardNumber + " was not found");
-                });
+        LOGGER.info("Got request from kafka topic: create-payment-by-cards with correlation id: {}", correlationId);
 
-        LOGGER.info(ACCOUNT_TO_SEARCHING_LOG, toCardNumber);
-        AccountDTO accountDTOToAccount = cardComponentClient.findByCardNumber(toCardNumber)
-                .map(cardDTO -> {
-                    LOGGER.info("To-Card was found successfully with card number: {}", cardDTO);
-                    LOGGER.info("Trying to find Linked Account to this Card");
-                    AccountDTO toAccountDTO = accountComponentClient.findById(cardDTO.getAccountId())
-                            .orElseThrow(() -> {
-                                LOGGER.error("Linked Account to this Card Number was not found: {}", toCardNumber);
-                                return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                                        "Linked Account to this Card Number: " + toCardNumber + " was not found");
-                            });
-                    LOGGER.info("Account was found successfully: {}", toAccountDTO);
-                    return toAccountDTO;
-                })
-                .orElseThrow(() -> {
-                    LOGGER.error(CARD_TO_NOT_FOUND_LOG, toCardNumber);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Card with such ID: " + toCardNumber + " was not found");
-                });
+        AccountDTO fromAccount = getAccountByCardNumber(fromCardNumber, true);
+        AccountDTO toAccount = getAccountByCardNumber(toCardNumber, false);
 
-        LOGGER.info("Checking availability of sufficient funds From-Account ID: {}", accountDTOFromAccount.getId());
-        if (accountDTOFromAccount.getBalance().compareTo(amount) < 0) {
-            LOGGER.error("Insufficient FUNDS for From-Account ID: {}", accountDTOFromAccount.getId());
-            throw new CustomKafkaException(HttpStatus.BAD_REQUEST, "INSUFFICIENT FUNDS");
-        }
+        checkSufficientFunds(fromAccount, amount);
 
-        LOGGER.info("Funds enough, Trying to debit");
-        accountDTOFromAccount.setBalance(accountDTOFromAccount.getBalance().subtract(amount));
-        LOGGER.info("Trying to create topic: debit-funds with correlation id: {} ", correlationId);
-        ProducerRecord<String, AccountDTO> debitRequestTopic = new ProducerRecord<>(
-                "debit-funds", null, accountDTOFromAccount);
-        debitRequestTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        requestDTOKafkaTemplate.send(debitRequestTopic);
-        LOGGER.info(ALLOCATED_TOPIC_LOG, debitRequestTopic.value());
-        LOGGER.info("Funds was Debited From-Account with ID: {}", accountDTOFromAccount.getId());
+        debitFunds(fromAccount, amount, correlationId);
+        creditFunds(toAccount, amount, correlationId);
 
-        LOGGER.info("Trying to credit Account-To");
-        accountDTOToAccount.setBalance(accountDTOToAccount.getBalance().add(amount));
-        LOGGER.info("Trying to create topic: credit-funds with correlation id: {} ", correlationId);
-        ProducerRecord<String, AccountDTO> creditRequestTopic = new ProducerRecord<>(
-                "credit-funds", null, accountDTOFromAccount);
-        creditRequestTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        requestDTOKafkaTemplate.send(creditRequestTopic);
-        LOGGER.info(ALLOCATED_TOPIC_LOG, creditRequestTopic.value());
-        LOGGER.info("Funds was Credited to To-Account ID: {}", accountDTOToAccount.getId());
+        Payment savedPayment = savePayment(buildCardToCardPaymentDTO(fromAccount.getId(), toAccount.getId(), amount, fromCardNumber, toCardNumber),
+                fromAccount.getId(), toAccount.getId());
 
-        PaymentDTO paymentDTO = new PaymentDTO();
-        paymentDTO.setFromAccount(accountDTOFromAccount.getId());
-        paymentDTO.setToAccount(accountDTOToAccount.getId());
-        paymentDTO.setAmount(amount);
-        paymentDTO.setPaymentType("Card to Card Transfer");
-        paymentDTO.setDescription("Transfer from Card: " + fromCardNumber + " to Card: " + toCardNumber);
-        LOGGER.info("Payment created successfully, saving in DB");
-        Payment payment = paymentRepository.save(convertPaymentDTOToModel(
-                accountDTOFromAccount.getId(), accountDTOToAccount.getId(), paymentDTO));
-        LOGGER.info("Card to Card transaction ended successfully: {}", payment);
-
-        LOGGER.info("Trying to create topic: create-payment-by-cards-response with correlation id: {} ", correlationId);
-        ProducerRecord<String, PaymentDTO> responseTopic = new ProducerRecord<>(
-                "create-payment-by-cards-response", null, convertPaymentModelToDTO(payment));
-        responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        responseDTOKafkaTemplate.send(responseTopic);
-        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
+        sendPaymentResponse(savedPayment, correlationId);
     }
 
     @Override
@@ -243,16 +144,9 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     public void getPaymentById(UUID paymentId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: get-payment-by-id with correlation id: {} ", correlationId);
         LOGGER.info(PAYMENT_SEARCHING_LOG, paymentId);
-        PaymentDTO paymentDTO = paymentRepository.findById(paymentId)
-                .map(paymentEntity -> {
-                    LOGGER.info(PAYMENT_WAS_FOUND_LOG, paymentEntity);
-                    return convertPaymentModelToDTO(paymentEntity);
-                })
-                .orElseThrow(() -> {
-                    LOGGER.error(PAYMENT_NOT_FOUND_LOG, paymentId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Payment with such ID was NOT Found: " + paymentId);
-                });
+
+        PaymentDTO paymentDTO = findPaymentDTOById(paymentId);
+        LOGGER.info(PAYMENT_WAS_FOUND_LOG, paymentDTO);
 
         LOGGER.info("Trying to create topic: get-payment-by-id-response with correlation id: {} ", correlationId);
         ProducerRecord<String, PaymentDTO> responseTopic = new ProducerRecord<>(
@@ -268,12 +162,8 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     public void getAllAccountPaymentsByFromAccount(UUID fromAccountId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: get-all-payments-by-from-account-id with correlation id: {} ", correlationId);
         LOGGER.info(ACCOUNT_FROM_SEARCHING_LOG, fromAccountId);
-        accountComponentClient.findById(fromAccountId)
-                .orElseThrow(() -> {
-                    LOGGER.error(ACCOUNT_FROM_NOT_FOUND_LOG, fromAccountId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Account with such ID: " + fromAccountId + " was not found");
-                });
+
+        validateAccountExistenceByAccountId(fromAccountId);
 
         LOGGER.info("Trying to find all Account Payments with Account ID: {}", fromAccountId);
         List<PaymentDTO> paymentDTOS = paymentRepository.findAllByFromAccountId(fromAccountId).stream()
@@ -297,12 +187,8 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
         String fromAccountId = mapFromAccountIdToStatus.keySet().iterator().next().replaceAll("\"", "");
         String status = mapFromAccountIdToStatus.get(fromAccountId);
         LOGGER.info(ACCOUNT_FROM_SEARCHING_LOG, fromAccountId);
-        accountComponentClient.findById(UUID.fromString(fromAccountId))
-                .orElseThrow(() -> {
-                    LOGGER.error(ACCOUNT_TO_NOT_FOUND_LOG, fromAccountId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Account with such ID: " + fromAccountId + " was not found");
-                });
+
+        validateAccountExistenceByAccountId(UUID.fromString(fromAccountId));
 
         LOGGER.info("Trying to find All Account Payments with Status: {}", status);
         List<PaymentDTO> paymentDTOS = paymentRepository.findAllByFromAccountId(UUID.fromString(fromAccountId))
@@ -327,12 +213,8 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
             containerFactory = "uuidKafkaListenerFactory")
     public void getAllAccountPaymentsByToAccount(UUID toAccountId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info(ACCOUNT_TO_SEARCHING_LOG, toAccountId);
-        accountComponentClient.findById(toAccountId)
-                .orElseThrow(() -> {
-                    LOGGER.error(ACCOUNT_TO_NOT_FOUND_LOG, toAccountId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Account with such ID: " + toAccountId + " was not found");
-                });
+
+        validateAccountExistenceByAccountId(toAccountId);
 
         LOGGER.info("Trying to find All Payments To-Account with ID: {}", toAccountId);
         List<PaymentDTO> paymentDTOS = paymentRepository.findAllByToAccountId(toAccountId).stream()
@@ -358,12 +240,8 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
         String fromAccountId = mapFromAccountIdToPaymentType.keySet().iterator().next().replaceAll("\"", "");
         String paymentType = mapFromAccountIdToPaymentType.get(fromAccountId);
         LOGGER.info(ACCOUNT_FROM_SEARCHING_LOG, fromAccountId);
-        accountComponentClient.findById(UUID.fromString(fromAccountId))
-                .orElseThrow(() -> {
-                    LOGGER.error(ACCOUNT_FROM_NOT_FOUND_LOG, fromAccountId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Account with such ID was not found: " + fromAccountId);
-                });
+
+        validateAccountExistenceByAccountId(UUID.fromString(fromAccountId));
 
         LOGGER.info("Trying to find All Account Payments with Type: {}", paymentType);
         List<PaymentDTO> paymentDTOS = paymentRepository.findAllByPaymentType(paymentType).stream()
@@ -384,24 +262,18 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     @Override
     @KafkaListener(topics = "get-all-from-account-payments-by-date-range", groupId = "payment-component",
             containerFactory = "paymentListKafkaListenerFactory")
-    public void getAllFromAccountPaymentsByPaymentDateRange(List<Object> listOfFromAccountIdFromPaymentDateToPaymentDate,
+    public void getAllFromAccountPaymentsByPaymentDateRange(DateRangeRequestDTO requestDTO,
                                                             @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: get-all-from-account-payments-by-date-range with correlation id: {} ", correlationId);
-        UUID fromAccountId = (UUID) listOfFromAccountIdFromPaymentDateToPaymentDate.get(0);
-        LocalDateTime fromPaymentDate = (LocalDateTime) listOfFromAccountIdFromPaymentDateToPaymentDate.get(1);
-        LocalDateTime toPaymentDate = (LocalDateTime) listOfFromAccountIdFromPaymentDateToPaymentDate.get(2);
-        LOGGER.info(ACCOUNT_FROM_SEARCHING_LOG, fromAccountId);
-        accountComponentClient.findById(fromAccountId)
-                .orElseThrow(() -> {
-                    LOGGER.error(ACCOUNT_FROM_NOT_FOUND_LOG, fromAccountId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Account with such ID: " + fromAccountId + " was not found");
-                });
+        LOGGER.info(ACCOUNT_FROM_SEARCHING_LOG, requestDTO.accountId());
+
+        validateAccountExistenceByAccountId(requestDTO.accountId());
 
         LOGGER.info("Trying to find All Account Payments with Date Range: " +
-                "{}-{}", fromPaymentDate, toPaymentDate);
+                "{}-{}", requestDTO.fromDate(), requestDTO.toDate());
         List<PaymentDTO> paymentDTOS = paymentRepository.findAllByFromAccountIdAndPaymentDateBetween(
-                        fromAccountId, fromPaymentDate, toPaymentDate).stream()
+                        requestDTO.accountId(), requestDTO.fromDate(), requestDTO.toDate())
+                .stream()
                 .map(paymentEntity -> {
                     LOGGER.info(PAYMENT_WAS_FOUND_LOG, paymentEntity);
                     return convertPaymentModelToDTO(paymentEntity);
@@ -419,26 +291,17 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
     @Override
     @KafkaListener(topics = "get-all-to-account-payments-by-date-range", groupId = "payment-component",
             containerFactory = "paymentListKafkaListenerFactory")
-    public void getAllToAccountPaymentsByPaymentDateRange(List<Object> listOfToAccountIdFromPaymentDateToPaymentDate,
+    public void getAllToAccountPaymentsByPaymentDateRange(DateRangeRequestDTO requestDTO,
                                                           @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        LOGGER.info("Got request from kafka topic: get-all-to-account-payments-by-date-range with correlation id: {} ",
-                correlationId);
-        UUID toAccountId = (UUID) listOfToAccountIdFromPaymentDateToPaymentDate.get(0);
-        LocalDateTime fromPaymentDate = (LocalDateTime) listOfToAccountIdFromPaymentDateToPaymentDate.get(1);
-        LocalDateTime toPaymentDate = (LocalDateTime) listOfToAccountIdFromPaymentDateToPaymentDate.get(2);
+        LOGGER.info("Got request from kafka topic: get-all-to-account-payments-by-date-range with correlation id: {} ", correlationId);
+        LOGGER.info(ACCOUNT_TO_SEARCHING_LOG, requestDTO.accountId());
 
-        LOGGER.info(ACCOUNT_TO_SEARCHING_LOG, toAccountId);
-        accountComponentClient.findById(toAccountId)
-                .orElseThrow(() -> {
-                    LOGGER.error(ACCOUNT_TO_NOT_FOUND_LOG, toAccountId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Account with such ID: " + toAccountId + " was NOT Found");
-                });
+        validateAccountExistenceByAccountId(requestDTO.accountId());
 
-        LOGGER.info("Trying to find All To Account Payments with Date Range: " +
-                "{}-{}", fromPaymentDate, toPaymentDate);
-        List<PaymentDTO> paymentDTOS = paymentRepository.findAllByToAccountIdAndPaymentDateBetween(toAccountId,
-                        fromPaymentDate, toPaymentDate).stream()
+        LOGGER.info("Trying to find All To Account Payments with Date Range: " + "{}-{}", requestDTO.fromDate(), requestDTO.toDate());
+        List<PaymentDTO> paymentDTOS = paymentRepository.findAllByToAccountIdAndPaymentDateBetween(requestDTO.accountId(),
+                        requestDTO.fromDate(), requestDTO.toDate())
+                .stream()
                 .map(paymentEntity -> {
                     LOGGER.info(PAYMENT_WAS_FOUND_LOG, paymentEntity);
                     return convertPaymentModelToDTO(paymentEntity);
@@ -450,6 +313,100 @@ public class KafkaPaymentServiceImpl implements KafkaPaymentService {
                 "get-all-to-account-payments-by-date-range-response", null, paymentDTOS);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOSKafkaTemplate.send(responseTopic);
+        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
+    }
+
+    private AccountDTO getAccountByCardNumber(String cardNumber, boolean isFrom) {
+        LOGGER.info("{} {}", isFrom ? ACCOUNT_FROM_SEARCHING_LOG : ACCOUNT_TO_SEARCHING_LOG, cardNumber);
+
+        return cardComponentClient.findByCardNumber(cardNumber)
+                .map(cardDTO -> {
+                    LOGGER.info("{}-Card was found successfully with card number: {}", isFrom ? "From" : "To", cardDTO);
+                    LOGGER.info("Trying to find Linked Account to this Card");
+                    return accountComponentClient.findById(cardDTO.getAccountId())
+                            .orElseThrow(() -> {
+                                LOGGER.error("Linked Account to this Card number was not found: {}", cardNumber);
+                                return new CustomKafkaException(HttpStatus.NOT_FOUND,
+                                        "Linked Account to this Card Number: " + cardNumber + " was not found");
+                            });
+                })
+                .orElseThrow(() -> {
+                    LOGGER.error(isFrom ? CARD_FROM_NOT_FOUND_LOG : CARD_TO_NOT_FOUND_LOG, cardNumber);
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
+                            "Card with such ID: " + cardNumber + " was not found");
+                });
+    }
+
+    private PaymentDTO findPaymentDTOById(UUID paymentId) {
+        return paymentRepository.findById(paymentId)
+                .map(this::convertPaymentModelToDTO)
+                .orElseThrow(() -> {
+                    LOGGER.error(PAYMENT_NOT_FOUND_LOG, paymentId);
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
+                            "Payment with such ID was NOT Found: " + paymentId);
+                });
+    }
+
+    private void validateAccountExistenceByAccountId(UUID accountId) {
+        accountComponentClient.findById(accountId)
+                .orElseThrow(() -> {
+                    LOGGER.error(ACCOUNT_FROM_NOT_FOUND_LOG, accountId);
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
+                            "Account with such ID: " + accountId + " was not found");
+                });
+    }
+
+    private AccountDTO findAccountOrThrow(UUID accountId, boolean isFrom) {
+        LOGGER.info("{} {}", isFrom ? ACCOUNT_FROM_SEARCHING_LOG : ACCOUNT_TO_SEARCHING_LOG, accountId);
+        return accountComponentClient.findById(accountId)
+                .orElseThrow(() -> {
+                    LOGGER.error(isFrom ? ACCOUNT_FROM_NOT_FOUND_LOG : ACCOUNT_TO_NOT_FOUND_LOG, accountId);
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
+                            (isFrom ? "From" : "To") + "-Account ID: " + accountId + " was not found");
+                });
+    }
+
+    private void checkSufficientFunds(AccountDTO fromAccount, BigDecimal amount) {
+        LOGGER.info("Checking availability of sufficient funds From-Account ID: {}", fromAccount.getId());
+        if (fromAccount.getBalance().compareTo(amount) < 0) {
+            LOGGER.error("Insufficient FUNDS for From-Account ID: {}", fromAccount.getId());
+            throw new CustomKafkaException(HttpStatus.BAD_REQUEST, "INSUFFICIENT FUNDS");
+        }
+    }
+
+    private void debitFunds(AccountDTO account, BigDecimal amount, String correlationId) {
+        account.setBalance(account.getBalance().subtract(amount));
+        LOGGER.info("Debiting account ID: {}", account.getId());
+        sendAccountUpdate("debit-funds", account, correlationId);
+    }
+
+    private void creditFunds(AccountDTO account, BigDecimal amount, String correlationId) {
+        account.setBalance(account.getBalance().add(amount));
+        LOGGER.info("Crediting account ID: {}", account.getId());
+        sendAccountUpdate("credit-funds", account, correlationId);
+    }
+
+    private void sendAccountUpdate(String topic, AccountDTO accountDTO, String correlationId) {
+        LOGGER.info("Trying to create topic: {} with correlation id: {}", topic, correlationId);
+        ProducerRecord<String, AccountDTO> responseTopic = new ProducerRecord<>(topic, null, accountDTO);
+        responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
+        requestDTOKafkaTemplate.send(responseTopic);
+        LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
+    }
+
+    @Transactional
+    private Payment savePayment(PaymentDTO dto, UUID fromId, UUID toId) {
+        dto.setPaymentType("Account to Account Transfer");
+        LOGGER.info("Saving payment in DB");
+        return paymentRepository.save(convertPaymentDTOToModel(fromId, toId, dto));
+    }
+
+    private void sendPaymentResponse(Payment payment, String correlationId) {
+        LOGGER.info("Sending response to topic: create-payment-by-accounts-response with correlation id: {}", correlationId);
+        ProducerRecord<String, PaymentDTO> responseTopic = new ProducerRecord<>(
+                "create-payment-by-accounts-response", null, convertPaymentModelToDTO(payment));
+        responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
+        responseDTOKafkaTemplate.send(responseTopic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
     }
 }

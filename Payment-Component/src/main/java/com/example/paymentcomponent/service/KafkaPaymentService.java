@@ -1,11 +1,11 @@
 package com.example.paymentcomponent.service;
 
+import com.example.paymentcomponent.dto.DateRangeRequestDTO;
 import com.example.paymentcomponent.dto.PaymentDTO;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,9 +24,7 @@ public interface KafkaPaymentService {
 
     void getAllAccountPaymentsByPaymentType(Map<String, String> mapFromAccountIdToPaymentType, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    void getAllFromAccountPaymentsByPaymentDateRange(List<Object> listOfFromAccountIdFromPaymentDateToPaymentDate,
-                                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+    void getAllFromAccountPaymentsByPaymentDateRange(DateRangeRequestDTO requestDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    void getAllToAccountPaymentsByPaymentDateRange(List<Object> listOfToAccountIdFromPaymentDateToPaymentDate,
-                                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+    void getAllToAccountPaymentsByPaymentDateRange(DateRangeRequestDTO requestDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 }

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/cards")
+@RequestMapping("/card")
 public class CardController {
     private static final Logger LOGGER = LoggerFactory.getLogger(CardController.class);
     private static final String RESPONSE_LOG = "Request was successfully processed and response was sent: {}";

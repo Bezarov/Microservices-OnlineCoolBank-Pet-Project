@@ -14,8 +14,10 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,15 +52,15 @@ public class CardGatewayServiceImpl implements CardGatewayService {
             containerFactory = "errorDTOKafkaListenerFactory")
     public void handleCardErrors(ErrorDTO cardErrorDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.error("Received error topic with correlation id: {} ", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.remove(correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.get(correlationId);
         LOGGER.info("Complete CompletableFuture exceptionally with message: {} ", cardErrorDTO);
         futureErrorResponse.completeExceptionally(new ResponseStatusException(HttpStatus.valueOf(
-                cardErrorDTO.getStatus()), cardErrorDTO.getMessage()));
+                cardErrorDTO.status()), cardErrorDTO.message()));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> createCard(UUID accountId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -68,7 +70,7 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -77,15 +79,14 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     public void handleCardCreationResponse(CardDTO cardDTO,
                                            @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: create-card-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, cardDTO);
         futureResponse.complete(ResponseEntity.ok(cardDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> getCardById(UUID cardId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -95,7 +96,7 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -104,15 +105,14 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     public void handleGetCardByIdResponse(CardDTO cardDTO,
                                           @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-card-by-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, cardDTO);
         futureResponse.complete(ResponseEntity.ok(cardDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> getCardByCardNumber(String cardNumber) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -122,7 +122,7 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -131,15 +131,14 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     public void handleGetCardByNumberResponse(CardDTO cardDTO,
                                               @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-card-by-card-number with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, cardDTO);
         futureResponse.complete(ResponseEntity.ok(cardDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<List<Object>>> getCardsByCardHolderFullName(String cardHolderFullName) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
@@ -150,24 +149,23 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
     @KafkaListener(topics = "get-all-cards-by-holder-name-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listCardDTOKafkaListenerFactory")
     public void handleGetAllCardByHolderFullNameResponse(List<CardDTO> cardDTOS,
                                                          @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-all-cards-by-holder-name with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, cardDTOS);
         futureResponse.complete(ResponseEntity.ok(cardDTOS));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountCardsByAccountId(UUID accountId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
@@ -177,24 +175,23 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
     @KafkaListener(topics = "get-all-cards-by-account-id-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listCardDTOKafkaListenerFactory")
     public void handleGetAllCardByAccountIdResponse(List<CardDTO> cardDTOS,
                                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-all-cards-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, cardDTOS);
         futureResponse.complete(ResponseEntity.ok(cardDTOS));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByCardHolderId(UUID holderId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
@@ -204,53 +201,51 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
     @KafkaListener(topics = "get-all-cards-by-holder-id-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listCardDTOKafkaListenerFactory")
     public void handleGetAllCardByHolderIdResponse(List<CardDTO> cardDTOS,
                                                    @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-all-cards-by-holder-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, cardDTOS);
         futureResponse.complete(ResponseEntity.ok(cardDTOS));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<List<Object>>> getAllUserCardsByStatus(UUID holderId, String status) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
 
-        LOGGER.info("Trying to create topic: update-card-status-by-id with correlation id: {} ", correlationId);
+        LOGGER.info("Trying to create topic: get-all-user-cards-by-status with correlation id: {} ", correlationId);
         Map<UUID, String> getCardsRequestMap = Map.of(holderId, status);
-        ProducerRecord<String, Map<UUID, String>> topic = new ProducerRecord<>("update-card-status-by-id",
+        ProducerRecord<String, Map<UUID, String>> topic = new ProducerRecord<>("get-all-user-cards-by-status",
                 getCardsRequestMap);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToStringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
-    @KafkaListener(topics = "update-card-status-by-id-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+    @KafkaListener(topics = "get-all-user-cards-by-status-response", groupId = "api-gateway",
+            containerFactory = "listCardDTOKafkaListenerFactory")
     public void handleGetAllCardByStatusNameResponse(List<CardDTO> cardDTOS,
                                                      @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: update-card-status-by-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, cardDTOS);
         futureResponse.complete(ResponseEntity.ok(cardDTOS));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<List<Object>>> getAllExpiredCards(UUID holderId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
@@ -260,24 +255,23 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
     @KafkaListener(topics = "get-all-expired-cards-by-holder-id-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listCardDTOKafkaListenerFactory")
     public void handleGetAllExpiredCardsResponse(List<CardDTO> cardDTOS,
                                                  @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-all-expired-cards-by-holder-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, cardDTOS);
         futureResponse.complete(ResponseEntity.ok(cardDTOS));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<List<Object>>> getAllActiveCards(UUID holderId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
@@ -287,24 +281,23 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
     @KafkaListener(topics = "get-all-active-cards-by-holder-id-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listCardDTOKafkaListenerFactory")
     public void handleGetAllActiveCardsResponse(List<CardDTO> cardDTOS,
                                                 @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-all-active-cards-by-holder-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, cardDTOS);
         futureResponse.complete(ResponseEntity.ok(cardDTOS));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> updateCardStatusById(UUID cardId, String status) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -316,7 +309,7 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToStringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -325,15 +318,14 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     public void handleUpdateCardStatusByIdResponse(CardDTO cardDTO,
                                                    @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: update-card-status-by-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, cardDTO);
         futureResponse.complete(ResponseEntity.ok(cardDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> updateCardStatusByCardNumber(String cardNumber, String status) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -345,7 +337,7 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapStringToStringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -354,15 +346,14 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     public void handleUpdateCardStatusByNumberResponse(CardDTO cardDTO,
                                                        @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: update-card-status-by-card-number with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, cardDTO);
         futureResponse.complete(ResponseEntity.ok(cardDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> deleteCardById(UUID cardId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -372,7 +363,7 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -381,15 +372,14 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     public void handleDeleteCardByCardIdResponse(CardDTO cardDTO,
                                                  @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: delete-card-by-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> responseMessage = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> responseMessage = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, responseMessage);
         responseMessage.complete(ResponseEntity.ok(cardDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> deleteAllAccountCardsByAccountId(UUID accountId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -399,7 +389,7 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -408,15 +398,14 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     public void handleDeleteCardByAccountIdResponse(CardDTO cardDTO,
                                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: delete-card-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> responseMessage = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> responseMessage = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, responseMessage);
         responseMessage.complete(ResponseEntity.ok(cardDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> deleteAllUsersCardsByCardHolderUUID(UUID cardHolderUUID) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -426,7 +415,7 @@ public class CardGatewayServiceImpl implements CardGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -435,19 +424,22 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     public void handleDeleteAllCardsByHolderIdResponse(CardDTO cardDTO,
                                                        @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: delete-card-by-holder-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> responseMessage = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> responseMessage = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, responseMessage);
         responseMessage.complete(ResponseEntity.ok(cardDTO));
     }
 
     private CompletableFuture<ResponseEntity<List<Object>>> awaitResponsesOrTimeout(
-            CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse) {
+            CompletableFuture<ResponseEntity<List<CardDTO>>> futureResponse, String correlationId) {
         return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
+                .whenComplete((response, throwable) -> {
+                    LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+                    responseFutures.remove(correlationId);
+                })
                 .thenApply(response -> {
-                    if (response != null) {
+                    if (response != null && futureResponse.isDone()) {
                         LOGGER.info("Request successfully collapsed and received to the Controller");
-                        return ResponseEntity.ok((List<Object>) response);
+                        return ResponseEntity.ok(new ArrayList<>(Objects.requireNonNull(response.getBody())));
                     } else {
                         throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT,
                                 "Request timed out, service unreachable, please try again later");
@@ -456,10 +448,14 @@ public class CardGatewayServiceImpl implements CardGatewayService {
     }
 
     private CompletableFuture<ResponseEntity<Object>> awaitResponseOrTimeout(
-            CompletableFuture<ResponseEntity<Object>> futureResponse) {
+            CompletableFuture<ResponseEntity<Object>> futureResponse, String correlationId) {
         return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
+                .whenComplete((response, throwable) -> {
+                    LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+                    responseFutures.remove(correlationId);
+                })
                 .thenApply(response -> {
-                    if (response != null && !futureResponse.isDone()) {
+                    if (response != null && futureResponse.isDone()) {
                         LOGGER.info("Request successfully collapsed and received to the Controller");
                         return ResponseEntity.ok(response.getBody());
                     } else {
@@ -467,5 +463,9 @@ public class CardGatewayServiceImpl implements CardGatewayService {
                                 "Request timed out, service unreachable, please try again later");
                     }
                 });
+    }
+
+    private static String getCorrelationId() {
+        return UUID.randomUUID().toString();
     }
 }

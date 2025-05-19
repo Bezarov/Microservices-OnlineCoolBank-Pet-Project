@@ -49,15 +49,15 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     public void handlePaymentErrors(ErrorDTO paymentErrorDTO,
                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.error("Received error topic with correlation id: {} ", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.remove(correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.get(correlationId);
         LOGGER.info("Complete CompletableFuture exceptionally with message: {} ", paymentErrorDTO);
         futureErrorResponse.completeExceptionally(new ResponseStatusException(HttpStatus.valueOf(
-                paymentErrorDTO.getStatus()), paymentErrorDTO.getMessage()));
+                paymentErrorDTO.status()), paymentErrorDTO.message()));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> createPaymentByAccounts(PaymentDTO paymentDTO) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -67,7 +67,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         paymentDTOKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -76,8 +76,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     public void handlePaymentCreationByAccountsResponse(PaymentDTO paymentDTO,
                                                         @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: create-payment-by-accounts with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, paymentDTO);
         futureResponse.complete(ResponseEntity.ok(paymentDTO));
     }
@@ -86,7 +85,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     public CompletableFuture<ResponseEntity<Object>> createPaymentByCards(String fromCardNumber,
                                                                           String toCardNumber,
                                                                           BigDecimal amount) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -99,7 +98,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         listObjectKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
 
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -108,15 +107,14 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     public void handlePaymentCreationByCardsResponse(PaymentDTO paymentDTO,
                                                      @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: create-payment-by-cards with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, paymentDTO);
         futureResponse.complete(ResponseEntity.ok(paymentDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<Object>> getPaymentById(UUID paymentId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
@@ -127,7 +125,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
 
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -135,16 +133,15 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
             containerFactory = "paymentDTOKafkaListenerFactory")
     public void handleGetPaymentByIdResponse(PaymentDTO paymentDTO,
                                              @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        LOGGER.info("Response from topic: create-payment-by-cards with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        LOGGER.info("Response from topic: get-payment-by-id with correlation id: {}", correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, paymentDTO);
         futureResponse.complete(ResponseEntity.ok(paymentDTO));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountPaymentsByFromAccount(UUID fromAccountId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
@@ -153,24 +150,23 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-all-payments-by-from-account-id", fromAccountId);
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
     @KafkaListener(topics = "get-all-payment-by-from-account-id-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listPaymentDTOKafkaListenerFactory")
     public void handleGetAllPaymentByFromAccountResponse(List<PaymentDTO> paymentDTOS,
                                                          @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-all-payment-by-from-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, paymentDTOS);
         futureResponse.complete(ResponseEntity.ok(paymentDTOS));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<List<Object>>> getPaymentsByStatus(UUID fromAccountId, String status) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
@@ -180,24 +176,23 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         ProducerRecord<String, Map<UUID, String>> topic = new ProducerRecord<>("get-payments-by-status", getPaymentByStatusRequestList);
         mapUUIDToStringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
     @KafkaListener(topics = "get-payments-by-status-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listPaymentDTOKafkaListenerFactory")
     public void handleGetAllPaymentByStatusResponse(List<PaymentDTO> paymentDTOS,
                                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-payments-by-status with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, paymentDTOS);
         futureResponse.complete(ResponseEntity.ok(paymentDTOS));
     }
 
     @Override
     public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountPaymentsByToAccount(UUID toAccountId) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
@@ -206,17 +201,16 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         ProducerRecord<String, UUID> topic = new ProducerRecord<>("get-all-payments-by-to-account", toAccountId);
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
     @KafkaListener(topics = "get-all-payments-by-to-account-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listPaymentDTOKafkaListenerFactory")
     public void handleGetAllPaymentByToAccountResponse(List<PaymentDTO> paymentDTOS,
                                                        @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-all-payments-by-to-account with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, paymentDTOS);
         futureResponse.complete(ResponseEntity.ok(paymentDTOS));
     }
@@ -224,7 +218,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     @Override
     public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountPaymentsByPaymentType(UUID fromAccountId,
                                                                                               String paymentType) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
@@ -235,17 +229,16 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
                 "get-all-payments-by-payment-type", getPaymentByTypeRequestList);
         mapUUIDToStringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
     @KafkaListener(topics = "get-all-payments-by-payment-type-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listPaymentDTOKafkaListenerFactory")
     public void handleGetAllPaymentByPaymentTypeResponse(
             List<PaymentDTO> paymentDTOS, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-all-payments-by-payment-type with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, paymentDTOS);
         futureResponse.complete(ResponseEntity.ok(paymentDTOS));
     }
@@ -253,7 +246,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     @Override
     public CompletableFuture<ResponseEntity<List<Object>>> getAllFromAccountPaymentsByPaymentDateRange(
             UUID fromAccountId, LocalDateTime fromPaymentDate, LocalDateTime toPaymentDate) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
@@ -264,17 +257,16 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
                 "get-all-from-account-payments-by-date-range", getPaymentByDateRangeRequestList);
         listObjectKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
     @KafkaListener(topics = "get-all-from-account-payments-by-date-range-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listPaymentDTOKafkaListenerFactory")
     public void handleGetAllPaymentFromAccountByPaymentDateRangeResponse(List<PaymentDTO> paymentDTOS,
                                                                          @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        LOGGER.info("Response from topic: get-all-payments-by-payment-type with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        LOGGER.info("Response from topic: get-all-from-account-payments-by-date-range with correlation id: {}", correlationId);
+        CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, paymentDTOS);
         futureResponse.complete(ResponseEntity.ok(paymentDTOS));
     }
@@ -282,7 +274,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     @Override
     public CompletableFuture<ResponseEntity<List<Object>>> getAllToAccountPaymentsByPaymentDateRange(
             UUID toAccountId, LocalDateTime fromPaymentDate, LocalDateTime toPaymentDate) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = new CompletableFuture<>();
         responseListFutures.put(correlationId, futureResponse);
@@ -293,29 +285,32 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
                 "get-all-to-account-payments-by-date-range", getPaymentByDateRangeRequestList);
         listObjectKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
 
     @Override
     @KafkaListener(topics = "get-all-to-account-payments-by-date-range-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listPaymentDTOKafkaListenerFactory")
     public void handleGetAllPaymentToAccountByFromAccountResponse(List<PaymentDTO> paymentDTOS,
                                                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-all-to-account-payments-by-date-range with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, paymentDTOS);
         futureResponse.complete(ResponseEntity.ok(paymentDTOS));
     }
 
     private CompletableFuture<ResponseEntity<List<Object>>> awaitResponsesOrTimeout(
-            CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse) {
+            CompletableFuture<ResponseEntity<List<PaymentDTO>>> futureResponse, String correlationId) {
         return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
+                .whenComplete((response, throwable) -> {
+                    LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+                    responseFutures.remove(correlationId);
+                })
                 .thenApply(response -> {
-                    if (response != null) {
+                    if (response != null && futureResponse.isDone()) {
                         LOGGER.info("Request successfully collapsed and received to the Controller");
-                        return ResponseEntity.ok((List<Object>) response);
+                        return ResponseEntity.ok(new ArrayList<>(Objects.requireNonNull(response.getBody())));
                     } else {
                         throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT,
                                 "Request timed out, service unreachable, please try again later");
@@ -323,10 +318,15 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
                 });
     }
 
-    private CompletableFuture<ResponseEntity<Object>> awaitResponseOrTimeout(CompletableFuture<ResponseEntity<Object>> futureResponse) {
+    private CompletableFuture<ResponseEntity<Object>> awaitResponseOrTimeout(
+            CompletableFuture<ResponseEntity<Object>> futureResponse, String correlationId) {
         return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
+                .whenComplete((response, throwable) -> {
+                    LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+                    responseFutures.remove(correlationId);
+                })
                 .thenApply(response -> {
-                    if (response != null && !futureResponse.isDone()) {
+                    if (response != null && futureResponse.isDone()) {
                         LOGGER.info("Request successfully collapsed and received to the Controller");
                         return ResponseEntity.ok(response.getBody());
                     } else {
@@ -334,5 +334,9 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
                                 "Request timed out, service unreachable, please try again later");
                     }
                 });
+    }
+
+    private static String getCorrelationId() {
+        return UUID.randomUUID().toString();
     }
 }

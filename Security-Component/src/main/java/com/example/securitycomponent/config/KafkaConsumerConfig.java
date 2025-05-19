@@ -14,7 +14,6 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
@@ -33,22 +32,23 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConsumerFactory<String, AuthRequestDTO> usersAuthRequestDTOConsumerFactory() {
-        Map<String, Object> usersAuthRequestDTOConsumerProp = new HashMap<>();
-        usersAuthRequestDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
-        usersAuthRequestDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueSecurityComponentGroupId);
-        usersAuthRequestDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        usersAuthRequestDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        usersAuthRequestDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        usersAuthRequestDTOConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.securitycomponent.dto.AuthRequestDTO");
-        usersAuthRequestDTOConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        usersAuthRequestDTOConsumerProp.put(JsonDeserializer.TYPE_MAPPINGS,
-                "com.example.apigatewaycomponent.dto.AuthRequestDTO:com.example.securitycomponent.dto.AuthRequestDTO");
-        return new DefaultKafkaConsumerFactory<>(usersAuthRequestDTOConsumerProp);
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueSecurityComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.securitycomponent.dto.AuthRequestDTO",
+                JsonDeserializer.TRUSTED_PACKAGES, "*",
+                JsonDeserializer.TYPE_MAPPINGS,
+                "com.example.apigatewaycomponent.dto.AuthRequestDTO:com.example.securitycomponent.dto.AuthRequestDTO"
+        ));
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, AuthRequestDTO> usersAuthRequestDTOKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, AuthRequestDTO> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, AuthRequestDTO> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(usersAuthRequestDTOConsumerFactory());
         factory.setCommonErrorHandler(globalKafkaExceptionHandler);
         return factory;
@@ -56,15 +56,15 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConsumerFactory<String, Map<String, String>> mapStringToStringConsumerFactory() {
-        Map<String, Object> mapStringToStringConsumerProp = new HashMap<>();
-        mapStringToStringConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
-        mapStringToStringConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueSecurityComponentGroupId);
-        mapStringToStringConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        mapStringToStringConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        mapStringToStringConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        mapStringToStringConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "java.util.HashMap");
-        mapStringToStringConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        return new DefaultKafkaConsumerFactory<>(mapStringToStringConsumerProp);
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueSecurityComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.VALUE_DEFAULT_TYPE, "java.util.HashMap",
+                JsonDeserializer.TRUSTED_PACKAGES, "*"
+        ));
     }
 
     @Bean

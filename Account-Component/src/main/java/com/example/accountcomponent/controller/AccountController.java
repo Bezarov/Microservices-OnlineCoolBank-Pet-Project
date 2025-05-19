@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/accounts")
+@RequestMapping("/account")
 public class AccountController {
     private static final Logger LOGGER = LoggerFactory.getLogger(AccountController.class);
     private static final String RESPONSE_LOG = "Request was successfully processed and response was sent: {}";
@@ -75,5 +75,13 @@ public class AccountController {
         List<AccountDTO> responseAccountDTOS = restAccountService.getAllAccountsWithStatusByUserId(userId, accountStatus);
         LOGGER.debug(RESPONSE_LOG, responseAccountDTOS);
         return ResponseEntity.ok(responseAccountDTOS);
+    }
+
+    @GetMapping("/exists-by-id/{accountId}")
+    public ResponseEntity<Boolean> existsById(@PathVariable UUID accountId) {
+        LOGGER.debug("Received GET request to check if exist account by ID: {}", accountId);
+        boolean responseAccountCheck = restAccountService.existsById(accountId);
+        LOGGER.debug(RESPONSE_LOG, responseAccountCheck);
+        return ResponseEntity.ok(responseAccountCheck);
     }
 }

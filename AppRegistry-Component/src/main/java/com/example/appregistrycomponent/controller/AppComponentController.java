@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/components")
+@RequestMapping("/component")
 public class AppComponentController {
     private static final Logger LOGGER = LoggerFactory.getLogger(AppComponentController.class);
     private static final String RESPONSE_LOG = "Request was successfully processed and response was sent: {}";

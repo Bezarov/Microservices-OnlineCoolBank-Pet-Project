@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.UUID;
 
 @Qualifier("AppRegistry-Components")
-@FeignClient(name = "APPREGISTRY-COMPONENTS", url = "http://localhost:8601/components", fallback = AppRegistryComponentClientFallback.class)
+@FeignClient(name = "APPREGISTRY-COMPONENTS", url = "http://localhost:8601/component", fallback = AppRegistryComponentClientFallback.class)
 public interface AppRegistryComponentClient {
     @PostMapping
     void registerComponent(@RequestBody EurekaServerAppComponentDTO eurekaServerAppComponentDTO);

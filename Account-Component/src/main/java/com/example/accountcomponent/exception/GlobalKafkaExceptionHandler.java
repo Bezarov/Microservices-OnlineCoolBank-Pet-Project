@@ -27,6 +27,13 @@ public class GlobalKafkaExceptionHandler implements CommonErrorHandler {
     }
 
     @Override
+    public boolean handleOne(@NonNull Exception thrownException, @NonNull ConsumerRecord<?, ?> rec,
+                             @NonNull Consumer<?, ?> consumer, @NonNull MessageListenerContainer container) {
+        handleRemaining(thrownException, List.of(rec), consumer, container);
+        return true;
+    }
+
+    @Override
     public void handleRemaining(@NonNull Exception thrownException, @NonNull List<ConsumerRecord<?, ?>> records,
                                 @NonNull Consumer<?, ?> consumer, @NonNull MessageListenerContainer container) {
         Throwable cause = (thrownException instanceof ListenerExecutionFailedException)
@@ -44,9 +51,7 @@ public class GlobalKafkaExceptionHandler implements CommonErrorHandler {
         String correlationId = extractCorrelationId(exception.getReason());
         String exceptionReason = extractExceptionReason(exception.getReason());
 
-        ErrorDTO errorDTO = new ErrorDTO();
-        errorDTO.setStatus(exception.getStatusCode().value());
-        errorDTO.setMessage(exceptionReason);
+        ErrorDTO errorDTO = new ErrorDTO(exceptionReason, exception.getStatusCode().value());
 
         LOGGER.info("Create topic: account-error with correlation id: {} ", correlationId);
         ProducerRecord<String, ErrorDTO> errorTopic = new ProducerRecord<>("account-error", null, errorDTO);

@@ -1,8 +1,6 @@
 package com.example.accountcomponent.service;
 
 import com.example.accountcomponent.dto.AccountDTO;
-import com.example.accountcomponent.dto.CardDTO;
-import com.example.accountcomponent.dto.UsersDTO;
 import com.example.accountcomponent.exception.CustomKafkaException;
 import com.example.accountcomponent.feign.CardComponentClient;
 import com.example.accountcomponent.feign.UsersComponentClient;
@@ -73,11 +71,11 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
         return accountDTO;
     }
 
-    private Account convertAccountDTOToModel(UsersDTO userDTO, AccountDTO accountDTO) {
+    private Account convertAccountDTOToModel(String userName, AccountDTO accountDTO) {
         Account account = new Account();
         account.setAccountName(accountDTO.getAccountName());
         account.setBalance(accountDTO.getBalance());
-        account.setAccountHolderFullName(userDTO.getFullName());
+        account.setAccountHolderFullName(userName);
         account.setStatus(accountDTO.getStatus());
         account.setAccountType(accountDTO.getAccountType());
         account.setCreatedDate(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
@@ -94,27 +92,22 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
         String userId = userIdToAccountDTOMap.keySet().iterator().next().replaceAll("\"", "");
         AccountDTO accountDTO = objectMapper.convertValue(userIdToAccountDTOMap.get(userId), AccountDTO.class);
 
-        LOGGER.info(USER_SEARCHING_LOG, userId);
-        UsersDTO userDTO = usersComponentClient.findById(UUID.fromString(userId))
-                .orElseThrow(() -> {
-                    LOGGER.error(USER_NOT_FOUND_LOG, userId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "User with such ID: " + userId + " was not found correlationId:" + correlationId);
-                });
-        LOGGER.info("User was found successfully: {}", userId);
+        String userName = getUserNameByUserId(UUID.fromString(userId), correlationId);
+        LOGGER.info("User was found successfully with Full name: {}", userName);
+
         LOGGER.info("Trying to create Account: {}", accountDTO);
         accountRepository.findByAccountName(accountDTO.getAccountName())
                 .ifPresent(accountEntity -> {
                     LOGGER.error("Account with such name already exists: {}", accountEntity);
-                    throw new CustomKafkaException(HttpStatus.FOUND, "Account with such name: " +
+                    throw new CustomKafkaException(HttpStatus.BAD_REQUEST, "Account with such name: " +
                             accountDTO.getAccountName() + " already exists correlationId:" + correlationId);
                 });
-        Account account = accountRepository.save(convertAccountDTOToModel(userDTO, accountDTO));
+        Account account = accountRepository.save(convertAccountDTOToModel(userName, accountDTO));
         LOGGER.debug("Account created successfully: {}", accountDTO);
 
         LOGGER.info("Trying to create topic: create-account-by-user-id-response with correlation id: {} ", correlationId);
         ProducerRecord<String, AccountDTO> responseTopic = new ProducerRecord<>(
-                "create-card-by-account-id-response", null, convertAccountModelToDTO(account));
+                "create-account-by-user-id-response", null, convertAccountModelToDTO(account));
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOKafkaTemplate.send(responseTopic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
@@ -125,23 +118,8 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
             containerFactory = "stringKafkaListenerFactory")
     public void getAccountByAccountName(String accountName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: get-account-by-account-name with correlation id: {} ", correlationId);
-        LOGGER.info(ACCOUNT_SEARCHING_LOG, accountName);
-        AccountDTO accountDTO = accountRepository.findByAccountName(accountName)
-                .map(accountEntity -> {
-                    LOGGER.debug("Account was found in DB: {}", accountEntity);
-                    return convertAccountModelToDTO(accountEntity);
-                })
-                .orElseThrow(() -> {
-                    LOGGER.error(ACCOUNT_NOT_FOUND_LOG, accountName);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Account with such name: " + accountName + " was not found correlationId:" + correlationId);
-                });
-        LOGGER.info("Trying to find account cards by accountId: {}", accountDTO.getId());
-        List<CardDTO> cardDTOS = cardComponentClient.findAllCardsByAccountId(accountDTO.getId())
-                .stream()
-                .peek(cardDTO -> LOGGER.info("Card was found and added to AccountDTO response: {}", cardDTO))
-                .toList();
-        accountDTO.setCards(cardDTOS);
+
+        AccountDTO accountDTO = getAccountWithCardsByAccountName(accountName, correlationId);
 
         LOGGER.info("Trying to create topic: get-account-by-account-name-response with correlation id: {} ", correlationId);
         ProducerRecord<String, AccountDTO> responseTopic = new ProducerRecord<>(
@@ -156,23 +134,9 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
             containerFactory = "uuidKafkaListenerFactory")
     public void getAccountById(UUID accountId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: get-account-by-account-id with correlation id: {} ", correlationId);
-        LOGGER.info(ALLOCATED_TOPIC_LOG, accountId);
-        AccountDTO accountDTO = accountRepository.findById(accountId)
-                .map(accountEntity -> {
-                    LOGGER.debug("Account was found in DB: {}", accountEntity);
-                    return convertAccountModelToDTO(accountEntity);
-                })
-                .orElseThrow(() -> {
-                    LOGGER.error(ACCOUNT_NOT_FOUND_LOG, accountId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Account with such ID: " + accountId + " was not found correlationId:" + correlationId);
-                });
-        LOGGER.info("Trying to find account cards by accountId: {}", accountDTO.getId());
-        List<CardDTO> cardDTOS = cardComponentClient.findAllCardsByAccountId(accountDTO.getId())
-                .stream()
-                .peek(cardDTO -> LOGGER.info("Card was found and added to AccountDTO response: {}", cardDTO))
-                .toList();
-        accountDTO.setCards(cardDTOS);
+
+        AccountDTO accountDTO = getAccountWithCardsByAccountId(accountId, correlationId);
+
         LOGGER.info("Trying to create topic: get-account-by-account-id-response with correlation id: {} ", correlationId);
         ProducerRecord<String, AccountDTO> responseTopic = new ProducerRecord<>(
                 "get-account-by-account-id-response", null, accountDTO);
@@ -186,29 +150,15 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
             containerFactory = "uuidKafkaListenerFactory")
     public void getAllUserAccountsByUserId(UUID userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: get-all-accounts-by-user-id with correlation id: {} ", correlationId);
-        LOGGER.info(USER_SEARCHING_LOG, userId);
-        UsersDTO usersDTO = usersComponentClient.findById(userId)
-                .orElseThrow(() -> {
-                    LOGGER.error(USER_NOT_FOUND_LOG, userId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "User with such ID: " + userId + " was not found correlationId:" + correlationId);
-                });
-        LOGGER.info("User was found successfully: {} \nTrying to find All Accounts linked to user with ID: {}",
-                usersDTO, userId);
 
-        List<AccountDTO> accountDTOS = accountRepository.findByAccountHolderFullName(usersDTO.getFullName())
-                .stream()
-                .map(this::convertAccountModelToDTO)
-                .toList();
-        LOGGER.debug("Accounts was found: {} \nTrying to find it cards", accountDTOS);
-        accountDTOS.forEach(accountDTO -> {
-            LOGGER.debug("Trying to find account by id: {}, cards", accountDTO.getId());
-            cardComponentClient.findAllCardsByAccountId(accountDTO.getId());
-        });
+        String userFullName = getUserNameByUserId(userId, correlationId);
+        LOGGER.info("User was found successfully \nTrying to find All Accounts by Holder Full name: {}", userFullName);
+
+        List<AccountDTO> accountDTOS = getAllUserAccountsWithCardsByFullName(userFullName);
 
         LOGGER.info("Trying to create topic: get-all-accounts-by-user-id-response with correlation id: {} ", correlationId);
         ProducerRecord<String, List<AccountDTO>> responseTopic = new ProducerRecord<>(
-                "get-account-by-account-id-response", null, accountDTOS);
+                "get-all-accounts-by-user-id-response", null, accountDTOS);
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseDTOSKafkaTemplate.send(responseTopic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
@@ -219,25 +169,10 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
             containerFactory = "stringKafkaListenerFactory")
     public void getAllAccountsByHolderFullName(String accountHolderFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: get-all-accounts-by-holder-full-name with correlation id: {} ", correlationId);
-        LOGGER.info(USER_SEARCHING_LOG, accountHolderFullName);
-        UsersDTO usersDTO = usersComponentClient.findByFullName(accountHolderFullName)
-                .orElseThrow(() -> {
-                    LOGGER.error(USER_NOT_FOUND_LOG, accountHolderFullName);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "User with such full-name: " + accountHolderFullName + " was not found correlationId:" + correlationId);
-                });
-        LOGGER.info("User was found successfully: {} \nTrying to find All Accounts linked to user with ID: {}",
-                usersDTO, usersDTO.getId());
 
-        List<AccountDTO> accountDTOS = accountRepository.findByAccountHolderFullName(usersDTO.getFullName())
-                .stream()
-                .map(this::convertAccountModelToDTO)
-                .toList();
-        LOGGER.debug("Accounts was found: {} \nTrying to find it cards", accountDTOS);
-        accountDTOS.forEach(accountDTO -> {
-            LOGGER.debug("Trying to find account by id: {}, cards", accountDTO.getId());
-            cardComponentClient.findAllCardsByAccountId(accountDTO.getId());
-        });
+        validateUserExistenceByUserFullName(accountHolderFullName, correlationId);
+
+        List<AccountDTO> accountDTOS = getAllUserAccountsWithCardsByFullName(accountHolderFullName);
 
         LOGGER.info("Trying to create topic: get-all-accounts-by-holder-full-name-response with correlation id: {} ", correlationId);
         ProducerRecord<String, List<AccountDTO>> responseTopic = new ProducerRecord<>(
@@ -252,15 +187,12 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
             containerFactory = "uuidKafkaListenerFactory")
     public void getBalanceByAccountId(UUID accountId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: get-balance-by-account-id with correlation id: {} ", correlationId);
+
         LOGGER.info(ACCOUNT_SEARCHING_LOG, accountId);
-        BigDecimal balance = accountRepository.findById(accountId)
-                .map(accountEntity -> {
-                    LOGGER.debug("Account was found and it balance successfully: {}", accountEntity.getBalance());
-                    return accountEntity.getBalance();
-                })
+        BigDecimal balance = accountRepository.findAccountBalanceById(accountId)
                 .orElseThrow(() -> {
                     LOGGER.error(ACCOUNT_NOT_FOUND_LOG, accountId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
+                    return new CustomKafkaException(HttpStatus.BAD_REQUEST,
                             "Account with such ID: " + accountId + " was not found correlationId:" + correlationId);
                 });
 
@@ -280,22 +212,12 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
         String userId = userIdToAccountStatusMap.keySet().iterator().next().replaceAll("\"", "");
         String accountStatus = userIdToAccountStatusMap.get(userId);
 
-        LOGGER.info(USER_SEARCHING_LOG, userId);
-        UsersDTO usersDTO = usersComponentClient.findById(UUID.fromString(userId))
-                .orElseThrow(() -> {
-                    LOGGER.error(USER_NOT_FOUND_LOG, userId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "User with such ID: " + userId + " was not found correlationId:" + correlationId);
-                });
-        LOGGER.info("User was found successfully: {}", usersDTO);
+        String userFullName = getUserNameByUserId(UUID.fromString(userId), correlationId);
+        LOGGER.info("User was found successfully with Full name: {}", userFullName);
 
         LOGGER.info("Trying to find All Accounts linked to user with ID: {}, with status: {}", userId, accountStatus);
-        List<AccountDTO> accountDTOS = accountRepository.findByAccountHolderFullName(usersDTO.getFullName())
-                .stream()
-                .filter(account -> account.getStatus().equals(accountStatus))
-                .map(this::convertAccountModelToDTO)
-                .toList();
-        LOGGER.info("Found Accounts with status: {}, in quantity: {} ", accountStatus, accountDTOS.size());
+        List<AccountDTO> accountDTOS = getAllUserAccountsWithCardsByFullName(userFullName);
+
         LOGGER.info("Trying to create topic: get-all-accounts-by-status-response with correlation id: {} ", correlationId);
         ProducerRecord<String, List<AccountDTO>> responseTopic = new ProducerRecord<>(
                 "get-all-accounts-by-status-response", null, accountDTOS);
@@ -518,20 +440,15 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
     }
 
     @Override
-    @KafkaListener(topics = "delete-account-by-account-id", groupId = "account-component",
+    @KafkaListener(topics = "delete-all-accounts-by-user-id", groupId = "account-component",
             containerFactory = "uuidKafkaListenerFactory")
     public void deleteAllUserAccountsByUserId(UUID userId, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        LOGGER.info("Got request from kafka topic: delete-account-by-account-id with correlation id: {} ", correlationId);
-        LOGGER.info(USER_SEARCHING_LOG, userId);
-        UsersDTO userDTO = usersComponentClient.findById(userId)
-                .orElseThrow(() -> {
-                    LOGGER.error(USER_NOT_FOUND_LOG, userId);
-                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "User with such ID: " + userId + " was not found correlationId:" + correlationId);
-                });
+        LOGGER.info("Got request from kafka topic: delete-all-accounts-by-user-id with correlation id: {} ", correlationId);
 
-        LOGGER.info("User was found successfully: {}, \nTrying to find All User Accounts", userDTO);
-        accountRepository.findByAccountHolderFullName(userDTO.getFullName())
+        String userName = getUserNameByUserId(userId, correlationId);
+
+        LOGGER.info("User was found successfully: {}, \nTrying to find All User Accounts", userName);
+        accountRepository.findByAccountHolderFullName(userName)
                 .forEach(accountEntity -> {
                     accountEntity.setStatus("PRE-REMOVED");
                     LOGGER.debug("Account was found and status it was changed to - PRE-REMOVED: {}", accountEntity);
@@ -541,11 +458,79 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
                     accountRepository.save(accountEntity);
                 });
 
-        LOGGER.info("Trying to create topic: delete-account-by-account-id-response with correlation id: {} ", correlationId);
+        LOGGER.info("Trying to create topic: delete-all-accounts-by-user-id-response with correlation id: {} ", correlationId);
         ProducerRecord<String, String> responseTopic = new ProducerRecord<>(
-                "delete-account-by-account-id-response", null, "Accounts deleted successfully");
+                "delete-all-accounts-by-user-id-response", null, "Accounts deleted successfully");
         responseTopic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         responseMessageKafkaTemplate.send(responseTopic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, responseTopic.value());
+    }
+
+    private void validateUserExistenceByUserFullName(String fullName, String correlationId) {
+        LOGGER.info(USER_SEARCHING_LOG, fullName);
+        usersComponentClient.findByFullName(fullName)
+                .orElseThrow(() -> {
+                    LOGGER.error(USER_NOT_FOUND_LOG, fullName);
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
+                            "User with such Full name: " + fullName + " was not found correlationId:" + correlationId);
+                });
+        LOGGER.debug("User existence by Full name: {} check successfully", fullName);
+    }
+
+    private String getUserNameByUserId(UUID userId, String correlationId) {
+        LOGGER.info(USER_SEARCHING_LOG, userId);
+        return usersComponentClient.findFullNameById(userId)
+                .orElseThrow(() -> {
+                    LOGGER.error(USER_NOT_FOUND_LOG, userId);
+                    return new CustomKafkaException(HttpStatus.BAD_REQUEST,
+                            "User with such ID: " + userId + " was not found correlationId:" + correlationId);
+                });
+    }
+
+    private AccountDTO getAccountWithCardsByAccountName(String accountName, String correlationId) {
+        LOGGER.info(ACCOUNT_SEARCHING_LOG, accountName);
+        return accountRepository.findByAccountName(accountName)
+                .map(accountEntity -> {
+                    AccountDTO accountDTO = convertAccountModelToDTO(accountEntity);
+                    LOGGER.debug("Account was found: {}", accountEntity);
+                    LOGGER.debug("Trying to find it Cards by ID: {}", accountEntity.getId());
+                    accountDTO.setCards(cardComponentClient.findAllCardsByAccountId(accountEntity.getId()));
+                    return accountDTO;
+                })
+                .orElseThrow(() -> {
+                    LOGGER.error(ACCOUNT_NOT_FOUND_LOG, accountName);
+                    return new CustomKafkaException(HttpStatus.BAD_REQUEST,
+                            "Account with such name: " + accountName + " was not found correlationId:" + correlationId);
+                });
+    }
+
+    private AccountDTO getAccountWithCardsByAccountId(UUID accountId, String correlationId) {
+        LOGGER.info(ACCOUNT_SEARCHING_LOG, accountId);
+        return accountRepository.findById(accountId)
+                .map(accountEntity -> {
+                    AccountDTO accountDTO = convertAccountModelToDTO(accountEntity);
+                    LOGGER.debug("Account was found: {}", accountEntity);
+                    LOGGER.debug("Trying to find it Cards by ID: {}", accountEntity.getId());
+                    accountDTO.setCards(cardComponentClient.findAllCardsByAccountId(accountEntity.getId()));
+                    return accountDTO;
+                })
+                .orElseThrow(() -> {
+                    LOGGER.error(ACCOUNT_NOT_FOUND_LOG, accountId);
+                    return new CustomKafkaException(HttpStatus.BAD_REQUEST,
+                            "Account with such ID: " + accountId + " was not found correlationId:" + correlationId);
+                });
+    }
+
+    private List<AccountDTO> getAllUserAccountsWithCardsByFullName(String fullName) {
+        return accountRepository.findByAccountHolderFullName(fullName)
+                .stream()
+                .map(accountEntity -> {
+                    AccountDTO accountDTO = convertAccountModelToDTO(accountEntity);
+                    LOGGER.debug("Account was found: {}", accountEntity);
+                    LOGGER.debug("Trying to find it Cards by ID: {}", accountEntity.getId());
+                    accountDTO.setCards(cardComponentClient.findAllCardsByAccountId(accountEntity.getId()));
+                    return accountDTO;
+                })
+                .toList();
     }
 }

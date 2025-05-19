@@ -51,9 +51,7 @@ public class GlobalKafkaExceptionHandler implements CommonErrorHandler {
         String correlationId = extractCorrelationId(exception.getReason());
         String exceptionReason = extractExceptionReason(exception.getReason());
 
-        ErrorDTO errorDTO = new ErrorDTO();
-        errorDTO.setStatus(exception.getStatusCode().value());
-        errorDTO.setMessage(exceptionReason);
+        ErrorDTO errorDTO = new ErrorDTO(exceptionReason, exception.getStatusCode().value());
 
         LOGGER.info("Create topic: card-error with correlation id: {} ", correlationId);
         ProducerRecord<String, ErrorDTO> errorTopic = new ProducerRecord<>("card-error", null, errorDTO);

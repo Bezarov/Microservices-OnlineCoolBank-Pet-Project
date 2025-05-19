@@ -17,4 +17,14 @@ public class UsersComponentClientFallback implements UsersComponentClient {
     public Optional<UsersDTO> findByFullName(String userFullName) {
         return Optional.empty();
     }
+
+    @Override
+    public Optional<Boolean> existenceCheck(UUID userId) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<Boolean> existenceCheck(String holderName) {
+        return Optional.empty();
+    }
 }

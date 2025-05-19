@@ -21,11 +21,11 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final String BEARER = "Bearer ";
-    private static final String HEADER = "Authorization";
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final SecurityComponentClient securityComponentClient;
+    private static final String BEARER = "Bearer ";
+    private static final String HEADER = "Authorization";
 
     public JwtAuthenticationFilter(@Qualifier("Security-Components") SecurityComponentClient securityComponentClient) {
         this.securityComponentClient = securityComponentClient;
