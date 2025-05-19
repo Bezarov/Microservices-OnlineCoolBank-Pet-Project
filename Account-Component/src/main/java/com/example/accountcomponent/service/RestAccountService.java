@@ -19,4 +19,6 @@ public interface RestAccountService {
     BigDecimal getBalanceByAccountId(UUID accountId);
 
     List<AccountDTO> getAllAccountsWithStatusByUserId(UUID userId, String accountStatus);
+
+    boolean existsById(UUID accountId);
 }

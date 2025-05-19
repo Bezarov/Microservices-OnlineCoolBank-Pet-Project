@@ -11,11 +11,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Qualifier("Account-Components")
-@FeignClient(name = "ACCOUNT-COMPONENTS", url = "http://localhost:8201/account", fallback = AccountComponentClientFallback.class)
+@FeignClient(name = "ACCOUNT-COMPONENTS", fallback = AccountComponentClientFallback.class)
 public interface AccountComponentClient {
-    @GetMapping("/by-account-id/{accountId}")
+    @GetMapping("account/by-account-id/{accountId}")
     @CircuitBreaker(name = "accountComponentCircuitBreaker", fallbackMethod = "accountComponentFallback")
     Optional<AccountDTO> findById(@PathVariable UUID accountId);
+
+    @GetMapping("account/exists-by-id/{accountId}")
+    Optional<Boolean> existenceCheck(@PathVariable UUID accountId);
 
     default AccountDTO accountComponentFallback(UUID accountId, Throwable ex) {
         return new AccountDTO();

@@ -11,15 +11,21 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Qualifier("Users-Components")
-@FeignClient(name = "USERS-COMPONENTS", url = "http://localhost:8101/users", fallback = UsersComponentClientFallback.class)
+@FeignClient(name = "USERS-COMPONENTS", fallback = UsersComponentClientFallback.class)
 public interface UsersComponentClient {
-    @GetMapping("/by-id/{userId}")
+    @GetMapping("users/by-id/{userId}")
     @CircuitBreaker(name = "usersComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")
     Optional<UsersDTO> findById(@PathVariable UUID userId);
 
-    @GetMapping("/by-name/{userFullName}")
+    @GetMapping("users/by-name/{userFullName}")
     @CircuitBreaker(name = "usersComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")
     Optional<UsersDTO> findByFullName(@PathVariable String userFullName);
+
+    @GetMapping("/exists-by-id/{userId}")
+    Optional<Boolean> existenceCheck(@PathVariable UUID userId);
+
+    @GetMapping("/exists-by-name/{holderName}")
+    Optional<Boolean> existenceCheck(@PathVariable String holderName);
 
     default UsersDTO usersComponentFallback(UUID usersId, Throwable ex) {
         return new UsersDTO();

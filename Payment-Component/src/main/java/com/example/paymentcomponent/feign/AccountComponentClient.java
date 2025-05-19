@@ -11,9 +11,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Qualifier("Account-Components")
-@FeignClient(name = "Account-Components", url = "http://localhost:8201/account", fallback = AccountComponentClientFallback.class)
+@FeignClient(name = "ACCOUNT-COMPONENTS", fallback = AccountComponentClientFallback.class)
 public interface AccountComponentClient {
-    @GetMapping("/by-account-id/{accountId}")
+    @GetMapping("account/by-account-id/{accountId}")
     @CircuitBreaker(name = "accountComponentCircuitBreaker", fallbackMethod = "accountComponentFallback")
     Optional<AccountDTO> findById(@PathVariable UUID accountId);
 

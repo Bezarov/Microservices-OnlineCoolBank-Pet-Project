@@ -18,7 +18,7 @@ import java.util.Optional;
 public interface UsersComponentClient {
     Logger logger = LoggerFactory.getLogger(UsersComponentClient.class);
 
-    @GetMapping("/by-email/{userEmail}")
+    @GetMapping("users/by-email/{userEmail}")
     @CircuitBreaker(name = "usersComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")
     Optional<UsersDTO> findByEmail(@PathVariable String userEmail);
 

@@ -13,4 +13,6 @@ public interface RestUsersService {
     UsersDTO getUserByFullName(String userFullName);
 
     UsersDTO getUserByPhoneNumber(String userPhoneNumber);
+
+    String getFullNameById(UUID userId);
 }

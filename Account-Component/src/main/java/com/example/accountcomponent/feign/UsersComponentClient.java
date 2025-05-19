@@ -11,17 +11,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Qualifier("Users-Components")
-@FeignClient(name = "USERS-COMPONENTS", url = "http://localhost:8101/users", fallback = UsersComponentClientFallback.class)
+@FeignClient(name = "USERS-COMPONENTS", fallback = UsersComponentClientFallback.class)
 public interface UsersComponentClient {
-    @GetMapping("/by-id/{userId}")
+    @GetMapping("users/by-id/{userId}")
     @CircuitBreaker(name = "usersComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")
     Optional<UsersDTO> findById(@PathVariable UUID userId);
 
-    @GetMapping("/by-name/{userFullName}")
+    @GetMapping("users/by-id/name/{userId}")
+    @CircuitBreaker(name = "usersComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")
+    Optional<String> findFullNameById(@PathVariable UUID userId);
+
+    @GetMapping("users/by-name/{userFullName}")
     @CircuitBreaker(name = "usersComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")
     Optional<UsersDTO> findByFullName(@PathVariable String userFullName);
-
-    default UsersDTO usersComponentFallback(UUID usersId, Throwable ex) {
-        return new UsersDTO();
-    }
 }

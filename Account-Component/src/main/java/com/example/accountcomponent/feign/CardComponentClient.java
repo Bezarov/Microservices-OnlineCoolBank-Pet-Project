@@ -12,17 +12,13 @@ import java.util.List;
 import java.util.UUID;
 
 @Qualifier("Card-Components")
-@FeignClient(name = "Card-Components", url = "http://localhost:8301/card", fallback = CardComponentClientFallback.class)
+@FeignClient(name = "CARD-COMPONENTS", fallback = CardComponentClientFallback.class)
 public interface CardComponentClient {
-    @GetMapping("/by-account-id/{accountId}")
-    @CircuitBreaker(name = "cardComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")
+    @GetMapping("card/by-account-id/{accountId}")
+    @CircuitBreaker(name = "cardComponentCircuitBreaker")
     List<CardDTO> findAllCardsByAccountId(@PathVariable UUID accountId);
 
-    @DeleteMapping("/by-account-id/{accountId}")
-    @CircuitBreaker(name = "cardComponentCircuitBreaker", fallbackMethod = "usersComponentFallback")
+    @DeleteMapping("card/by-account-id/{accountId}")
+    @CircuitBreaker(name = "cardComponentCircuitBreaker")
     void deleteAllAccountCardsByAccountId(@PathVariable UUID accountId);
-
-    default CardDTO cardComponentFallback(UUID accountId, Throwable ex) {
-        return new CardDTO();
-    }
 }

@@ -149,7 +149,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     public void getUserByFullName(String userFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: get-user-by-full-name with correlation id: {} ", correlationId);
         LOGGER.info(USER_SEARCHING_LOG, userFullName);
-        UsersDTO responseUserDTO = usersRepository.findByFullName(userFullName)
+        UsersDTO responseUserDTO = usersRepository.findByFullNameIgnoreCase(userFullName)
                 .map(userEntity -> {
                     LOGGER.info(FOUND_USER_LOG, userEntity);
                     return convertUsersModelToDTO(userEntity);
@@ -309,7 +309,7 @@ public class KafkaUsersServiceImpl implements KafkaUsersService {
     public void deleteUserByFullName(String userFullName, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: delete-user-by-full-name with correlation id: {} ", correlationId);
         LOGGER.info(USER_SEARCHING_LOG, userFullName);
-        Users user = usersRepository.findByFullName(userFullName)
+        Users user = usersRepository.findByFullNameIgnoreCase(userFullName)
                 .orElseThrow(() -> {
                     LOGGER.error("User with such name was not found: {}", userFullName);
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,

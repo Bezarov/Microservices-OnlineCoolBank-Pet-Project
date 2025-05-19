@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Qualifier("AppRegistry-Components")
-@FeignClient(name = "APPREGISTRY-COMPONENTS", url = "http://localhost:8601/components", fallback = AppRegistryComponentClientFallback.class)
+@FeignClient(name = "APPREGISTRY-COMPONENTS", url = "http://localhost:8601/component", fallback = AppRegistryComponentClientFallback.class)
 public interface AppRegistryComponentClient {
     Logger logger = LoggerFactory.getLogger(UsersComponentClient.class);
 

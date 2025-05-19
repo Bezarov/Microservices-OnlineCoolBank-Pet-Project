@@ -14,6 +14,11 @@ public class AccountComponentClientFallback implements AccountComponentClient {
     }
 
     @Override
+    public Optional<Boolean> existenceCheck(UUID accountId) {
+        return Optional.empty();
+    }
+
+    @Override
     public AccountDTO accountComponentFallback(UUID accountId, Throwable ex) {
         return AccountComponentClient.super.accountComponentFallback(accountId, ex);
     }

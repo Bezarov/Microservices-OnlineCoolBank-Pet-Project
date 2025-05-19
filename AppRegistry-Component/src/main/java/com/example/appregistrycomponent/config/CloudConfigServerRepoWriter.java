@@ -14,7 +14,6 @@ import java.util.List;
 public class CloudConfigServerRepoWriter {
     private final ComponentConfigReader configReader = ComponentConfigReader.readConfig();
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudConfigServerRepoWriter.class);
-
     private static final String DEFAULT_PROPERTIES_CONFIG_PATH = "default-component-config/";
 
     @PostConstruct
@@ -35,7 +34,7 @@ public class CloudConfigServerRepoWriter {
         }
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             writer.write(defaultProperties);
-        } catch (IOException e) {
+        } catch (IOException exception) {
             LOGGER.error("Error writing to file: {}", filePath);
         }
         LOGGER.info("Repository config file: {} created/updated successfully.", component.getComponentName());
@@ -51,19 +50,18 @@ public class CloudConfigServerRepoWriter {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("server.address")) {
+                if (line.startsWith("server.address"))
                     line = "server.address=" + component.getComponentAddress();
-                } else if (line.startsWith("server.port")) {
+                else if (line.startsWith("server.port"))
                     line = "server.port=" + component.getComponentPort();
-                } else if (line.startsWith("eureka.instance.appname")) {
+                else if (line.startsWith("eureka.instance.appname"))
                     line = "eureka.instance.appname=" + component.getInstanceEurekaName();
-                } else if (line.startsWith("spring.kafka.bootstrap-servers")) {
+                else if (line.startsWith("spring.kafka.bootstrap-servers"))
                     line = "spring.kafka.bootstrap-servers=" + component.getKafkaBootstrapAddresses();
-                }
 
                 content.append(line).append(System.lineSeparator());
             }
-        } catch (IOException e) {
+        } catch (IOException exception) {
             LOGGER.error("Error reading default properties file or it doesn't exists: {}", defaultFileName);
             return null;
         }

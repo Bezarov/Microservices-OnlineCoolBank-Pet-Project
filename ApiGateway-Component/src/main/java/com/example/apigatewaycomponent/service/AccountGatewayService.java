@@ -72,7 +72,7 @@ public interface AccountGatewayService {
 
     void handleDeleteAccountByNameResponse(AccountDTO accountDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> deleteAllUserAccountsByUserId(UUID userId);
+    CompletableFuture<ResponseEntity<Object>> deleteAllAccountsByUserId(UUID userId);
 
-    void handleDeleteAccountByUserIdResponse(AccountDTO accountDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+    void handleDeleteAllAccountByUserIdResponse(AccountDTO accountDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 }

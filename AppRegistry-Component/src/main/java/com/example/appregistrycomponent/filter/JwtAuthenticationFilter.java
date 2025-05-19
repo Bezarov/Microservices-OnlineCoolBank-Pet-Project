@@ -39,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestJwtToken = authorizationHeaderExtractor(request);
         String requestURI = request.getRequestURI();
 
-        if (requestJwtToken != null && requestURI.startsWith("/components/")) {
+        if (requestJwtToken != null && requestURI.startsWith("/component/")) {
             TokenAuthRequestDTO authRequestDTO = new TokenAuthRequestDTO(requestJwtToken, requestURI);
             try {
                 LOGGER.info("Trying to authenticate component token: {} in: Security-Components", requestJwtToken);

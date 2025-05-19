@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Qualifier("Security-Components")
-@FeignClient(name = "SECURITY-COMPONENTS", url = "http://localhost:8501/auth", fallback = SecurityComponentClientFallback.class)
+@FeignClient(name = "SECURITY-COMPONENTS", fallback = SecurityComponentClientFallback.class)
 public interface SecurityComponentClient {
     @Retryable(maxAttempts = 2, backoff = @Backoff(delay = 1000))
-    @PostMapping("/component")
+    @PostMapping("auth/component")
     String authenticateComponent(@RequestBody AuthRequestDTO authRequestDTO);
 }

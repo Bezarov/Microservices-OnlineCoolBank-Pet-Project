@@ -15,8 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,17 +51,16 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         this.mapStringToBigDecimalKafkaTemplate = mapStringToBigDecimalKafkaTemplate;
     }
 
-
     @Override
     @KafkaListener(topics = "account-error", groupId = "api-gateway",
             containerFactory = "errorDTOKafkaListenerFactory")
     public void handleAccountErrors(ErrorDTO accountErrorDTO,
                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.error("Received error topic with correlation id: {} ", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.remove(correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureErrorResponse = responseFutures.get(correlationId);
         LOGGER.info("Complete CompletableFuture exceptionally with message: {} ", accountErrorDTO);
         futureErrorResponse.completeExceptionally(new ResponseStatusException(HttpStatus.valueOf(
-                accountErrorDTO.getStatus()), accountErrorDTO.getMessage()));
+                accountErrorDTO.status()), accountErrorDTO.message()));
     }
 
     @Override
@@ -76,17 +77,16 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToDTOKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
-    @KafkaListener(topics = "create-card-by-account-id-response", groupId = "api-gateway",
+    @KafkaListener(topics = "create-account-by-user-id-response", groupId = "api-gateway",
             containerFactory = "accountDTOKafkaListenerFactory")
     public void handleAccountCreationResponse(AccountDTO accountDTO,
                                               @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: create-card-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
         futureResponse.complete(ResponseEntity.ok(accountDTO));
     }
@@ -103,7 +103,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -112,8 +112,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     public void handleGetAccountByNameResponse(AccountDTO accountDTO,
                                                @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-account-by-account-name with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
         futureResponse.complete(ResponseEntity.ok(accountDTO));
     }
@@ -130,7 +129,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -139,8 +138,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     public void handleGetAccountByIdResponse(AccountDTO accountDTO,
                                              @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-account-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
         futureResponse.complete(ResponseEntity.ok(accountDTO));
     }
@@ -157,17 +155,16 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
-    @KafkaListener(topics = "get-account-by-account-id-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+    @KafkaListener(topics = "get-all-accounts-by-user-id-response", groupId = "api-gateway",
+            containerFactory = "listAccountDTOKafkaListenerFactory")
     public void handleGetAllAccountsByIdResponse(List<AccountDTO> accountDTOS,
                                                  @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        LOGGER.info("Response from topic: get-account-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<AccountDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        LOGGER.info("Response from topic: get-all-accounts-by-account-id with correlation id: {}", correlationId);
+        CompletableFuture<ResponseEntity<List<AccountDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTOS);
         futureResponse.complete(ResponseEntity.ok(accountDTOS));
     }
@@ -185,17 +182,16 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
     @KafkaListener(topics = "get-all-accounts-by-holder-full-name-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listAccountDTOKafkaListenerFactory")
     public void handleGetAllAccountsByHolderFullNameResponse(List<AccountDTO> accountDTOS,
                                                              @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-all-accounts-by-holder-full-name with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<AccountDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<List<AccountDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTOS);
         futureResponse.complete(ResponseEntity.ok(accountDTOS));
     }
@@ -212,7 +208,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -221,8 +217,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     public void handleGetAccountBalanceByIdResponse(AccountDTO accountDTO,
                                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-balance-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
         futureResponse.complete(ResponseEntity.ok(accountDTO));
     }
@@ -240,17 +235,16 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToStringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponsesOrTimeout(futureResponse);
+        return awaitResponsesOrTimeout(futureResponse, correlationId);
     }
 
     @Override
     @KafkaListener(topics = "get-all-accounts-by-status-response", groupId = "api-gateway",
-            containerFactory = "listKafkaListenerFactory")
+            containerFactory = "listAccountDTOKafkaListenerFactory")
     public void handleGetAllAccountsByStatusResponse(List<AccountDTO> accountDTOS,
                                                      @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        LOGGER.info("Response from topic: get-all-accounts-by-holder-full-name with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<List<AccountDTO>>> futureResponse = responseListFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        LOGGER.info("Response from topic: get-all-accounts-by-status with correlation id: {}", correlationId);
+        CompletableFuture<ResponseEntity<List<AccountDTO>>> futureResponse = responseListFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTOS);
         futureResponse.complete(ResponseEntity.ok(accountDTOS));
     }
@@ -269,7 +263,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToBigDecimalKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -278,8 +272,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     public void handleRefillAccountByIdResponse(AccountDTO accountDTO,
                                                 @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: refill-account-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
         futureResponse.complete(ResponseEntity.ok(accountDTO));
     }
@@ -298,7 +291,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToDTOKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -307,8 +300,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     public void handleUpdateAccountByIdResponse(AccountDTO accountDTO,
                                                 @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: update-account-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
         futureResponse.complete(ResponseEntity.ok(accountDTO));
     }
@@ -327,7 +319,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToStringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -336,8 +328,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     public void handleUpdateAccountStatusByIdResponse(AccountDTO accountDTO,
                                                       @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: update-account-status-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
         futureResponse.complete(ResponseEntity.ok(accountDTO));
     }
@@ -356,7 +347,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapUUIDToBigDecimalKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -365,8 +356,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     public void handleUpdateAccountBalanceByIdResponse(AccountDTO accountDTO,
                                                        @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: update-account-balance-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
         futureResponse.complete(ResponseEntity.ok(accountDTO));
     }
@@ -386,7 +376,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         mapStringToBigDecimalKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -395,8 +385,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     public void handleUpdateAccountBalanceByNameResponse(AccountDTO accountDTO,
                                                          @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: update-account-balance-by-account-name with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
         futureResponse.complete(ResponseEntity.ok(accountDTO));
     }
@@ -413,7 +402,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -422,8 +411,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     public void handleDeleteAccountByIdResponse(AccountDTO accountDTO,
                                                 @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: delete-account-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
         futureResponse.complete(ResponseEntity.ok(accountDTO));
     }
@@ -440,7 +428,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         stringKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
@@ -450,45 +438,48 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
                                                   @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: delete-account-by-account-name with correlation id: {} " +
                 "was received successfully", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
         futureResponse.complete(ResponseEntity.ok(accountDTO));
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> deleteAllUserAccountsByUserId(UUID userId) {
+    public CompletableFuture<ResponseEntity<Object>> deleteAllAccountsByUserId(UUID userId) {
         String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
-        LOGGER.info("Trying to create topic: delete-account-by-account-id with correlation id: {}", correlationId);
-        ProducerRecord<String, UUID> topic = new ProducerRecord<>("delete-account-by-account-id", userId);
+        LOGGER.info("Trying to create topic: delete-account-by-user-id with correlation id: {}", correlationId);
+        ProducerRecord<String, UUID> topic = new ProducerRecord<>("delete-all-accounts-by-user-id", userId);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
         uuidKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
-        return awaitResponseOrTimeout(futureResponse);
+        return awaitResponseOrTimeout(futureResponse, correlationId);
     }
 
     @Override
-    @KafkaListener(topics = "delete-account-by-account-id-response", groupId = "api-gateway",
+    @KafkaListener(topics = "delete-all-accounts-by-user-id-response", groupId = "api-gateway",
             containerFactory = "stringKafkaListenerFactory")
-    public void handleDeleteAccountByUserIdResponse(AccountDTO accountDTO,
+    public void handleDeleteAllAccountByUserIdResponse(AccountDTO accountDTO,
                                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        LOGGER.info("Response from topic: delete-account-by-account-id with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.remove(correlationId);
-        LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+        LOGGER.info("Response from topic: delete-all-accounts-by-user-id with correlation id: {}", correlationId);
+        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
         futureResponse.complete(ResponseEntity.ok(accountDTO));
     }
 
-    private CompletableFuture<ResponseEntity<List<Object>>> awaitResponsesOrTimeout(CompletableFuture<ResponseEntity<List<AccountDTO>>> futureResponse) {
+    private CompletableFuture<ResponseEntity<List<Object>>> awaitResponsesOrTimeout(
+            CompletableFuture<ResponseEntity<List<AccountDTO>>> futureResponse, String correlationId) {
         return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
+                .whenComplete((response, throwable) -> {
+                    LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+                    responseFutures.remove(correlationId);
+                })
                 .thenApply(response -> {
-                    if (response != null) {
+                    if (response != null && futureResponse.isDone()) {
                         LOGGER.info("Request successfully collapsed and received to the Controller");
-                        return ResponseEntity.ok((List<Object>) response);
+                        return ResponseEntity.ok(new ArrayList<>(Objects.requireNonNull(response.getBody())));
                     } else {
                         throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT,
                                 "Request timed out, service unreachable, please try again later");
@@ -496,10 +487,15 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
                 });
     }
 
-    private CompletableFuture<ResponseEntity<Object>> awaitResponseOrTimeout(CompletableFuture<ResponseEntity<Object>> futureResponse) {
+    private CompletableFuture<ResponseEntity<Object>> awaitResponseOrTimeout(
+            CompletableFuture<ResponseEntity<Object>> futureResponse, String correlationId) {
         return futureResponse.completeOnTimeout(null, REQUEST_TIMEOUT, TimeUnit.SECONDS)
+                .whenComplete((response, throwable) -> {
+                    LOGGER.debug(REMOVED_EXPECTED_FUTURE_LOG, correlationId);
+                    responseFutures.remove(correlationId);
+                })
                 .thenApply(response -> {
-                    if (response != null && !futureResponse.isDone()) {
+                    if (response != null && futureResponse.isDone()) {
                         LOGGER.info("Request successfully collapsed and received to the Controller");
                         return ResponseEntity.ok(response.getBody());
                     } else {

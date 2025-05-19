@@ -56,10 +56,10 @@ public class AccountGatewayController {
                 });
     }
 
-    @GetMapping("/by-holder-name/{accountHolderFullName}")
+    @GetMapping("/all/by-holder-name/{accountHolderFullName}")
     public CompletableFuture<ResponseEntity<List<Object>>> getAllAccountsByHolderFullName(@PathVariable
                                                                                           String accountHolderFullName) {
-        LOGGER.debug("Received GET request to get All User Accounts by HOLDER FULL NAME: {}",
+        LOGGER.debug("Received GET request to get All User Accounts by Holder Full name: {}",
                 accountHolderFullName);
         return accountGatewayService.getAllAccountsByHolderFullName(accountHolderFullName)
                 .thenApply(response -> {
@@ -183,7 +183,7 @@ public class AccountGatewayController {
     @DeleteMapping("/by-user-id/{userId}")
     public CompletableFuture<ResponseEntity<Object>> deleteAllUserAccountsByUserId(@PathVariable UUID userId) {
         LOGGER.debug("Received DELETE request to remove All User Accounts with User ID: {} ", userId);
-        return accountGatewayService.deleteAllUserAccountsByUserId(userId)
+        return accountGatewayService.deleteAllAccountsByUserId(userId)
                 .thenApply(response -> {
                     LOGGER.debug(RESPONSE_LOG, response);
                     return response;

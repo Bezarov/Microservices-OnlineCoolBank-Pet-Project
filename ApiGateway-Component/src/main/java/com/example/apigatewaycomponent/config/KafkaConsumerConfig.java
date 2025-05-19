@@ -15,7 +15,6 @@ import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.security.core.context.SecurityContextImpl;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,195 +26,248 @@ public class KafkaConsumerConfig {
     @Value("${spring.kafka.bootstrap-servers}")
     private String kafkaBootstrapServers;
 
+    private static final String DEFAULT_ARRAYLIST_CLASS = "java.util.ArrayList";
+
     @Bean
     public ConsumerFactory<String, ErrorDTO> errorDTOConsumerFactory() {
-        Map<String, Object> errorDTOConsumerProp = new HashMap<>();
-        errorDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
-        errorDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId);
-        errorDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        errorDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        errorDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        errorDTOConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.ErrorDTO");
-        errorDTOConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        errorDTOConsumerProp.put(JsonDeserializer.TYPE_MAPPINGS,
-                        "com.example.securitycomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO," +
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.ErrorDTO",
+                JsonDeserializer.TRUSTED_PACKAGES, "*",
+                JsonDeserializer.TYPE_MAPPINGS,
+                "com.example.securitycomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO," +
                         "com.example.userscomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO," +
                         "com.example.accountcomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO," +
                         "com.example.cardcomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO," +
-                        "com.example.paymentcomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO");
-        return new DefaultKafkaConsumerFactory<>(errorDTOConsumerProp);
+                        "com.example.paymentcomponent.dto.ErrorDTO:com.example.apigatewaycomponent.dto.ErrorDTO"
+        ));
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, ErrorDTO> errorDTOKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, ErrorDTO> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, ErrorDTO> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(errorDTOConsumerFactory());
         return factory;
     }
 
     @Bean
     public ConsumerFactory<String, UsersDTO> usersDTOConsumerFactory() {
-        Map<String, Object> usersDTOConsumerProp = new HashMap<>();
-        usersDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
-        usersDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId);
-        usersDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        usersDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        usersDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        usersDTOConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.UsersDTO");
-        usersDTOConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        usersDTOConsumerProp.put(JsonDeserializer.TYPE_MAPPINGS, "com.example.userscomponent.dto.UsersDTO:" +
-                "com.example.apigatewaycomponent.dto.UsersDTO");
-        return new DefaultKafkaConsumerFactory<>(usersDTOConsumerProp);
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.UsersDTO",
+                JsonDeserializer.TRUSTED_PACKAGES, "*",
+                JsonDeserializer.TYPE_MAPPINGS,
+                "com.example.userscomponent.dto.UsersDTO:com.example.apigatewaycomponent.dto.UsersDTO"
+        ));
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, UsersDTO> usersDTOKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, UsersDTO> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, UsersDTO> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(usersDTOConsumerFactory());
         return factory;
     }
 
     @Bean
     public ConsumerFactory<String, AccountDTO> accountDTOConsumerFactory() {
-        Map<String, Object> accountDTOConsumerProp = new HashMap<>();
-        accountDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
-        accountDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId);
-        accountDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        accountDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        accountDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        accountDTOConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.AccountDTO");
-        accountDTOConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        accountDTOConsumerProp.put(JsonDeserializer.TYPE_MAPPINGS, "com.example.accountcomponent.dto.AccountDTO:" +
-                "com.example.apigatewaycomponent.dto.AccountDTO");
-        return new DefaultKafkaConsumerFactory<>(accountDTOConsumerProp);
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.AccountDTO",
+                JsonDeserializer.TRUSTED_PACKAGES, "*",
+                JsonDeserializer.TYPE_MAPPINGS,
+                "com.example.accountcomponent.dto.AccountDTO:com.example.apigatewaycomponent.dto.AccountDTO"
+        ));
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, AccountDTO> accountDTOKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, AccountDTO> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, AccountDTO> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(accountDTOConsumerFactory());
         return factory;
     }
 
     @Bean
+    public ConsumerFactory<String, List<AccountDTO>> listAccountDTOKafkaContainerFactory() {
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.VALUE_DEFAULT_TYPE, DEFAULT_ARRAYLIST_CLASS,
+                JsonDeserializer.TRUSTED_PACKAGES, "*"
+        ));
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, List<AccountDTO>> listAccountDTOKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, List<AccountDTO>> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(listAccountDTOKafkaContainerFactory());
+        return factory;
+    }
+
+    @Bean
     public ConsumerFactory<String, CardDTO> cardDTOConsumerFactory() {
-        Map<String, Object> cardDTOConsumerProp = new HashMap<>();
-        cardDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
-        cardDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId);
-        cardDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        cardDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        cardDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        cardDTOConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.CardDTO");
-        cardDTOConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        cardDTOConsumerProp.put(JsonDeserializer.TYPE_MAPPINGS, "com.example.cardcomponent.dto.CardDTO:" +
-                "com.example.apigatewaycomponent.dto.CardDTO");
-        return new DefaultKafkaConsumerFactory<>(cardDTOConsumerProp);
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.CardDTO",
+                JsonDeserializer.TRUSTED_PACKAGES, "*",
+                JsonDeserializer.TYPE_MAPPINGS,
+                "com.example.cardcomponent.dto.CardDTO:com.example.apigatewaycomponent.dto.CardDTO"
+        ));
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, CardDTO> cardDTOKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, CardDTO> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, CardDTO> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(cardDTOConsumerFactory());
         return factory;
     }
 
     @Bean
+    public ConsumerFactory<String, List<CardDTO>> listCardDTOKafkaContainerFactory() {
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.VALUE_DEFAULT_TYPE, DEFAULT_ARRAYLIST_CLASS,
+                JsonDeserializer.TRUSTED_PACKAGES, "*"
+        ));
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, List<CardDTO>> listCardDTOKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, List<CardDTO>> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(listCardDTOKafkaContainerFactory());
+        return factory;
+    }
+
+    @Bean
     public ConsumerFactory<String, PaymentDTO> paymentDTOConsumerFactory() {
-        Map<String, Object> paymentDTOConsumerProp = new HashMap<>();
-        paymentDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
-        paymentDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId);
-        paymentDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        paymentDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        paymentDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        paymentDTOConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.PaymentDTO");
-        paymentDTOConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        paymentDTOConsumerProp.put(JsonDeserializer.TYPE_MAPPINGS, "com.example.paymentcomponent.dto.PaymentDTO:" +
-                "com.example.apigatewaycomponent.dto.PaymentDTO");
-        return new DefaultKafkaConsumerFactory<>(paymentDTOConsumerProp);
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.PaymentDTO",
+                JsonDeserializer.TRUSTED_PACKAGES, "*",
+                JsonDeserializer.TYPE_MAPPINGS,
+                "com.example.paymentcomponent.dto.PaymentDTO:com.example.apigatewaycomponent.dto.PaymentDTO"
+        ));
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, PaymentDTO> paymentDTOKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, PaymentDTO> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, PaymentDTO> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(paymentDTOConsumerFactory());
         return factory;
     }
 
     @Bean
+    public ConsumerFactory<String, List<PaymentDTO>> listPaymentDTOKafkaContainerFactory() {
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.VALUE_DEFAULT_TYPE, DEFAULT_ARRAYLIST_CLASS,
+                JsonDeserializer.TRUSTED_PACKAGES, "*"
+        ));
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, List<PaymentDTO>> listPaymentDTOKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, List<PaymentDTO>> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(listPaymentDTOKafkaContainerFactory());
+        return factory;
+    }
+
+    @Bean
     public ConsumerFactory<String, AuthResponseDTO> securityDTOConsumerFactory() {
-        Map<String, Object> securityDTOConsumerProp = new HashMap<>();
-        securityDTOConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
-        securityDTOConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId);
-        securityDTOConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        securityDTOConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        securityDTOConsumerProp.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        securityDTOConsumerProp.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.AuthResponseDTO");
-        securityDTOConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        securityDTOConsumerProp.put(JsonDeserializer.TYPE_MAPPINGS, "com.example.securitycomponent.dto.AuthResponseDTO:" +
-                "com.example.apigatewaycomponent.dto.AuthResponseDTO");
-        return new DefaultKafkaConsumerFactory<>(securityDTOConsumerProp);
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.VALUE_DEFAULT_TYPE, "com.example.apigatewaycomponent.dto.AuthResponseDTO",
+                JsonDeserializer.TRUSTED_PACKAGES, "*",
+                JsonDeserializer.TYPE_MAPPINGS,
+                "com.example.securitycomponent.dto.AuthResponseDTO:com.example.apigatewaycomponent.dto.AuthResponseDTO"
+        ));
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, AuthResponseDTO> securityDTOKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, AuthResponseDTO> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, AuthResponseDTO> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(securityDTOConsumerFactory());
         return factory;
     }
 
     @Bean
     public ConsumerFactory<String, String> stringConsumerFactory() {
-        Map<String, Object> stringConsumerProp = new HashMap<>();
-        stringConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
-        stringConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId);
-        stringConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        stringConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        return new DefaultKafkaConsumerFactory<>(stringConsumerProp);
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class.getName()
+        ));
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, String> stringKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, String> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(stringConsumerFactory());
         return factory;
     }
 
-    @Bean
-    public ConsumerFactory<String, List<AccountDTO>> listConsumerFactory() {
-        Map<String, Object> listOfAccountDTOSConsumerProps = new HashMap<>();
-        listOfAccountDTOSConsumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
-        listOfAccountDTOSConsumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId);
-        listOfAccountDTOSConsumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        listOfAccountDTOSConsumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        listOfAccountDTOSConsumerProps.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        listOfAccountDTOSConsumerProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, "java.util.ArrayList");
-        listOfAccountDTOSConsumerProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        return new DefaultKafkaConsumerFactory<>(listOfAccountDTOSConsumerProps);
-    }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, List<AccountDTO>> listKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, List<AccountDTO>> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(listConsumerFactory());
-        return factory;
-    }
 
     @Bean
     public ConsumerFactory<String, SecurityContextImpl> securityContextConsumerFactory() {
-        Map<String, Object> securityContextConsumerProp = new HashMap<>();
-        securityContextConsumerProp.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers);
-        securityContextConsumerProp.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
-        securityContextConsumerProp.put(ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId);
-        securityContextConsumerProp.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        securityContextConsumerProp.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SecurityContextDeserializer.class);
-        securityContextConsumerProp.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        return new DefaultKafkaConsumerFactory<>(securityContextConsumerProp);
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest",
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SecurityContextDeserializer.class,
+                JsonDeserializer.TRUSTED_PACKAGES, "*"
+        ));
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, SecurityContextImpl> securityContextKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, SecurityContextImpl> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, SecurityContextImpl> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(securityContextConsumerFactory());
         return factory;
     }

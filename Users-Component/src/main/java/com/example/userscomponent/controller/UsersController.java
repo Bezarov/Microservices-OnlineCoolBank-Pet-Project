@@ -52,4 +52,12 @@ public class UsersController {
         LOGGER.debug(RESPONSE_LOG, usersDTO);
         return ResponseEntity.ok(usersDTO);
     }
+
+    @GetMapping("/by-id/name/{userId}")
+    public ResponseEntity<String> getNameById(@PathVariable UUID userId) {
+        LOGGER.debug("Received GET request to get User name by ID: {}", userId);
+        String name = restUsersService.getFullNameById(userId);
+        LOGGER.debug(RESPONSE_LOG, name);
+        return ResponseEntity.ok(name);
+    }
 }

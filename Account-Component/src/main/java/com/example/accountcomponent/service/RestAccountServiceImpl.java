@@ -1,8 +1,7 @@
 package com.example.accountcomponent.service;
 
 import com.example.accountcomponent.dto.AccountDTO;
-import com.example.accountcomponent.dto.CardDTO;
-import com.example.accountcomponent.dto.UsersDTO;
+import com.example.accountcomponent.exception.CustomKafkaException;
 import com.example.accountcomponent.feign.CardComponentClient;
 import com.example.accountcomponent.feign.UsersComponentClient;
 import com.example.accountcomponent.model.Account;
@@ -18,11 +17,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class RestAccountServiceImpl implements RestAccountService {
-    private static final Logger logger = LoggerFactory.getLogger(RestAccountServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestAccountServiceImpl.class);
     private static final String ACCOUNT_SEARCHING_LOG = "Trying to find Account by: {}";
     private static final String ACCOUNT_NOT_FOUND_LOG = "Account was not found by: {}";
     private static final String USER_SEARCHING_LOG = "Trying to find User by: {}";
@@ -58,97 +56,85 @@ public class RestAccountServiceImpl implements RestAccountService {
     @Override
     @Transactional
     public AccountDTO getAccountByAccountName(String accountName) {
-        logger.info(ACCOUNT_SEARCHING_LOG, accountName);
-        AccountDTO accountDTO = accountRepository.findByAccountName(accountName)
+        LOGGER.info(ACCOUNT_SEARCHING_LOG, accountName);
+        return accountRepository.findByAccountName(accountName)
                 .map(accountEntity -> {
-                    logger.debug("Account was found in DB: {}", accountEntity);
-                    return convertAccountModelToDTO(accountEntity);
+                    AccountDTO accountDTO = convertAccountModelToDTO(accountEntity);
+                    LOGGER.debug("Account was found: {}", accountEntity);
+                    LOGGER.debug("Trying to find it Cards by ID: {}", accountEntity.getId());
+                    accountDTO.setCards(cardComponentClient.findAllCardsByAccountId(accountEntity.getId()));
+                    return accountDTO;
                 })
                 .orElseThrow(() -> {
-                    logger.error(ACCOUNT_NOT_FOUND_LOG, accountName);
+                    LOGGER.error(ACCOUNT_NOT_FOUND_LOG, accountName);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Account with such name: " + accountName + " was not found");
                 });
-        logger.info("Trying to find account cards by accountId: {}", accountDTO.getId());
-        List<CardDTO> cardDTOS = cardComponentClient.findAllCardsByAccountId(accountDTO.getId())
-                .stream()
-                .peek(cardDTO -> logger.info("Card was found and added to AccountDTO response: {}", cardDTO))
-                .toList();
-        accountDTO.setCards(cardDTOS);
-        return accountDTO;
     }
 
     @Override
     @Transactional
     public AccountDTO getAccountById(UUID accountId) {
-        logger.info(ACCOUNT_SEARCHING_LOG, accountId);
-        AccountDTO accountDTO = accountRepository.findById(accountId)
+        LOGGER.info(ACCOUNT_SEARCHING_LOG, accountId);
+        return accountRepository.findById(accountId)
                 .map(accountEntity -> {
-                    logger.debug("Account was found in DB: {}", accountEntity);
-                    return convertAccountModelToDTO(accountEntity);
+                    AccountDTO accountDTO = convertAccountModelToDTO(accountEntity);
+                    LOGGER.debug("Account was found: {}", accountEntity);
+                    LOGGER.debug("Trying to find it Cards by ID: {}", accountEntity.getId());
+                    accountDTO.setCards(cardComponentClient.findAllCardsByAccountId(accountEntity.getId()));
+                    return accountDTO;
                 })
                 .orElseThrow(() -> {
-                    logger.error(ACCOUNT_NOT_FOUND_LOG, accountId);
+                    LOGGER.error(ACCOUNT_NOT_FOUND_LOG, accountId);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + accountId + " was not found");
                 });
-        logger.info("Trying to find account cards by accountId: {}", accountDTO.getId());
-        List<CardDTO> cardDTOS = cardComponentClient.findAllCardsByAccountId(accountDTO.getId())
-                .stream()
-                .peek(cardDTO -> logger.info("Card was found and added to AccountDTO response: {}", cardDTO))
-                .toList();
-        accountDTO.setCards(cardDTOS);
-        return accountDTO;
     }
 
     @Override
     @Transactional
     public List<AccountDTO> getAllUserAccountsByUserId(UUID userId) {
-        logger.info(USER_SEARCHING_LOG, userId);
-        UsersDTO usersDTO = usersComponentClient.findById(userId)
-                .orElseThrow(() -> {
-                    logger.error(USER_NOT_FOUND_LOG, userId);
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "User with such ID: " + userId + " was not found: ");
-                });
-        logger.info(USER_FOUND_LOG, usersDTO);
-        logger.info("Trying to find All Accounts linked to user with ID: {}", userId);
-        List<Account> accounts = accountRepository.findByAccountHolderFullName(usersDTO.getFullName());
-        logger.debug(ACCOUNTS_FOUND_LOG, accounts);
+        String userName = getUserNameByUserId(userId);
+        LOGGER.info(USER_FOUND_LOG, userName);
+
+        LOGGER.info("Trying to find All Accounts linked to user with ID: {}", userId);
+        List<Account> accounts = accountRepository.findByAccountHolderFullName(userName);
+        LOGGER.debug(ACCOUNTS_FOUND_LOG, accounts);
         return accounts.stream()
                 .map(this::convertAccountModelToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     @Transactional
     public List<AccountDTO> getAllAccountsByHolderFullName(String accountHolderFullName) {
-        logger.info(USER_SEARCHING_LOG, accountHolderFullName);
-        UsersDTO usersDTO = usersComponentClient.findByFullName(accountHolderFullName).orElseThrow(() -> {
-            logger.error(USER_NOT_FOUND_LOG, accountHolderFullName);
-            return new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "User with such Name: " + accountHolderFullName + " was not found: ");
-        });
-        logger.info(USER_FOUND_LOG, usersDTO);
-        logger.info("Trying to find All Accounts linked to user with Name: {}", accountHolderFullName);
+        LOGGER.info(USER_SEARCHING_LOG, accountHolderFullName);
+        usersComponentClient.findByFullName(accountHolderFullName)
+                .orElseThrow(() -> {
+                    LOGGER.error(USER_NOT_FOUND_LOG, accountHolderFullName);
+                    return new CustomKafkaException(HttpStatus.NOT_FOUND,
+                            "User with such Full name: " + accountHolderFullName + " was not found");
+                });
+        LOGGER.debug("User existence by Full name: {} check successfully", accountHolderFullName);
+
+        LOGGER.info("Trying to find All Accounts linked to user with Name: {}", accountHolderFullName);
         List<Account> accounts = accountRepository.findByAccountHolderFullName(accountHolderFullName);
-        logger.debug(ACCOUNTS_FOUND_LOG, accounts);
+        LOGGER.debug(ACCOUNTS_FOUND_LOG, accounts);
         return accounts.stream()
                 .map(this::convertAccountModelToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public BigDecimal getBalanceByAccountId(UUID accountId) {
-        logger.info(ACCOUNT_SEARCHING_LOG, accountId);
-        return accountRepository.findById(accountId)
-                .map(accountEntity -> {
-                    logger.debug("Account was found and it balance: {} received to the Controller",
-                            accountEntity.getBalance());
-                    return accountEntity.getBalance();
+        LOGGER.info(ACCOUNT_SEARCHING_LOG, accountId);
+        return accountRepository.findAccountBalanceById(accountId)
+                .map(balance -> {
+                    LOGGER.debug("Account was found and it balance: {} received to the Controller", balance);
+                    return balance;
                 })
                 .orElseThrow(() -> {
-                    logger.error(ACCOUNT_NOT_FOUND_LOG, accountId);
+                    LOGGER.error(ACCOUNT_NOT_FOUND_LOG, accountId);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Account with such ID: " + accountId + " was not found: ");
                 });
@@ -157,22 +143,32 @@ public class RestAccountServiceImpl implements RestAccountService {
     @Override
     @Transactional
     public List<AccountDTO> getAllAccountsWithStatusByUserId(UUID userId, String accountStatus) {
-        logger.info(USER_SEARCHING_LOG, userId);
-        UsersDTO usersDTO = usersComponentClient.findById(userId)
+        String userName = getUserNameByUserId(userId);
+        LOGGER.info(USER_FOUND_LOG, userName);
+
+        LOGGER.info("Trying to find All Accounts linked to user with ID: {}", userId);
+        return accountRepository.findByAccountHolderFullName(userName).stream()
+                .filter(account -> account.getStatus().equals(accountStatus))
+                .map(filteredEntity -> {
+                    LOGGER.debug(ACCOUNTS_FOUND_LOG, filteredEntity);
+                    return convertAccountModelToDTO(filteredEntity);
+                })
+                .toList();
+    }
+
+    @Override
+    public boolean existsById(UUID accountId) {
+        LOGGER.info(ACCOUNT_SEARCHING_LOG, accountId);
+        return accountRepository.existsById(accountId);
+    }
+
+    private String getUserNameByUserId(UUID userId) {
+        LOGGER.info(USER_SEARCHING_LOG, userId);
+        return usersComponentClient.findFullNameById(userId)
                 .orElseThrow(() -> {
-                    logger.error(USER_NOT_FOUND_LOG, userId);
+                    LOGGER.error(USER_NOT_FOUND_LOG, userId);
                     return new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "User with such ID: " + userId + " was not found: ");
                 });
-        logger.info(USER_FOUND_LOG, usersDTO);
-        logger.info("Trying to find All Accounts linked to user with ID: {}", userId);
-        List<Account> accounts = accountRepository.findByAccountHolderFullName(usersDTO.getFullName());
-        return accounts.stream()
-                .filter(account -> account.getStatus().equals(accountStatus))
-                .map(filteredEntity -> {
-                    logger.debug(ACCOUNTS_FOUND_LOG, filteredEntity);
-                    return convertAccountModelToDTO(filteredEntity);
-                })
-                .collect(Collectors.toList());
     }
 }

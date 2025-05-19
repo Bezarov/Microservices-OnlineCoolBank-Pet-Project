@@ -16,15 +16,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Qualifier("Card-Components")
-@FeignClient(name = "Card-Components", url = "http://localhost:8301/card", fallback = CardComponentClientFallback.class)
+@FeignClient(name = "CARD-COMPONENTS", fallback = CardComponentClientFallback.class)
 public interface CardComponentClient {
     Logger logger = LoggerFactory.getLogger(CardComponentClient.class);
 
-    @GetMapping("/by-card-id/{cardId}")
+    @GetMapping("card/by-card-id/{cardId}")
     @CircuitBreaker(name = "cardComponentCircuitBreaker", fallbackMethod = "cardComponentFallback")
     List<CardDTO> findAllCardsByAccountId(@PathVariable UUID cardId);
 
-    @GetMapping("/by-card-number/{cardNumber}")
+    @GetMapping("card/by-card-number/{cardNumber}")
     @CircuitBreaker(name = "cardComponentCircuitBreaker", fallbackMethod = "cardComponentFallbackByCardNumber")
     Optional<CardDTO> findByCardNumber(@PathVariable String cardNumber);
 

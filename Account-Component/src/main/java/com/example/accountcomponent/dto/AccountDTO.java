@@ -2,6 +2,7 @@ package com.example.accountcomponent.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,7 +15,7 @@ public class AccountDTO {
     private String accountType;
     private LocalDateTime createdDate;
     private String currency;
-    private List<CardDTO> cards = null;
+    private List<CardDTO> cards = Collections.emptyList();
 
     public AccountDTO() {
     }
