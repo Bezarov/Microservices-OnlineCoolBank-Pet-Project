@@ -14,7 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 
 @Qualifier("Users-Components")
-@FeignClient(name = "USERS-COMPONENTS", url = "http://localhost:8101/users", fallback = UsersComponentClientFallback.class)
+@FeignClient(name = "USERS-COMPONENTS", fallback = UsersComponentClientFallback.class)
 public interface UsersComponentClient {
     Logger logger = LoggerFactory.getLogger(UsersComponentClient.class);
 

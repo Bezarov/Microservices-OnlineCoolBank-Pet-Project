@@ -1,18 +1,19 @@
 package com.example.eurekaserver.feign;
 
+import com.example.eurekaserver.dto.AuthResponseDTO;
 import com.example.eurekaserver.dto.AuthRequestDTO;
-import com.example.eurekaserver.dto.TokenAuthRequestDTO;
+import com.example.eurekaserver.dto.JwksSpecificInfoDTO;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SecurityComponentClientFallback implements SecurityComponentClient{
+public class SecurityComponentClientFallback implements SecurityComponentClient {
     @Override
-    public String authenticateComponent(AuthRequestDTO authRequestDTO) {
+    public AuthResponseDTO authenticateComponent(AuthRequestDTO authRequestDTO) {
         return null;
     }
 
     @Override
-    public Boolean authenticateComponentToken(TokenAuthRequestDTO tokenAuthRequestDTO) {
+    public JwksSpecificInfoDTO getActualJwks(AuthRequestDTO authRequestDTO) {
         return null;
     }
 }

@@ -1,6 +1,6 @@
 package com.example.cardcomponent.feign;
 
-import com.example.cardcomponent.dto.CardAppComponentConfigDTO;
+import com.example.cardcomponent.config.CardAppComponentConfig;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,7 @@ import java.util.UUID;
 @FeignClient(name = "APPREGISTRY-COMPONENTS", fallback = AppRegistryComponentClientFallback.class)
 public interface AppRegistryComponentClient {
     @PostMapping("component")
-    void registerComponent(@RequestBody CardAppComponentConfigDTO cardAppComponentConfigDTO);
+    void registerComponent(@RequestBody CardAppComponentConfig cardAppComponentConfig);
 
     @DeleteMapping("component/by-id/{componentId}")
     ResponseEntity<String> deregisterComponent(@PathVariable UUID componentId);

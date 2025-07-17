@@ -30,7 +30,8 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/*/default").permitAll()
-                        .requestMatchers(HttpMethod.POST,  "/component").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/component/by-id/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/component").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/component/by-id/*").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session

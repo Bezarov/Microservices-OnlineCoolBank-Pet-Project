@@ -1,7 +1,8 @@
 package com.example.apigatewaycomponent.feign;
 
-import com.example.apigatewaycomponent.dto.ApiGatewayAppComponentConfigDTO;
+import com.example.apigatewaycomponent.config.ApiGatewayAppComponentConfig;
 import com.example.apigatewaycomponent.dto.AuthRequestDTO;
+import com.example.apigatewaycomponent.dto.AuthResponseDTO;
 import feign.FeignException;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -14,23 +15,24 @@ import org.springframework.stereotype.Component;
 public class FeignClientInterceptor implements RequestInterceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger(FeignClientInterceptor.class);
     private final SecurityComponentClient securityComponentClient;
-    private final ApiGatewayAppComponentConfigDTO appComponentConfigDTO;
+    private final ApiGatewayAppComponentConfig apiGatewayConfig;
 
-    public FeignClientInterceptor(@Qualifier("Security-Components") SecurityComponentClient securityComponentClient, ApiGatewayAppComponentConfigDTO appComponentConfigDTO) {
+    public FeignClientInterceptor(@Qualifier("Security-Components") SecurityComponentClient securityComponentClient, ApiGatewayAppComponentConfig apiGatewayConfig) {
         this.securityComponentClient = securityComponentClient;
-        this.appComponentConfigDTO = appComponentConfigDTO;
+        this.apiGatewayConfig = apiGatewayConfig;
     }
 
     @Override
     public void apply(RequestTemplate requestTemplate) {
         try {
             LOGGER.debug("Inject to feign request my JWT Token");
-            requestTemplate.header("Authorization", "Bearer " + ApiGatewayAppComponentConfigDTO.getJwtToken());
+            requestTemplate.header("Authorization", "Bearer " + apiGatewayConfig.getJwtToken());
         } catch (FeignException.Unauthorized receivedFeignException) {
             if (receivedFeignException.status() == 401 &&
                     receivedFeignException.getMessage().contains("JWT token is expired, refresh it")) {
-                LOGGER.warn("{} token expired, trying to refresh it", ApiGatewayAppComponentConfigDTO.getJwtToken());
+                LOGGER.warn("{} token expired, trying to refresh it", apiGatewayConfig.getJwtToken());
                 refreshToken();
+                apply(requestTemplate);
                 LOGGER.debug("new Jwt Token set up successfully");
             }
         }
@@ -38,11 +40,12 @@ public class FeignClientInterceptor implements RequestInterceptor {
 
     private void refreshToken() {
         try {
-            ApiGatewayAppComponentConfigDTO.setJwtToken(securityComponentClient.authenticateComponent(new AuthRequestDTO(
-                    appComponentConfigDTO.getComponentId(), appComponentConfigDTO.getComponentSecret())));
-            LOGGER.debug("Token refreshed successfully: {}", ApiGatewayAppComponentConfigDTO.getJwtToken());
-        } catch (FeignException feignResponseError) {
-            LOGGER.error("Failed to refresh token: {}", feignResponseError.contentUTF8());
+            AuthResponseDTO authResponseDTO = securityComponentClient.authenticateComponent(
+                    new AuthRequestDTO(apiGatewayConfig.getComponentId(), apiGatewayConfig.getComponentSecret()));
+            apiGatewayConfig.setJwtToken(authResponseDTO.token());
+            LOGGER.debug("Token refreshed successfully: {}", apiGatewayConfig.getJwtToken());
+        } catch (FeignException feignException) {
+            LOGGER.error("Failed to refresh token: {}", feignException.contentUTF8());
             System.exit(1);
         }
     }

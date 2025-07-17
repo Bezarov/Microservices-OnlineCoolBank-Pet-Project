@@ -1,6 +1,5 @@
 package com.example.apigatewaycomponent.config;
 
-import com.example.apigatewaycomponent.deserializer.SecurityContextDeserializer;
 import com.example.apigatewaycomponent.dto.*;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -13,7 +12,6 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
-import org.springframework.security.core.context.SecurityContextImpl;
 
 import java.util.List;
 import java.util.Map;
@@ -248,27 +246,6 @@ public class KafkaConsumerConfig {
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(stringConsumerFactory());
-        return factory;
-    }
-
-
-    @Bean
-    public ConsumerFactory<String, SecurityContextImpl> securityContextConsumerFactory() {
-        return new DefaultKafkaConsumerFactory<>(Map.of(
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
-                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest",
-                ConsumerConfig.GROUP_ID_CONFIG, uniqueGatewayComponentGroupId,
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SecurityContextDeserializer.class,
-                JsonDeserializer.TRUSTED_PACKAGES, "*"
-        ));
-    }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, SecurityContextImpl> securityContextKafkaListenerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, SecurityContextImpl> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(securityContextConsumerFactory());
         return factory;
     }
 }

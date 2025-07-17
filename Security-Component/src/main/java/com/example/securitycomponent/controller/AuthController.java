@@ -2,7 +2,7 @@ package com.example.securitycomponent.controller;
 
 import com.example.securitycomponent.dto.AuthRequestDTO;
 import com.example.securitycomponent.dto.AuthResponseDTO;
-import com.example.securitycomponent.dto.TokenAuthRequestDTO;
+import com.example.securitycomponent.dto.JwksSpecificInfoDTO;
 import com.example.securitycomponent.service.AuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,16 +20,18 @@ public class AuthController {
     }
 
     @PostMapping("/component")
-    public ResponseEntity<String> authenticateComponent(@RequestBody AuthRequestDTO authRequestDTO) {
+    public ResponseEntity<AuthResponseDTO> authenticateComponent(@RequestBody AuthRequestDTO authRequestDTO) {
         LOGGER.debug("Received POST request to Authenticate Component with Credentials: {}", authRequestDTO);
-        String responseToken = authService.authenticateComponent(authRequestDTO);
-        LOGGER.debug("Request was successfully processed and response was sent: Token={}", responseToken);
-        return ResponseEntity.ok(new AuthResponseDTO(responseToken).toString());
+        AuthResponseDTO authResponseDTO = authService.authenticateComponent(authRequestDTO);
+        LOGGER.debug("Request was successfully processed and response was sent:{}", authResponseDTO);
+        return ResponseEntity.ok(authResponseDTO);
     }
 
-    @PostMapping("/component/token")
-    public ResponseEntity<Boolean> authenticateComponentToken(@RequestBody TokenAuthRequestDTO tokenAuthRequestDTO) {
-        LOGGER.debug("Received POST request to Authenticate Component token: {}", tokenAuthRequestDTO);
-        return ResponseEntity.ok(authService.authenticateComponentToken(tokenAuthRequestDTO));
+    @PostMapping("/jwks")
+    public ResponseEntity<JwksSpecificInfoDTO> getJwks(@RequestBody AuthRequestDTO authRequestDTO) {
+        LOGGER.debug("Received GET request to get actual Jwks with Credentials: {}", authRequestDTO);
+        JwksSpecificInfoDTO jwksSpecificInfoDTO = authService.getJwks(authRequestDTO);
+        LOGGER.debug("Request was successfully processed and response was sent: {}", jwksSpecificInfoDTO);
+        return ResponseEntity.ok(jwksSpecificInfoDTO);
     }
 }

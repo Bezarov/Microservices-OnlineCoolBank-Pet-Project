@@ -1,7 +1,9 @@
 package com.example.apigatewaycomponent.service;
 
 import com.example.apigatewaycomponent.dto.AccountDTO;
+import com.example.apigatewaycomponent.dto.AccountRefillRequestDTO;
 import com.example.apigatewaycomponent.dto.ErrorDTO;
+import com.example.apigatewaycomponent.dto.AccountUpdateRequestDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -38,17 +40,17 @@ public interface AccountGatewayService {
 
     CompletableFuture<ResponseEntity<Object>> getBalanceByAccountId(UUID accountId);
 
-    void handleGetAccountBalanceByIdResponse(AccountDTO accountDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+    void handleGetAccountBalanceByIdResponse(BigDecimal balance, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     CompletableFuture<ResponseEntity<List<Object>>> getAllAccountsByStatus(UUID userId, String accountStatus);
 
     void handleGetAllAccountsByStatusResponse(List<AccountDTO> accountDTOS, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> refillAccount(UUID accountId, BigDecimal amount);
+    CompletableFuture<ResponseEntity<Object>> refillAccount(AccountRefillRequestDTO accountRefillRequestDTO);
 
     void handleRefillAccountByIdResponse(AccountDTO accountDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    CompletableFuture<ResponseEntity<Object>> updateAccountById(UUID accountId, AccountDTO accountDTO);
+    CompletableFuture<ResponseEntity<Object>> updateAccountById(AccountUpdateRequestDTO accountUpdateRequestDTO);
 
     void handleUpdateAccountByIdResponse(AccountDTO accountDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 

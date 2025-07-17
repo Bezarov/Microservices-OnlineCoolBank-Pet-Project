@@ -11,7 +11,6 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
-import org.springframework.security.core.context.SecurityContext;
 
 import java.util.Map;
 
@@ -27,11 +26,6 @@ public class KafkaProducerConfig {
 
     @Bean
     public KafkaTemplate<String, AuthResponseDTO> usersAuthResponseDTOKafkaTemplate() {
-        return new KafkaTemplate<>(buildProducerFactory());
-    }
-
-    @Bean
-    public KafkaTemplate<String, SecurityContext> securityContextKafkaTemplate() {
         return new KafkaTemplate<>(buildProducerFactory());
     }
 

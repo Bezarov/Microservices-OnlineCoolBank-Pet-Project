@@ -2,11 +2,12 @@ package com.example.securitycomponent.service;
 
 
 import com.example.securitycomponent.dto.AuthRequestDTO;
-import com.example.securitycomponent.dto.TokenAuthRequestDTO;
+import com.example.securitycomponent.dto.AuthResponseDTO;
+import com.example.securitycomponent.dto.JwksSpecificInfoDTO;
 
 public interface AuthService {
 
-    String authenticateComponent(AuthRequestDTO authRequestDTO);
+    AuthResponseDTO authenticateComponent(AuthRequestDTO authRequestDTO);
 
-    Boolean authenticateComponentToken(TokenAuthRequestDTO tokenAuthRequestDTO);
+    JwksSpecificInfoDTO getJwks(AuthRequestDTO authRequestDTO);
 }

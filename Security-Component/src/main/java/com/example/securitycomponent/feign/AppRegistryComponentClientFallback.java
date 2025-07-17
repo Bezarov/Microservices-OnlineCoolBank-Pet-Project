@@ -1,7 +1,7 @@
 package com.example.securitycomponent.feign;
 
 import com.example.securitycomponent.dto.AppComponentDTO;
-import com.example.securitycomponent.dto.SecurityAppComponentConfigDTO;
+import com.example.securitycomponent.config.SecurityAppComponentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ public class AppRegistryComponentClientFallback implements AppRegistryComponentC
 
 
     @Override
-    public void registerComponent(SecurityAppComponentConfigDTO securityAppComponentConfigDTO) {
+    public void registerComponent(SecurityAppComponentConfig securityAppComponentConfig) {
     }
 
     @Override

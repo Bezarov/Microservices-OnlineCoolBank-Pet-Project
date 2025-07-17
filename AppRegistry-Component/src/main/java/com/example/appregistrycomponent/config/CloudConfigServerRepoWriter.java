@@ -1,10 +1,12 @@
 package com.example.appregistrycomponent.config;
 
 import com.example.appregistrycomponent.model.AppComponent;
+import com.example.appregistrycomponent.repository.AppComponentRepository;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -12,13 +14,34 @@ import java.util.List;
 
 @Component
 public class CloudConfigServerRepoWriter {
-    private final ComponentConfigReader configReader = ComponentConfigReader.readConfig();
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudConfigServerRepoWriter.class);
     private static final String DEFAULT_PROPERTIES_CONFIG_PATH = "default-component-config/";
+
+    private final ComponentConfigReader configReader = ComponentConfigReader.readConfig();
+    private final AppRegistryComponentConfig appRegistryConfig;
+    private final AppComponentRepository appRegistryRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public CloudConfigServerRepoWriter(AppRegistryComponentConfig appRegistryConfig, AppComponentRepository appRegistryRepository, PasswordEncoder passwordEncoder) {
+        this.appRegistryConfig = appRegistryConfig;
+        this.appRegistryRepository = appRegistryRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @PostConstruct
     void init() {
         List<AppComponent> components = configReader.getComponents();
+        components.forEach(component -> {
+            if ("AppRegistry-Component-01".equals(component.getComponentName())) {
+                appRegistryConfig.setComponentId(component.getComponentId());
+                appRegistryConfig.setComponentSecret(component.getComponentSecret());
+
+                component.setComponentSecret(passwordEncoder.encode(component.getComponentSecret()));
+                appRegistryRepository.save(component);
+                LOGGER.info("Registered component in DB: {}", component.getComponentName());
+            }
+        });
+
         components.forEach(this::createOrUpdateComponentFile);
     }
 

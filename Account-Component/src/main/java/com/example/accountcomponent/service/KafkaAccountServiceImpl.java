@@ -1,6 +1,8 @@
 package com.example.accountcomponent.service;
 
 import com.example.accountcomponent.dto.AccountDTO;
+import com.example.accountcomponent.dto.RefillRequestDTO;
+import com.example.accountcomponent.dto.UpdateRequestDTO;
 import com.example.accountcomponent.exception.CustomKafkaException;
 import com.example.accountcomponent.feign.CardComponentClient;
 import com.example.accountcomponent.feign.UsersComponentClient;
@@ -216,7 +218,11 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
         LOGGER.info("User was found successfully with Full name: {}", userFullName);
 
         LOGGER.info("Trying to find All Accounts linked to user with ID: {}, with status: {}", userId, accountStatus);
-        List<AccountDTO> accountDTOS = getAllUserAccountsWithCardsByFullName(userFullName);
+        List<AccountDTO> accountDTOS = accountRepository.findByAccountHolderFullName(userFullName)
+                .stream()
+                .filter(account -> account.getStatus().equals(accountStatus))
+                .map(this::convertAccountModelToDTO)
+                .toList();
 
         LOGGER.info("Trying to create topic: get-all-accounts-by-status-response with correlation id: {} ", correlationId);
         ProducerRecord<String, List<AccountDTO>> responseTopic = new ProducerRecord<>(
@@ -228,24 +234,22 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
 
     @Override
     @KafkaListener(topics = "refill-account-by-account-id", groupId = "account-component",
-            containerFactory = "mapObjectToObjectKafkaListenerFactory")
-    public void refillAccount(Map<String, BigDecimal> accountIdToAmountMap, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+            containerFactory = "refillKafkaListenerFactory")
+    public void refillAccount(RefillRequestDTO refillRequestDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: refill-account-by-account-id with correlation id: {} ", correlationId);
-        String accountId = accountIdToAmountMap.keySet().iterator().next().replaceAll("\"", "");
-        BigDecimal amount = accountIdToAmountMap.get(accountId);
 
-        LOGGER.info(ACCOUNT_SEARCHING_LOG, accountId);
-        AccountDTO accountDTO = accountRepository.findById(UUID.fromString(accountId))
+        LOGGER.info(ACCOUNT_SEARCHING_LOG, refillRequestDTO.accountId());
+        AccountDTO accountDTO = accountRepository.findById(refillRequestDTO.accountId())
                 .map(accountEntity -> {
-                    accountEntity.setBalance(accountEntity.getBalance().add(amount));
+                    accountEntity.setBalance(accountEntity.getBalance().add(refillRequestDTO.amount()));
                     accountRepository.save(accountEntity);
                     LOGGER.debug("Account was found and balance was refilled successfully: {}", accountEntity.getBalance());
                     return convertAccountModelToDTO(accountEntity);
                 })
                 .orElseThrow(() -> {
-                    LOGGER.error(ACCOUNT_NOT_FOUND_LOG, accountId);
+                    LOGGER.error(ACCOUNT_NOT_FOUND_LOG, refillRequestDTO.accountId());
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Account with such ID: " + accountId + " was not found correlationId:" + correlationId);
+                            "Account with such ID: " + refillRequestDTO.accountId() + " was not found correlationId:" + correlationId);
                 });
 
         LOGGER.info("Trying to create topic: refill-account-by-account-id-response with correlation id: {} ", correlationId);
@@ -258,27 +262,25 @@ public class KafkaAccountServiceImpl implements KafkaAccountService {
 
     @Override
     @KafkaListener(topics = "update-account-by-account-id", groupId = "account-component",
-            containerFactory = "mapObjectToObjectKafkaListenerFactory")
-    public void updateAccountById(Map<String, AccountDTO> accountIdToAccountDTOMap, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+            containerFactory = "updateKafkaListenerFactory")
+    public void updateAccountById(UpdateRequestDTO updateRequestDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Got request from kafka topic: update-account-by-account-id with correlation id: {} ", correlationId);
-        String accountId = accountIdToAccountDTOMap.keySet().iterator().next().replaceAll("\"", "");
-        AccountDTO accountDTO = accountIdToAccountDTOMap.get(accountId);
 
-        LOGGER.info(ACCOUNT_SEARCHING_LOG, accountId);
-        AccountDTO responseAccountDTO = accountRepository.findById(UUID.fromString(accountId))
+        LOGGER.info(ACCOUNT_SEARCHING_LOG, updateRequestDTO.accountId());
+        AccountDTO responseAccountDTO = accountRepository.findById(updateRequestDTO.accountId())
                 .map(accountEntity -> {
-                    accountEntity.setAccountName(accountDTO.getAccountName());
-                    accountEntity.setStatus(accountDTO.getStatus());
-                    accountEntity.setAccountType(accountDTO.getAccountType());
-                    accountEntity.setCurrency(accountDTO.getCurrency());
+                    accountEntity.setAccountName(updateRequestDTO.accountDTO().getAccountName());
+                    accountEntity.setStatus(updateRequestDTO.accountDTO().getStatus());
+                    accountEntity.setAccountType(updateRequestDTO.accountDTO().getAccountType());
+                    accountEntity.setCurrency(updateRequestDTO.accountDTO().getCurrency());
                     accountRepository.save(accountEntity);
                     LOGGER.debug("Account updated successfully: {}", accountEntity);
                     return convertAccountModelToDTO(accountEntity);
                 })
                 .orElseThrow(() -> {
-                    LOGGER.error(ACCOUNT_NOT_FOUND_LOG, accountId);
+                    LOGGER.error(ACCOUNT_NOT_FOUND_LOG, updateRequestDTO.accountId());
                     return new CustomKafkaException(HttpStatus.NOT_FOUND,
-                            "Account with such ID: " + accountId + " was not found correlationId:" + correlationId);
+                            "Account with such ID: " + updateRequestDTO.accountId() + " was not found correlationId:" + correlationId);
                 });
 
         LOGGER.info("Trying to create topic: update-account-by-account-id-response with correlation id: {} ", correlationId);
