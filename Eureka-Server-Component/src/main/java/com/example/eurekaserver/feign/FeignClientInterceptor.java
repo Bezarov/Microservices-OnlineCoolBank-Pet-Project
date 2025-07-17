@@ -1,7 +1,8 @@
 package com.example.eurekaserver.feign;
 
+import com.example.eurekaserver.dto.AuthResponseDTO;
 import com.example.eurekaserver.dto.AuthRequestDTO;
-import com.example.eurekaserver.dto.EurekaServerAppComponentDTO;
+import com.example.eurekaserver.config.EurekaServerAppComponentConfig;
 import feign.FeignException;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -14,24 +15,25 @@ import org.springframework.stereotype.Component;
 public class FeignClientInterceptor implements RequestInterceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger(FeignClientInterceptor.class);
     private final SecurityComponentClient securityComponentClient;
-    private final EurekaServerAppComponentDTO appComponentConfigDTO;
+    private final EurekaServerAppComponentConfig eurekaServerConfig;
 
     public FeignClientInterceptor(@Qualifier("Security-Components") SecurityComponentClient securityComponentClient,
-                                  EurekaServerAppComponentDTO appComponentConfigDTO) {
+                                  EurekaServerAppComponentConfig eurekaServerConfig) {
         this.securityComponentClient = securityComponentClient;
-        this.appComponentConfigDTO = appComponentConfigDTO;
+        this.eurekaServerConfig = eurekaServerConfig;
     }
 
     @Override
     public void apply(RequestTemplate requestTemplate) {
         try {
             LOGGER.debug("Inject to feign request my JWT Token");
-            requestTemplate.header("Authorization", "Bearer " + EurekaServerAppComponentDTO.getJwtToken());
+            requestTemplate.header("Authorization", "Bearer " + eurekaServerConfig.getJwtToken());
         } catch (FeignException.Unauthorized receivedFeignException) {
             if (receivedFeignException.status() == 401 &&
                     receivedFeignException.getMessage().contains("JWT token is expired, refresh it")) {
-                LOGGER.warn("{} token expired, trying to refresh it", EurekaServerAppComponentDTO.getJwtToken());
+                LOGGER.warn("{} token expired, trying to refresh it", eurekaServerConfig.getJwtToken());
                 refreshToken();
+                apply(requestTemplate);
                 LOGGER.debug("new Jwt Token set up successfully");
             }
         }
@@ -39,11 +41,12 @@ public class FeignClientInterceptor implements RequestInterceptor {
 
     private void refreshToken() {
         try {
-            EurekaServerAppComponentDTO.setJwtToken(securityComponentClient.authenticateComponent(new AuthRequestDTO(
-                    appComponentConfigDTO.getComponentId(), appComponentConfigDTO.getComponentSecret())));
-            LOGGER.debug("Token refreshed successfully: {}", EurekaServerAppComponentDTO.getJwtToken());
-        } catch (FeignException feignResponseError) {
-            LOGGER.error("Failed to refresh token: {}", feignResponseError.contentUTF8());
+            AuthResponseDTO authResponseDTO = securityComponentClient.authenticateComponent(new AuthRequestDTO(
+                    eurekaServerConfig.getComponentId(), eurekaServerConfig.getComponentSecret()));
+            eurekaServerConfig.setJwtToken(authResponseDTO.token());
+            LOGGER.debug("Token refreshed successfully: {}", eurekaServerConfig.getJwtToken());
+        } catch (FeignException feignException) {
+            LOGGER.error("Failed to refresh token: {}", feignException.contentUTF8());
             System.exit(1);
         }
     }

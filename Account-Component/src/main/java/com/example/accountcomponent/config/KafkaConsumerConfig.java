@@ -1,5 +1,7 @@
 package com.example.accountcomponent.config;
 
+import com.example.accountcomponent.dto.RefillRequestDTO;
+import com.example.accountcomponent.dto.UpdateRequestDTO;
 import com.example.accountcomponent.exception.GlobalKafkaExceptionHandler;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -91,6 +93,50 @@ public class KafkaConsumerConfig {
         ConcurrentKafkaListenerContainerFactory<String, Map<Object, Object>> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(mapObjectToObjectConsumerFactory());
+        factory.setCommonErrorHandler(globalKafkaExceptionHandler);
+        return factory;
+    }
+
+    @Bean
+    public ConsumerFactory<String, RefillRequestDTO> refillConsumerFactory() {
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueAccountComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.TYPE_MAPPINGS,
+                "com.example.apigatewaycomponent.dto.AccountRefillRequestDTO:com.example.accountcomponent.dto.RefillRequestDTO"
+        ));
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, RefillRequestDTO> refillKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, RefillRequestDTO> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(refillConsumerFactory());
+        factory.setCommonErrorHandler(globalKafkaExceptionHandler);
+        return factory;
+    }
+
+    @Bean
+    public ConsumerFactory<String, UpdateRequestDTO> updateConsumerFactory() {
+        return new DefaultKafkaConsumerFactory<>(Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBootstrapServers,
+                ConsumerConfig.GROUP_ID_CONFIG, uniqueAccountComponentGroupId,
+                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class,
+                ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName(),
+                JsonDeserializer.TYPE_MAPPINGS,
+                "com.example.apigatewaycomponent.dto.AccountUpdateRequestDTO:com.example.accountcomponent.dto.UpdateRequestDTO"
+        ));
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, UpdateRequestDTO> updateKafkaListenerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, UpdateRequestDTO> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(updateConsumerFactory());
         factory.setCommonErrorHandler(globalKafkaExceptionHandler);
         return factory;
     }

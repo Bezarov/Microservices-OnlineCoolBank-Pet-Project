@@ -2,6 +2,8 @@ package com.example.apigatewaycomponent.service;
 
 import com.example.apigatewaycomponent.dto.AccountDTO;
 import com.example.apigatewaycomponent.dto.ErrorDTO;
+import com.example.apigatewaycomponent.dto.AccountRefillRequestDTO;
+import com.example.apigatewaycomponent.dto.AccountUpdateRequestDTO;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +36,8 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     private static final long REQUEST_TIMEOUT = 5;
     private final KafkaTemplate<String, UUID> uuidKafkaTemplate;
     private final KafkaTemplate<String, String> stringKafkaTemplate;
+    private final KafkaTemplate<String, AccountRefillRequestDTO> accountRefillKafkaTemplate;
+    private final KafkaTemplate<String, AccountUpdateRequestDTO> accountUpdateKafkaTemplate;
     private final KafkaTemplate<String, Map<UUID, AccountDTO>> mapUUIDToDTOKafkaTemplate;
     private final KafkaTemplate<String, Map<UUID, String>> mapUUIDToStringKafkaTemplate;
     private final KafkaTemplate<String, Map<UUID, BigDecimal>> mapUUIDToBigDecimalKafkaTemplate;
@@ -42,9 +46,17 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     private final Map<String, CompletableFuture<ResponseEntity<List<AccountDTO>>>> responseListFutures = new ConcurrentHashMap<>();
 
     public AccountGatewayServiceImpl(KafkaTemplate<String, UUID> uuidKafkaTemplate,
-                                     KafkaTemplate<String, String> stringKafkaTemplate, KafkaTemplate<String, Map<UUID, AccountDTO>> mapUUIDToDTOKafkaTemplate, KafkaTemplate<String, Map<UUID, String>> mapUUIDToStringKafkaTemplate, KafkaTemplate<String, Map<UUID, BigDecimal>> mapUUIDToBigDecimalKafkaTemplate, KafkaTemplate<String, Map<String, BigDecimal>> mapStringToBigDecimalKafkaTemplate) {
+                                     KafkaTemplate<String, String> stringKafkaTemplate,
+                                     KafkaTemplate<String, AccountRefillRequestDTO> accountRefillKafkaTemplate,
+                                     KafkaTemplate<String, AccountUpdateRequestDTO> accountUpdateKafkaTemplate,
+                                     KafkaTemplate<String, Map<UUID, AccountDTO>> mapUUIDToDTOKafkaTemplate,
+                                     KafkaTemplate<String, Map<UUID, String>> mapUUIDToStringKafkaTemplate,
+                                     KafkaTemplate<String, Map<UUID, BigDecimal>> mapUUIDToBigDecimalKafkaTemplate,
+                                     KafkaTemplate<String, Map<String, BigDecimal>> mapStringToBigDecimalKafkaTemplate) {
         this.stringKafkaTemplate = stringKafkaTemplate;
         this.uuidKafkaTemplate = uuidKafkaTemplate;
+        this.accountRefillKafkaTemplate = accountRefillKafkaTemplate;
+        this.accountUpdateKafkaTemplate = accountUpdateKafkaTemplate;
         this.mapUUIDToDTOKafkaTemplate = mapUUIDToDTOKafkaTemplate;
         this.mapUUIDToStringKafkaTemplate = mapUUIDToStringKafkaTemplate;
         this.mapUUIDToBigDecimalKafkaTemplate = mapUUIDToBigDecimalKafkaTemplate;
@@ -214,12 +226,12 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     @Override
     @KafkaListener(topics = "get-balance-by-account-id-response", groupId = "api-gateway",
             containerFactory = "accountDTOKafkaListenerFactory")
-    public void handleGetAccountBalanceByIdResponse(AccountDTO accountDTO,
+    public void handleGetAccountBalanceByIdResponse(BigDecimal balance,
                                                     @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: get-balance-by-account-id with correlation id: {}", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
-        LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);
-        futureResponse.complete(ResponseEntity.ok(accountDTO));
+        LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, balance);
+        futureResponse.complete(ResponseEntity.ok(balance));
     }
 
     @Override
@@ -250,18 +262,17 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> refillAccount(UUID accountId, BigDecimal amount) {
+    public CompletableFuture<ResponseEntity<Object>> refillAccount(AccountRefillRequestDTO accountRefillRequestDTO) {
         String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         LOGGER.info("Trying to create topic: refill-account-by-account-id with correlation id: {} ", correlationId);
-        Map<UUID, BigDecimal> accountRequestMap = Map.of(accountId, amount);
-        ProducerRecord<String, Map<UUID, BigDecimal>> topic = new ProducerRecord<>(
-                "refill-account-by-account-id", accountRequestMap);
+        ProducerRecord<String, AccountRefillRequestDTO> topic = new ProducerRecord<>(
+                "refill-account-by-account-id", accountRefillRequestDTO);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        mapUUIDToBigDecimalKafkaTemplate.send(topic);
+        accountRefillKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
         return awaitResponseOrTimeout(futureResponse, correlationId);
     }
@@ -278,18 +289,17 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Object>> updateAccountById(UUID accountId, AccountDTO accountDTO) {
+    public CompletableFuture<ResponseEntity<Object>> updateAccountById(AccountUpdateRequestDTO accountUpdateRequestDTO) {
         String correlationId = getCorrelationId();
         LOGGER.debug(CREATED_EXCEPTED_FUTURE_LOG, correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
         responseFutures.put(correlationId, futureResponse);
 
         LOGGER.info("Trying to create topic: update-account-by-account-id with correlation id: {} ", correlationId);
-        Map<UUID, AccountDTO> createAccountRequestMap = Map.of(accountId, accountDTO);
-        ProducerRecord<String, Map<UUID, AccountDTO>> topic = new ProducerRecord<>("update-account-by-account-id",
-                createAccountRequestMap);
+        ProducerRecord<String, AccountUpdateRequestDTO> topic = new ProducerRecord<>(
+                "update-account-by-account-id", accountUpdateRequestDTO);
         topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        mapUUIDToDTOKafkaTemplate.send(topic);
+        accountUpdateKafkaTemplate.send(topic);
         LOGGER.info(ALLOCATED_TOPIC_LOG, topic.value());
         return awaitResponseOrTimeout(futureResponse, correlationId);
     }
@@ -462,7 +472,7 @@ public class AccountGatewayServiceImpl implements AccountGatewayService {
     @KafkaListener(topics = "delete-all-accounts-by-user-id-response", groupId = "api-gateway",
             containerFactory = "stringKafkaListenerFactory")
     public void handleDeleteAllAccountByUserIdResponse(AccountDTO accountDTO,
-                                                    @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
+                                                       @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
         LOGGER.info("Response from topic: delete-all-accounts-by-user-id with correlation id: {}", correlationId);
         CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, accountDTO);

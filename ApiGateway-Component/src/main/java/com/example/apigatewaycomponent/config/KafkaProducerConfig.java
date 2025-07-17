@@ -1,8 +1,10 @@
 package com.example.apigatewaycomponent.config;
 
 import com.example.apigatewaycomponent.dto.AccountDTO;
+import com.example.apigatewaycomponent.dto.AccountUpdateRequestDTO;
 import com.example.apigatewaycomponent.dto.AuthRequestDTO;
 import com.example.apigatewaycomponent.dto.PaymentDTO;
+import com.example.apigatewaycomponent.dto.AccountRefillRequestDTO;
 import com.example.apigatewaycomponent.dto.UsersDTO;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -81,6 +83,16 @@ public class KafkaProducerConfig {
 
     @Bean
     public KafkaTemplate<String, List<Object>> listObjectKafkaTemplate() {
+        return new KafkaTemplate<>(buildProducerFactory());
+    }
+
+    @Bean
+    public KafkaTemplate<String, AccountRefillRequestDTO> accountRefillKafkaTemplate() {
+        return new KafkaTemplate<>(buildProducerFactory());
+    }
+
+    @Bean
+    public KafkaTemplate<String, AccountUpdateRequestDTO> accountUpdateKafkaTemplate() {
         return new KafkaTemplate<>(buildProducerFactory());
     }
 

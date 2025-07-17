@@ -12,7 +12,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -29,12 +28,10 @@ public class SecurityGatewayServiceImpl implements SecurityGatewayService {
     private static final String REMOVED_EXPECTED_FUTURE_LOG = "Future expectation with correlation id: {} was removed from expectations";
     private static final long REQUEST_TIMEOUT = 5;
     private final KafkaTemplate<String, AuthRequestDTO> securityKafkaTemplate;
-    private final KafkaTemplate<String, Map<String, String>> mapStringToStringKafkaTemplate;
     private final Map<String, CompletableFuture<ResponseEntity<Object>>> responseFutures = new ConcurrentHashMap<>();
 
-    public SecurityGatewayServiceImpl(KafkaTemplate<String, AuthRequestDTO> securityKafkaTemplate, KafkaTemplate<String, Map<String, String>> mapStringToStringKafkaTemplate) {
+    public SecurityGatewayServiceImpl(KafkaTemplate<String, AuthRequestDTO> securityKafkaTemplate) {
         this.securityKafkaTemplate = securityKafkaTemplate;
-        this.mapStringToStringKafkaTemplate = mapStringToStringKafkaTemplate;
     }
 
     @Override
@@ -73,33 +70,6 @@ public class SecurityGatewayServiceImpl implements SecurityGatewayService {
         CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
         LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, authResponseDTO);
         futureResponse.complete(ResponseEntity.ok(authResponseDTO));
-    }
-
-    @Override
-    public CompletableFuture<ResponseEntity<Object>> authenticateUserToken(String jwtToken, String requestURI) {
-        String correlationId = getCorrelationId();
-        LOGGER.debug("Creating expected future result with correlation id: {} ", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = new CompletableFuture<>();
-        responseFutures.put(correlationId, futureResponse);
-
-        LOGGER.info("Trying to create topic: user-token-authentication with correlation id: {} ", correlationId);
-        Map<String, String> tokenAndURIMap = Map.of(jwtToken, requestURI);
-        ProducerRecord<String, Map<String, String>> topic = new ProducerRecord<>("user-token-authentication", tokenAndURIMap);
-        topic.headers().add(KafkaHeaders.CORRELATION_ID, correlationId.getBytes());
-        mapStringToStringKafkaTemplate.send(topic);
-        LOGGER.info("Topic was created and allocated in kafka broker successfully: {}", topic.value());
-        return awaitResponseOrTimeout(futureResponse, correlationId);
-    }
-
-    @Override
-    @KafkaListener(topics = "user-token-authentication-response", groupId = "api-gateway",
-            containerFactory = "securityContextKafkaListenerFactory")
-    public void handleUserTokenAuthenticationResponse(SecurityContextImpl securityContext,
-                                                      @Header(KafkaHeaders.CORRELATION_ID) String correlationId) {
-        LOGGER.info("Response from topic: user-token-authentication-response with correlation id: {}", correlationId);
-        CompletableFuture<ResponseEntity<Object>> futureResponse = responseFutures.get(correlationId);
-        LOGGER.info(COMPLETED_EXPECTED_FUTURE_LOG, securityContext);
-        futureResponse.complete(ResponseEntity.ok(securityContext));
     }
 
     private CompletableFuture<ResponseEntity<Object>> awaitResponseOrTimeout(

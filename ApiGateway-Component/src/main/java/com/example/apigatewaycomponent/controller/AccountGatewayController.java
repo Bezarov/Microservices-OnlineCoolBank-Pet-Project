@@ -1,6 +1,8 @@
 package com.example.apigatewaycomponent.controller;
 
 import com.example.apigatewaycomponent.dto.AccountDTO;
+import com.example.apigatewaycomponent.dto.AccountRefillRequestDTO;
+import com.example.apigatewaycomponent.dto.AccountUpdateRequestDTO;
 import com.example.apigatewaycomponent.service.AccountGatewayService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +107,7 @@ public class AccountGatewayController {
                                                                    @RequestParam(name = "amount") BigDecimal amount) {
         LOGGER.debug("Received PATCH request to refill Account with ID: {}, in AMOUNT OF: {}",
                 accountId, amount);
-        return accountGatewayService.refillAccount(accountId, amount)
+        return accountGatewayService.refillAccount(new AccountRefillRequestDTO(accountId, amount))
                 .thenApply(response -> {
                     LOGGER.debug(RESPONSE_LOG, response);
                     return response;
@@ -117,7 +119,7 @@ public class AccountGatewayController {
                                                                        @RequestBody AccountDTO accountDTO) {
         LOGGER.debug("Received PUT request to update Account with ID: {}, UPDATE TO: {}",
                 accountId, accountDTO);
-        return accountGatewayService.updateAccountById(accountId, accountDTO)
+        return accountGatewayService.updateAccountById(new AccountUpdateRequestDTO(accountId, accountDTO))
                 .thenApply(response -> {
                     LOGGER.debug(RESPONSE_LOG, response);
                     return response;

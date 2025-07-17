@@ -1,7 +1,7 @@
 package com.example.securitycomponent.feign;
 
 import com.example.securitycomponent.dto.AppComponentDTO;
-import com.example.securitycomponent.dto.SecurityAppComponentConfigDTO;
+import com.example.securitycomponent.config.SecurityAppComponentConfig;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,7 @@ public interface AppRegistryComponentClient {
     Logger logger = LoggerFactory.getLogger(UsersComponentClient.class);
 
     @PostMapping
-    void registerComponent(@RequestBody SecurityAppComponentConfigDTO securityAppComponentConfigDTO);
+    void registerComponent(@RequestBody SecurityAppComponentConfig securityAppComponentConfig);
 
     @GetMapping("/by-id/{componentId}")
     @CircuitBreaker(name = "appRegistryComponentCircuitBreaker", fallbackMethod = "appRegistryComponentFallback")

@@ -1,6 +1,8 @@
 package com.example.accountcomponent.service;
 
 import com.example.accountcomponent.dto.AccountDTO;
+import com.example.accountcomponent.dto.RefillRequestDTO;
+import com.example.accountcomponent.dto.UpdateRequestDTO;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 
@@ -24,9 +26,9 @@ public interface KafkaAccountService {
 
     void getAllAccountsWithStatusByUserId(Map<String, String> userIdToAccountStatusMap, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    void refillAccount(Map<String, BigDecimal> accountIdToAmountMap, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+    void refillAccount(RefillRequestDTO refillRequestDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
-    void updateAccountById(Map<String, AccountDTO> accountIdToAccountDTOMap, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
+    void updateAccountById(UpdateRequestDTO updateRequestDTO, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 
     void updateAccountStatusById(Map<String, String> accountIdToStatusMap, @Header(KafkaHeaders.CORRELATION_ID) String correlationId);
 

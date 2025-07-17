@@ -1,6 +1,8 @@
 package com.example.apigatewaycomponent.feign;
 
 import com.example.apigatewaycomponent.dto.AuthRequestDTO;
+import com.example.apigatewaycomponent.dto.AuthResponseDTO;
+import com.example.apigatewaycomponent.dto.JwksSpecificInfoDTO;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.retry.annotation.Backoff;
@@ -13,5 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface SecurityComponentClient {
     @Retryable(maxAttempts = 2, backoff = @Backoff(delay = 1000))
     @PostMapping("auth/component")
-    String authenticateComponent(@RequestBody AuthRequestDTO authRequestDTO);
+    AuthResponseDTO authenticateComponent(@RequestBody AuthRequestDTO authRequestDTO);
+
+    @PostMapping("auth/jwks")
+    JwksSpecificInfoDTO getActualJwks(@RequestBody AuthRequestDTO authRequestDTO);
 }
